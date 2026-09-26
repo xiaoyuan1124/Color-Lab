@@ -2084,7 +2084,7 @@ function persistDraft(){
 }
 function restoreDraft(){
   try{
-    const d=sanitizeDraftRecord(JSON.parse(localStorage.getItem('colorlab.draft')||'null'));
+    const d=sanitizeDraftRecord(safeJsonRead('colorlab.draft',null));
     if(!d)return;
     selectedColors=[...d.selectedColors];
     lockedSlots=[...d.lockedSlots];
@@ -3396,10 +3396,10 @@ function semanticPhotoSwatches(region=null){
   const clusters=fallbackPhotoClusters(region);
   if(!clusters.length)return[];
   const used=new Set(),rows=[];
-  const take=(label,score)=>{
+  const take=(label,score,predicate=()=>true)=>{
     let best=null,bestScore=-Infinity;
     clusters.forEach((x,i)=>{
-      if(used.has(i))return;
+      if(used.has(i)||!predicate(x))return;
       const s=score(x);
       if(s>bestScore){bestScore=s;best={...x,index:i}}
     });
@@ -3411,10 +3411,10 @@ function semanticPhotoSwatches(region=null){
     return x.proportion*5*extremeNeutral+x.c*.25;
   };
   take('主體',dominantWeight);
-  take('鮮明',x=>x.c*5-Math.abs(x.l-.58)*.8+x.proportion);
-  take('柔和',x=>(.16-Math.min(.16,x.c))*4-Math.abs(x.l-.62)*.45+x.proportion*.5);
-  take('深色',x=>(1-x.l)*3+x.proportion*.4-(x.l<.03&&x.c<.015?.8:0));
-  take('淺色',x=>x.l*3+x.proportion*.4-(x.l>.98&&x.c<.012?.8:0));
+  take('鮮明',x=>x.c*5-Math.abs(x.l-.58)*.8+x.proportion,x=>x.c>=.05&&x.l>.16&&x.l<.88);
+  take('柔和',x=>(.16-Math.min(.16,x.c))*4-Math.abs(x.l-.62)*.45+x.proportion*.5,x=>x.c<=.12&&x.l>.20&&x.l<.92);
+  take('深色',x=>(1-x.l)*3+x.proportion*.4-(x.l<.03&&x.c<.015?.8:0),x=>x.l<=.52);
+  take('淺色',x=>x.l*3+x.proportion*.4-(x.l>.98&&x.c<.012?.8:0),x=>x.l>=.58);
 
   if(rows.length<5){
     clusters.forEach(x=>{
