@@ -2595,9 +2595,29 @@ function candidateColors(inputs,style=mode){
   }
   return [...new Set(out.map(x=>x.toUpperCase()))].filter(x=>!inputs.includes(x));
 }
+function orderedPalette(colors){
+  return {base:colors[0],structure:colors[1],accent:colors[2]};
+}
+function orderedPaletteScore(colors){
+  if(colors.length<3||colors.some(x=>!x))return-Infinity;
+  const p=orderedPalette(colors);
+  const structureContrast=Math.min(1,contrastRatio(p.base,p.structure)/7);
+  const accentBase=perceptualDistance(p.base,p.accent);
+  const accentStructure=perceptualDistance(p.structure,p.accent);
+  const accent=toOKLCH(p.accent);
+  const duplicatePenalty=
+    (perceptualDistance(p.base,p.structure)<.07?1.2:0)+
+    (accentBase<.07?1.2:0)+
+    (accentStructure<.055?.8:0);
+  return structureContrast*3.2+
+    Math.min(.45,accentBase)*2.2+
+    Math.min(.45,accentStructure)*1.2+
+    Math.min(.24,accent.c)*.9-
+    duplicatePenalty;
+}
 function completeCombo(inputs,style=mode){
-  const chosen=[...new Set(inputs.map(x=>x.toUpperCase()))].slice(0,3);
-  if(chosen.length===3)return bestRoleAssignment(chosen);
+  const chosen=inputs.map(x=>x.toUpperCase()).slice(0,3);
+  if(chosen.length===3)return orderedPalette(chosen);
 
   const pool=intelligentPool(chosen,style);
   let best=null,bestScore=-Infinity;
@@ -2605,21 +2625,23 @@ function completeCombo(inputs,style=mode){
   if(chosen.length===2){
     for(const x of pool){
       const trio=[chosen[0],chosen[1],x];
-      const pal=bestRoleAssignment(trio);
-      const sc=assignmentScore([pal.base,pal.structure,pal.accent]);
-      if(sc>bestScore){bestScore=sc;best=pal}
+      const sc=orderedPaletteScore(trio);
+      if(sc>bestScore){bestScore=sc;best=orderedPalette(trio)}
     }
-  }else{
+  }else if(chosen.length===1){
     for(let i=0;i<pool.length;i++){
-      for(let j=i+1;j<pool.length;j++){
+      for(let j=0;j<pool.length;j++){
+        if(i===j)continue;
         const trio=[chosen[0],pool[i],pool[j]];
-        const pal=bestRoleAssignment(trio);
-        const sc=assignmentScore([pal.base,pal.structure,pal.accent]);
-        if(sc>bestScore){bestScore=sc;best=pal}
+        const sc=orderedPaletteScore(trio);
+        if(sc>bestScore){bestScore=sc;best=orderedPalette(trio)}
       }
     }
   }
-  return best||derive(chosen[0],style);
+
+  if(best)return best;
+  const fallback=derive(chosen[0],style);
+  return {base:chosen[0],structure:fallback.structure,accent:fallback.accent};
 }
 function syncEditor(){
   const current=selectedColors[activeSlot]||seed;
