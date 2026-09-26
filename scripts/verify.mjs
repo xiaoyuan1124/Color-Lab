@@ -274,5 +274,17 @@ if(!html.includes("requestIdleCallback(run,{timeout:180})")||!html.includes('con
   fail('V1.7 deferred rendering optimization missing');
 }else pass('V1.7 deferred rendering optimization');
 
+
+if(!html.includes('function fastSingleColorTrios(')){
+  fail('V1.7 compact single-color search missing');
+}else pass('V1.7 compact single-color search');
+
+const completeStart=html.indexOf('function completeCombo(inputs,style=mode){');
+const completeEnd=html.indexOf('function syncEditor()',completeStart);
+const completeBody=completeStart>=0&&completeEnd>completeStart?html.slice(completeStart,completeEnd):'';
+if(completeBody.includes('for(let i=0;i<pool.length;i++){')&&completeBody.includes('for(let j=0;j<pool.length;j++){')){
+  fail('quadratic single-color search returned');
+}else pass('single-color startup avoids quadratic pool search');
+
 if(process.exitCode) process.exit(process.exitCode);
 console.log('Color Lab V1.7 verification complete.');
