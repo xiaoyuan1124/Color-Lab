@@ -1,4 +1,4 @@
-const CACHE='color-lab-v14-style';
+const CACHE='color-lab-v15-quality';
 const ASSETS=['./','./index.html','./manifest.json','./apple-touch-icon.png','./icon-192.png','./icon-512.png','./vendor/poline.umd.js','./vendor/iro.min.js','./vendor/Sortable.min.js','./data/fashion-palettes.js','./data/ig-style-patterns.js'];
 
 self.addEventListener('install',event=>{
