@@ -1795,7 +1795,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
               <div class="photo-auto-title">照片色彩角色</div>
               <div class="photo-auto-note">主體／鮮明／柔和／深色／淺色</div>
             </div>
-            <div class="photo-swatches" id="photoSwatches"></div>
+            <div class="photo-swatches" id="photoSwatches" aria-live="polite" aria-label="照片分析配色"></div>
           </div>
         </div>
 
@@ -3057,6 +3057,15 @@ function ensureComboSortable(){
     onEnd:e=>reorderSlots(e.oldIndex,e.newIndex)
   });
 }
+function handleSlotKeyboard(e){
+  if(!e.altKey||!['ArrowLeft','ArrowRight'].includes(e.key))return;
+  const slot=e.target.closest?.('[data-slot]');if(!slot)return;
+  const from=Number(slot.dataset.slot);if(!Number.isInteger(from)||!selectedColors[from])return;
+  const to=e.key==='ArrowLeft'?from-1:from+1;
+  if(to<0||to>2||!selectedColors[to])return;
+  e.preventDefault();reorderSlots(from,to);
+  requestAnimationFrame(()=>document.querySelector('[data-slot="'+to+'"]')?.focus());
+}
 function setColorAtActive(hex){
   const h=normHex(hex);
   if(!h)return;
@@ -3101,7 +3110,8 @@ function renderComboSlots(){
     const btn=document.createElement('button');
     btn.type='button';
     btn.className='combo-slot '+(hex?'':'empty')+(i===activeSlot?' active':'');
-    btn.dataset.slot=i;btn.setAttribute('aria-label',hex?'編輯顏色 '+(i+1)+' '+hex:'新增顏色 '+(i+1));
+    btn.dataset.slot=i;btn.setAttribute('aria-label',hex?'編輯顏色 '+(i+1)+' '+hex+'，Alt 加左右方向鍵可調整順序':'新增顏色 '+(i+1));
+    if(hex)btn.setAttribute('aria-keyshortcuts','Alt+ArrowLeft Alt+ArrowRight');
     if(hex){
       btn.style.background=hex;
       btn.style.color=textFor(hex);
@@ -3296,7 +3306,7 @@ function renderPhotoPalette(items){
 }
 function fallbackPhotoClusters(region=null){
   const w=photoCanvas.width,h=photoCanvas.height;if(!w||!h)return[];
-  const size=80,cv=document.createElement('canvas');cv.width=size;cv.height=size;
+  const size=region?96:80,cv=document.createElement('canvas');cv.width=size;cv.height=size;
   const cx=cv.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'});
   if(region)cx.drawImage(photoCanvas,region.x,region.y,region.w,region.h,0,0,size,size);
   else cx.drawImage(photoCanvas,0,0,size,size);
@@ -3305,7 +3315,8 @@ function fallbackPhotoClusters(region=null){
   for(let i=0;i<d.length;i+=4){
     if(d[i+3]<220)continue;
     const hex=rgbToHex(d[i]/255,d[i+1]/255,d[i+2]/255),o=toOKLCH(hex);
-    if((o.l>.99||o.l<.018)&&pts.length>260)continue;
+    const extremeNeutral=(o.l>.975||o.l<.028)&&o.c<.018;
+    if(extremeNeutral&&((i/4)%5)!==0)continue;
     pts.push([d[i],d[i+1],d[i+2]]);
   }
   if(!pts.length)return[];
@@ -3336,7 +3347,7 @@ function fallbackPhotoClusters(region=null){
   const raw=centers.map((p,i)=>{
     const hex=rgbToHex(p[0]/255,p[1]/255,p[2]/255),o=toOKLCH(hex);
     return{hex,count:counts[i],proportion:counts[i]/total,l:o.l,c:o.c,h:o.h};
-  }).filter(x=>x.count>0).sort((a,b)=>b.count-a.count);
+  }).filter(x=>x.count>0&&x.proportion>=.004).sort((a,b)=>b.count-a.count);
 
   const out=[];
   for(const item of raw){
@@ -3359,11 +3370,15 @@ function semanticPhotoSwatches(region=null){
     if(best){used.add(best.index);rows.push({hex:best.hex,label,proportion:best.proportion})}
   };
 
-  take('主體',x=>x.proportion*5);
+  const dominantWeight=x=>{
+    const extremeNeutral=((x.l>.94||x.l<.07)&&x.c<.025)?0.46:1;
+    return x.proportion*5*extremeNeutral+x.c*.25;
+  };
+  take('主體',dominantWeight);
   take('鮮明',x=>x.c*5-Math.abs(x.l-.58)*.8+x.proportion);
   take('柔和',x=>(.16-Math.min(.16,x.c))*4-Math.abs(x.l-.62)*.45+x.proportion*.5);
-  take('深色',x=>(1-x.l)*3+x.proportion*.4);
-  take('淺色',x=>x.l*3+x.proportion*.4);
+  take('深色',x=>(1-x.l)*3+x.proportion*.4-(x.l<.03&&x.c<.015?.8:0));
+  take('淺色',x=>x.l*3+x.proportion*.4-(x.l>.98&&x.c<.012?.8:0));
 
   if(rows.length<5){
     clusters.forEach(x=>{
@@ -3395,7 +3410,8 @@ function updateRegionBox(start,p){
 function finishPhotoRegion(p){
   if(!regionStart)return;
   const x=Math.min(regionStart.px,p.px),y=Math.min(regionStart.py,p.py),w=Math.abs(p.px-regionStart.px)+1,h=Math.abs(p.py-regionStart.py)+1;
-  if(w<12||h<12){toast('請框選大一點的區域');return}
+  const minW=Math.max(10,Math.round(photoCanvas.width*.008)),minH=Math.max(10,Math.round(photoCanvas.height*.008));
+  if(w<minW||h<minH){toast('請框選大一點的區域');return}
   extractPhotoPalette({x,y,w,h});toast('已分析框選區域');
 }
 function openPhotoPicker(){photoInput.click()}
@@ -3475,6 +3491,7 @@ function updatePhotoPick(clientX,clientY,commit=false){
     toast('已取色 '+picked);
   }
 }
+$('#comboSlots').addEventListener('keydown',handleSlotKeyboard);
 $('#photoTrigger').onclick=openPhotoPicker;
 $('#photoChange').onclick=openPhotoPicker;
 photoInput.addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(file)loadPhoto(file);e.target.value=''});
