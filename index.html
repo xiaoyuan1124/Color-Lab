@@ -3673,10 +3673,20 @@ function photoCompositionProfile(clusters,roles=[]){
     .sort((a,b)=>(b.edgeShare*b.proportion)-(a.edgeShare*a.proportion))[0]||null;
 
   const primaryShare=Number.isFinite(primary?.proportion)?primary.proportion:usable[0].proportion;
+  const subjectClusters=edgeCandidate&&edgeCandidate.hex!==primary?.hex
+    ?usable.filter(x=>x!==edgeCandidate)
+    :usable;
+  const subjectTotal=subjectClusters.reduce((sum,x)=>sum+x.proportion,0)||1;
+  const normalizedShares=subjectClusters.map(x=>x.proportion/subjectTotal).sort((a,b)=>b-a);
+  const normalizedPrimary=primaryShare/subjectTotal;
+  const secondShare=normalizedShares.find(x=>x<normalizedPrimary-.0001)??normalizedShares[1]??0;
+  const dominanceGap=Math.max(0,normalizedPrimary-secondShare);
+
   const chromaBand=avgC<.045?'低彩度':avgC<.105?'中彩度':'高彩度';
   const lightnessBand=avgL>.72?'偏明亮':avgL<.38?'偏深':'中等明度';
   const contrastBand=lightnessSpan>.48?'明暗跨度大':lightnessSpan>.28?'明暗層次中等':'明暗較柔和';
-  const dominanceBand=primaryShare>=.52?'單一主色明確':primaryShare>=.32?'主次清楚':'多色分布較平均';
+  const dominanceBand=normalizedPrimary>=.58?'單一主色明確'
+    :(normalizedPrimary>=.40&&dominanceGap>=.10?'主次清楚':'多色分布較平均');
   const focusBand=vivid
     ?(vivid.proportion<=.22?'少量高彩度形成焦點':'高彩度顏色占比明顯')
     :'沒有強烈高彩度焦點';
