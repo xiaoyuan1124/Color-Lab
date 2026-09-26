@@ -222,7 +222,7 @@ if(!html.includes("aria-keyshortcuts")){
   fail('keyboard slot reorder accessibility missing');
 }else pass('keyboard slot reorder accessibility');
 
-if(!html.includes("extremeNeutral")||!html.includes("dominantWeight")){
+if(!html.includes("extremeNeutral")||!html.includes("function photoDominanceScore(")){
   fail('photo extreme-neutral suppression missing');
 }else pass('photo extreme-neutral suppression');
 
