@@ -1,0 +1,137 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+import fc from 'fast-check';
+
+const html=fs.readFileSync('index.html','utf8');
+const scriptMatch=html.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/);
+if(!scriptMatch){
+  console.error('FAIL inline app script not found');
+  process.exit(1);
+}
+const source=scriptMatch[1];
+
+function extractFunction(name){
+  const start=source.indexOf('function '+name+'(');
+  if(start<0)throw new Error('missing function '+name);
+  const open=source.indexOf('{',start);
+  let depth=0,quote=null,escape=false,lineComment=false,blockComment=false;
+  for(let i=open;i<source.length;i++){
+    const ch=source[i],next=source[i+1];
+    if(lineComment){if(ch==='\n')lineComment=false;continue}
+    if(blockComment){if(ch==='*'&&next==='/'){blockComment=false;i++}continue}
+    if(quote){
+      if(escape){escape=false;continue}
+      if(ch==='\\'){escape=true;continue}
+      if(ch===quote)quote=null;
+      continue;
+    }
+    if(ch==='/'&&next==='/'){lineComment=true;i++;continue}
+    if(ch==='/'&&next==='*'){blockComment=true;i++;continue}
+    if(ch==="'"||ch==='"'||ch==='\`'){quote=ch;continue}
+    if(ch==='{')depth++;
+    else if(ch==='}'){
+      depth--;
+      if(depth===0)return source.slice(start,i+1);
+    }
+  }
+  throw new Error('unterminated function '+name);
+}
+
+const functionNames=[
+  'clamp','hexToRgb','rgbToHex','lum','srgbToLinear','linearToSrgb',
+  'toOKLCH','fromOKLCH','perceptualDistance','oklchLinearRgb',
+  'isLinearSrgbInGamut','gamutMapOKLCH','hueDistance','signedHueDelta',
+  'hueToward','contrastRatio','ensureStructureContrast','cohesionPass',
+  'qualityRefineGenerated','qualityMetrics','relationVector','relationVectorDistance'
+];
+
+const sandbox={console};
+vm.createContext(sandbox);
+vm.runInContext(
+  functionNames.map(extractFunction).join('\n')+
+  '\nthis.API={'+functionNames.join(',')+'};',
+  sandbox,
+  {timeout:2000}
+);
+const A=sandbox.API;
+
+const hexArb=fc
+  .tuple(
+    fc.integer({min:0,max:255}),
+    fc.integer({min:0,max:255}),
+    fc.integer({min:0,max:255})
+  )
+  .map(([r,g,b])=>'#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('').toUpperCase());
+
+const finiteDouble=(min,max)=>fc.double({min,max,noNaN:true,noDefaultInfinity:true});
+
+let assertions=0;
+function property(name,arb,predicate,options={}){
+  fc.assert(fc.property(...arb,(...args)=>{
+    assertions++;
+    return predicate(...args);
+  }),{numRuns:250,...options});
+  console.log('PASS',name);
+}
+
+property('OKLCH round-trip stays perceptually close',[hexArb],hex=>{
+  const o=A.toOKLCH(hex);
+  const back=A.fromOKLCH(o.l,o.c,o.h);
+  return /^#[0-9A-F]{6}$/.test(back)&&A.perceptualDistance(hex,back)<.016;
+});
+
+property('perceptual distance is symmetric',[hexArb,hexArb],(a,b)=>{
+  const ab=A.perceptualDistance(a,b),ba=A.perceptualDistance(b,a);
+  return Number.isFinite(ab)&&Math.abs(ab-ba)<1e-12;
+});
+
+property('distance to self is zero',[hexArb],hex=>Math.abs(A.perceptualDistance(hex,hex))<1e-12);
+
+property(
+  'signed hue delta is normalized',
+  [finiteDouble(-5000,5000),finiteDouble(-5000,5000)],
+  (a,b)=>{
+    const d=A.signedHueDelta(a,b);
+    return Number.isFinite(d)&&d>=-180&&d<180;
+  }
+);
+
+property(
+  'gamut map always emits valid HEX',
+  [finiteDouble(-2,3),finiteDouble(-1,2),finiteDouble(-5000,5000)],
+  (l,c,h)=>/^#[0-9A-F]{6}$/.test(A.gamutMapOKLCH(l,c,h))
+);
+
+property('contrast ratio is symmetric',[hexArb,hexArb],(a,b)=>{
+  const ab=A.contrastRatio(a,b),ba=A.contrastRatio(b,a);
+  return Number.isFinite(ab)&&ab>=1&&ab<=21.0001&&Math.abs(ab-ba)<1e-12;
+});
+
+property('quality refinement preserves Color 1',[hexArb,hexArb,hexArb],(a,b,c)=>{
+  const out=A.qualityRefineGenerated([a,b,c],1);
+  return out[0]===a;
+});
+
+property('quality refinement preserves first two user colors',[hexArb,hexArb,hexArb],(a,b,c)=>{
+  const out=A.qualityRefineGenerated([a,b,c],2);
+  return out[0]===a&&out[1]===b;
+});
+
+property('quality refinement preserves all user colors',[hexArb,hexArb,hexArb],(a,b,c)=>{
+  const out=A.qualityRefineGenerated([a,b,c],3);
+  return out[0]===a&&out[1]===b&&out[2]===c;
+});
+
+property('generated structure contrast reaches guard target when possible',[hexArb,hexArb],(base,structure)=>{
+  const out=A.ensureStructureContrast(base,structure,2.55);
+  const ratio=A.contrastRatio(base,out);
+  return /^#[0-9A-F]{6}$/.test(out)&&ratio>=2.50;
+},{numRuns:400});
+
+property('relation distance to self is zero',[hexArb,hexArb,hexArb],(a,b,c)=>{
+  const v=A.relationVector([a,b,c]);
+  const d=A.relationVectorDistance(v,v);
+  return Number.isFinite(d)&&Math.abs(d)<1e-12;
+});
+
+console.log('Color Lab property tests:',assertions,'generated cases passed');
