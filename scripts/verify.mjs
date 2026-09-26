@@ -69,7 +69,7 @@ for(const src of localScripts){
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v12")) fail('service worker cache version is not V1.2');
+if(!sw.includes("color-lab-v121")) fail('service worker cache version is not V1.2.1');
 else pass('service worker cache version');
 
 if(manifest.display!=='standalone') fail('manifest display must be standalone');
@@ -110,5 +110,22 @@ if(html.includes("renderPaletteHealth();renderRelationshipExplanation();renderVi
 if(!html.includes("data.slice(0,300)")) fail('saved palette cap regression');
 else pass('saved palette capacity');
 
+
+if(html.includes('id="modes"')) fail('preset mood controls returned to Compose');
+else pass('Compose preset mood controls removed');
+
+if(html.includes('id="modeLabel"')) fail('visible preset mode label returned to result');
+else pass('result preset mode label removed');
+
+if(!html.includes('function orderedPalette(colors)')||!html.includes('if(chosen.length===3)return orderedPalette(chosen);')){
+  fail('ordered Color 1/2/3 palette contract missing');
+}else pass('Color 1/2/3 ordered palette contract');
+
+const completeStart=html.indexOf('function completeCombo(inputs,style=mode){');
+const completeEnd=html.indexOf('function syncEditor()',completeStart);
+const completeBlock=completeStart>=0&&completeEnd>completeStart?html.slice(completeStart,completeEnd):'';
+if(completeBlock.includes('bestRoleAssignment(')) fail('completeCombo still reassigns user color roles');
+else pass('completeCombo never reassigns user roles');
+
 if(process.exitCode) process.exit(process.exitCode);
-console.log('Color Lab V1.2 verification complete.');
+console.log('Color Lab V1.2.1 verification complete.');
