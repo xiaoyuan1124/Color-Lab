@@ -197,7 +197,7 @@ if(!html.includes("recommendationCacheKey")||!html.includes("recommendationCache
   fail('recommendation cache missing');
 }else pass('recommendation cache present');
 
-if(!html.includes("contrastRatio(out[0],out[1])<2.55")){
+if(!html.includes("function ensureStructureContrast(")||!html.includes("out[1]=ensureStructureContrast(out[0],out[1],2.55)")){
   fail('adaptive structure contrast guard missing');
 }else pass('adaptive structure contrast guard');
 
