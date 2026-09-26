@@ -24,6 +24,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Verify Color Lab
         run: node scripts/verify.mjs
+      - name: Torture test color engine
+        run: node scripts/torture.mjs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
