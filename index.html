@@ -2495,7 +2495,7 @@ function finishPhotoPick(e){
 photoCanvas.addEventListener('pointerup',finishPhotoPick);
 photoCanvas.addEventListener('pointercancel',()=>{
   photoPicking=false;regionStart=null;
-  magnifier.style.display='none';
+  magnifier.style.display='none';$('#regionBox').style.display='none';
 });
 
 $('#color').addEventListener('input',e=>{setColorAtActive(e.target.value.toUpperCase())});
