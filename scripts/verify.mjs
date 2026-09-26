@@ -16,9 +16,9 @@ else {
 
 
 const forbiddenPatterns=[
-  {re:/\$\([^\n;]+\)\.forEach\(/g,label:'single-element helper $() used with forEach'},
-  {re:/\$\([^\n;]+\)\.map\(/g,label:'single-element helper $() used with map'},
-  {re:/\$\([^\n;]+\)\.filter\(/g,label:'single-element helper $() used with filter'}
+  {re:/(?<!\$)\$\([^\n;]+\)\.forEach\(/g,label:'single-element helper $() used with forEach'},
+  {re:/(?<!\$)\$\([^\n;]+\)\.map\(/g,label:'single-element helper $() used with map'},
+  {re:/(?<!\$)\$\([^\n;]+\)\.filter\(/g,label:'single-element helper $() used with filter'}
 ];
 for(const item of forbiddenPatterns){
   if(item.re.test(html)) fail(item.label);
