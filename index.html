@@ -3392,16 +3392,15 @@ function fallbackPhotoClusters(region=null){
   }
   return out;
 }
-function semanticPhotoSwatches(region=null){
-  const clusters=fallbackPhotoClusters(region);
-  if(!clusters.length)return[];
+function semanticRolesFromClusters(clusters){
+  if(!Array.isArray(clusters)||!clusters.length)return[];
   const used=new Set(),rows=[];
   const take=(label,score,predicate=()=>true)=>{
     let best=null,bestScore=-Infinity;
     clusters.forEach((x,i)=>{
       if(used.has(i)||!predicate(x))return;
       const s=score(x);
-      if(s>bestScore){bestScore=s;best={...x,index:i}}
+      if(Number.isFinite(s)&&s>bestScore){bestScore=s;best={...x,index:i}}
     });
     if(best){used.add(best.index);rows.push({hex:best.hex,label,proportion:best.proportion})}
   };
@@ -3419,11 +3418,14 @@ function semanticPhotoSwatches(region=null){
   if(rows.length<5){
     clusters.forEach(x=>{
       if(rows.length>=5)return;
-      if(rows.some(r=>r.hex===x.hex))return;
+      if(!x?.hex||rows.some(r=>r.hex===x.hex))return;
       rows.push({hex:x.hex,label:'補充',proportion:x.proportion});
     });
   }
   return rows;
+}
+function semanticPhotoSwatches(region=null){
+  return semanticRolesFromClusters(fallbackPhotoClusters(region));
 }
 function fallbackPhotoPalette(region=null){
   return fallbackPhotoClusters(region).map(x=>x.hex);
