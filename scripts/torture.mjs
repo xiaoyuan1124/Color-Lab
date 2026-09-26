@@ -47,7 +47,7 @@ const functionNames=[
   'clamp','hexToRgb','rgbToHex','lum','srgbToLinear','linearToSrgb',
   'toOKLCH','fromOKLCH','perceptualDistance','oklchLinearRgb',
   'isLinearSrgbInGamut','gamutMapOKLCH','hueDistance','signedHueDelta',
-  'hueToward','contrastRatio','cohesionPass','qualityRefineGenerated',
+  'hueToward','contrastRatio','ensureStructureContrast','cohesionPass','qualityRefineGenerated',
   'qualityMetrics','relationVector','relationVectorDistance',
   'semanticRolesFromClusters'
 ];
@@ -92,20 +92,22 @@ for(const hex of edgeHexes){
 const Ls=[-1,0,.01,.14,.5,.9,.99,1,2,NaN];
 const Cs=[-1,0,.01,.05,.2,.5,1,Infinity,NaN];
 const Hs=[-720,-1,0,1,180,359,360,721,NaN];
-let gamutFailures=0;
+let gamutFailures=0,lightnessFailures=0,chromaFailures=0;
 for(const l of Ls){
   for(const c of Cs){
     for(const h of Hs){
       const hex=A.gamutMapOKLCH(l,c,h);
-      if(!validHex(hex))gamutFailures++;
-      else{
-        const o=A.toOKLCH(hex);
-        if(!A.isLinearSrgbInGamut(A.oklchLinearRgb(o.l,o.c,o.h)))gamutFailures++;
-      }
+      if(!validHex(hex)){gamutFailures++;continue}
+      const o=A.toOKLCH(hex);
+      if(!finiteObject(o))gamutFailures++;
+      if(Number.isFinite(l)&&l>=.05&&l<=.95&&Math.abs(o.l-l)>.025)lightnessFailures++;
+      if(Number.isFinite(c)&&c>=0&&o.c>c+.02)chromaFailures++;
     }
   }
 }
-check('gamut torture grid',gamutFailures===0,'failures='+gamutFailures);
+check('gamut torture grid emits valid finite sRGB',gamutFailures===0,'failures='+gamutFailures);
+check('gamut mapping preserves lightness',lightnessFailures===0,'failures='+lightnessFailures);
+check('gamut mapping never meaningfully increases chroma',chromaFailures===0,'failures='+chromaFailures);
 
 check('contrast black white',approx(A.contrastRatio('#000000','#FFFFFF'),21,.05),A.contrastRatio('#000000','#FFFFFF'));
 check('contrast identity',approx(A.contrastRatio('#68705E','#68705E'),1,.0001),A.contrastRatio('#68705E','#68705E'));
@@ -193,9 +195,17 @@ const vividClusters=[
 ];
 const vividRoles=A.semanticRolesFromClusters(vividClusters);
 check('white background can yield to meaningful subject',vividRoles[0]?.hex==='#D43C5A',JSON.stringify(vividRoles));
-check('vivid subject classified vivid',vividRoles.some(x=>x.label==='鮮明'&&x.hex==='#D43C5A'),JSON.stringify(vividRoles));
+check('vivid subject represented semantically',vividRoles.some(x=>x.hex==='#D43C5A'&&['主體','鮮明'].includes(x.label)),JSON.stringify(vividRoles));
 
-for(const roles of [greyRoles,lightRoles,darkRoles,vividRoles]){
+const mixedClusters=[
+  {hex:'#8A8178',proportion:.50,l:.62,c:.025,h:55},
+  {hex:'#D43C5A',proportion:.30,l:.57,c:.19,h:18},
+  {hex:'#EEE8DE',proportion:.20,l:.92,c:.018,h:70}
+];
+const mixedRoles=A.semanticRolesFromClusters(mixedClusters);
+check('distinct vivid secondary gets vivid role',mixedRoles.some(x=>x.label==='鮮明'&&x.hex==='#D43C5A'),JSON.stringify(mixedRoles));
+
+for(const roles of [greyRoles,lightRoles,darkRoles,vividRoles,mixedRoles]){
   check('semantic roles unique',new Set(roles.map(x=>x.hex)).size===roles.length,JSON.stringify(roles));
   check('semantic roles max five',roles.length<=5,roles.length);
 }
