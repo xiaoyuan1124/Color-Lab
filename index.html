@@ -1840,11 +1840,11 @@ function renderVision(){
   const host=$('#visionPreview');if(!host)return;
   host.innerHTML='';
   [palette.base,palette.structure,palette.accent].forEach(hex=>{const d=document.createElement('div');d.style.background=transformVision(hex,visionMode);host.appendChild(d)});
-  $('#visionModes [data-vision]').forEach(b=>b.classList.toggle('active',b.dataset.vision===visionMode));
+  $$('#visionModes [data-vision]').forEach(b=>b.classList.toggle('active',b.dataset.vision===visionMode));
 }
 function renderContextPreview(){
   const host=$('#uiPreview');if(!host)return;
-  $('#contextTabs [data-context]').forEach(b=>b.classList.toggle('active',b.dataset.context===previewContext));
+  $$('#contextTabs [data-context]').forEach(b=>b.classList.toggle('active',b.dataset.context===previewContext));
   host.className='real-preview';
   host.removeAttribute('style');
   if(previewContext==='app'){
@@ -2416,7 +2416,7 @@ function extractPhotoPalette(region=null){
 }
 function setPhotoMode(next){
   photoMode=next==='region'?'region':'point';
-  $('#photoModeBar [data-photo-mode]').forEach(b=>b.classList.toggle('active',b.dataset.photoMode===photoMode));
+  $$('#photoModeBar [data-photo-mode]').forEach(b=>b.classList.toggle('active',b.dataset.photoMode===photoMode));
   const hint=$('.photo-hint');if(hint)hint.textContent=photoMode==='region'?'拖曳框選區域 自動分析主要色':'按住拖動 精準取色';
   if(photoMode==='point')$('#regionBox').style.display='none';
 }
