@@ -440,113 +440,300 @@ button:disabled{opacity:.42;cursor:not-allowed}
   *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.001ms!important;animation-duration:.001ms!important;animation-iteration-count:1!important}
 }
 
+
+/* V0.7 APP SHELL */
+body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
+.app{
+  min-height:100dvh;
+  padding-bottom:var(--space-7);
+}
+.app-topbar{
+  position:sticky;
+  top:0;
+  z-index:20;
+  margin:calc(-1 * var(--space-2)) 0 var(--space-6);
+  padding:var(--space-3) 0;
+  background:linear-gradient(to bottom,var(--surface-0) 72%,rgba(243,239,232,0));
+  backdrop-filter:blur(10px);
+}
+.app-main{min-height:calc(100dvh - 180px)}
+.tab-view{display:block}
+.tab-view[hidden]{display:none!important}
+.screen-head{margin:0 0 var(--space-7)}
+.screen-head.compact{margin-bottom:var(--space-6)}
+.screen-head h1{
+  margin:0 0 var(--space-3);
+  font-size:clamp(32px,9vw,42px);
+  line-height:1.04;
+  letter-spacing:-.045em;
+  font-weight:700;
+}
+.screen-head p{
+  margin:0;
+  color:var(--text-2);
+  font-size:var(--text-md);
+  line-height:1.55;
+}
+.seed-block{margin-bottom:var(--space-7)}
+.app-section.first{padding-top:0;margin-top:0;border-top:0}
+.app-section.section{margin-top:var(--space-8);padding-top:var(--space-8)}
+.app-section#result{
+  margin-top:var(--space-8);
+  padding-top:var(--space-8);
+  border-top:1px solid var(--border-subtle);
+}
+.photo-screen{padding-bottom:var(--space-6)}
+.photo-select{margin-bottom:var(--space-5)}
+.photo-panel{margin-bottom:var(--space-5)}
+.photo-target-note{
+  display:flex;
+  align-items:center;
+  gap:var(--space-2);
+  flex-wrap:wrap;
+  margin-top:var(--space-5);
+  padding-top:var(--space-4);
+  border-top:1px solid var(--border-subtle);
+  color:var(--text-2);
+  font-size:var(--text-sm);
+}
+.photo-target-note strong{color:var(--text-1);font-size:var(--text-sm)}
+.text-action{
+  min-height:var(--touch);
+  border:0;
+  background:transparent;
+  padding:0 var(--space-1);
+  color:var(--olive-11);
+  font-size:var(--text-sm);
+  font-weight:600;
+}
+.app-footer{
+  margin-top:var(--space-8);
+  padding-top:0;
+  border:0;
+  text-align:center;
+}
+.bottom-nav{
+  position:fixed;
+  left:50%;
+  bottom:0;
+  z-index:100;
+  width:min(100%,540px);
+  transform:translateX(-50%);
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  padding:8px 12px calc(8px + env(safe-area-inset-bottom));
+  background:rgba(250,248,244,.92);
+  border-top:1px solid rgba(201,194,184,.72);
+  backdrop-filter:blur(24px) saturate(140%);
+  -webkit-backdrop-filter:blur(24px) saturate(140%);
+}
+.nav-item{
+  min-height:56px;
+  border:0;
+  background:transparent;
+  color:var(--text-3);
+  border-radius:var(--radius-lg);
+  padding:6px 4px 4px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:2px;
+  font-size:11px;
+  font-weight:600;
+}
+.nav-item.active{
+  color:var(--olive-12);
+  background:var(--olive-2);
+}
+.nav-icon{width:24px;height:24px;display:block}
+.nav-icon svg{
+  width:24px;height:24px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+#nav-inspire .nav-icon svg path{fill:currentColor;stroke:none}
+.nav-item:active{transform:none;background:var(--olive-3)}
+.nav-item:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
+
+@media(max-width:390px){
+  .bottom-nav{padding-left:8px;padding-right:8px}
+  .nav-item{font-size:10px}
+}
+
 </style>
 </head>
 <body>
 <div class="app">
-  <div class="topline"><div class="brand">PERSONAL COLOR LAB</div><div class="version">V0.6</div></div>
+  <div class="topline app-topbar">
+    <div class="brand">COLOR LAB</div>
+    <div class="version">V0.7</div>
+  </div>
 
-  <header class="hero">
-    <h1>從顏色開始</h1>
-    <p>選 1 至 3 個顏色 系統補滿三色</p>
-  </header>
+  <main class="app-main">
+    <section class="tab-view active" data-view="compose" aria-labelledby="nav-compose">
+      <header class="screen-head">
+        <div class="eyebrow">COMPOSE</div>
+        <h1>從顏色開始</h1>
+        <p>選 1 至 3 個顏色 系統補滿三色</p>
+      </header>
 
-  <section class="seed-block">
-    <div class="seed-stage">
-      <div class="color-shell"><input id="color" class="color-input" type="color" value="#68705E" aria-label="選擇起始顏色"></div>
-      <div class="seed-meta">
-        <div class="seed-kicker">目前編輯</div>
-        <input id="hex" class="hex" value="#68705E" maxlength="7" aria-label="HEX 顏色">
-        <div class="seed-note">選色槽後可用色盤 HEX 或照片取色</div>
-      </div>
-    </div>
-    <div class="combo-head">
-      <div class="combo-title">你的三色組合</div>
-      <div class="combo-count" id="comboCount">1 / 3</div>
-    </div>
-    <div class="combo-slots" id="comboSlots"></div>
-    <div class="source-actions">
-      <button class="photo-trigger" id="photoTrigger" type="button">從照片取色</button>
-      <input id="photoInput" type="file" accept="image/*" hidden>
-    </div>
-    <div class="photo-panel" id="photoPanel">
-      <div class="photo-frame" id="photoFrame">
-        <canvas id="photoCanvas" aria-label="點照片選取顏色"></canvas>
-        <div class="pick-marker" id="pickMarker"></div>
-        <div class="magnifier" id="magnifier">
-          <canvas id="magnifierCanvas" width="112" height="112"></canvas>
-          <div class="pick-readout" id="pickReadout">#68705E</div>
+      <section class="seed-block">
+        <div class="seed-stage">
+          <div class="color-shell"><input id="color" class="color-input" type="color" value="#68705E" aria-label="選擇起始顏色"></div>
+          <div class="seed-meta">
+            <div class="seed-kicker">目前編輯</div>
+            <input id="hex" class="hex" value="#68705E" maxlength="7" aria-label="HEX 顏色">
+            <div class="seed-note">選色槽後可用色盤或 HEX</div>
+          </div>
         </div>
-      </div>
-      <div class="photo-caption">
-        <div class="photo-hint">按住拖動 精準取色</div>
-        <button class="photo-change" id="photoChange" type="button">更換照片</button>
-      </div>
-      <div class="photo-auto" id="photoAuto" hidden>
-        <div class="photo-auto-head">
-          <div class="photo-auto-title">照片主要色</div>
-          <div class="photo-auto-note">點一下加入目前色槽</div>
+
+        <div class="combo-head">
+          <div class="combo-title">你的三色組合</div>
+          <div class="combo-count" id="comboCount">1 / 3</div>
         </div>
-        <div class="photo-swatches" id="photoSwatches"></div>
-      </div>
-    </div>
-    <div class="modes" id="modes"></div>
-    <button class="primary" id="generate">完成三色組合 <span class="arrow">→</span></button>
-  </section>
+        <div class="combo-slots" id="comboSlots"></div>
 
-  <section class="section" id="result">
-    <div class="section-head">
-      <div>
-        <div class="eyebrow">75 / 18 / 7</div>
-        <h2>這組顏色的關係</h2>
-        <div class="section-desc">系統只安排角色 不改動你已選的顏色</div>
-      </div>
-      <div class="mode-label" id="modeLabel"></div>
-    </div>
+        <div class="modes" id="modes"></div>
+        <button class="primary" id="generate">完成三色組合 <span class="arrow">→</span></button>
+      </section>
 
-    <div class="preview" id="preview"></div>
-    <div class="relation-list" id="palette"></div>
-    <div class="name-field">
-      <div class="name-label">配色名稱</div>
-      <input id="comboName" class="name-input" maxlength="24" placeholder="例如 秋日下午">
-    </div>
-    <button class="save" id="save">♡ 收藏這組配色</button>
-  </section>
+      <section class="section app-section" id="result">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">75 / 18 / 7</div>
+            <h2>這組顏色的關係</h2>
+            <div class="section-desc">系統只安排角色 不改動你已選的顏色</div>
+          </div>
+          <div class="mode-label" id="modeLabel"></div>
+        </div>
 
-  <section class="section" id="intelligenceSection">
-    <div class="section-head">
-      <div>
-        <div class="eyebrow">COLOR INTELLIGENCE</div>
-        <h2 id="intelHeading">推薦補色</h2>
-        <div class="section-desc" id="intelDescription">依感知距離 明暗與色相關係產生</div>
-      </div>
-    </div>
-    <div class="rec-scroll" id="recommendations"></div>
-  </section>
+        <div class="preview" id="preview"></div>
+        <div class="relation-list" id="palette"></div>
+        <div class="name-field">
+          <div class="name-label">配色名稱</div>
+          <input id="comboName" class="name-input" maxlength="24" placeholder="例如 秋日下午">
+        </div>
+        <button class="save" id="save">♡ 收藏這組配色</button>
+      </section>
+    </section>
 
-  <section class="section">
-    <div class="section-head">
-      <div>
-        <div class="eyebrow">VARIATIONS</div>
-        <h2>同一個顏色，<br>可以往不同氣氛走。</h2>
-      </div>
-    </div>
-    <div class="ideas-wrap"><div class="ideas" id="ideas"></div></div>
-  </section>
+    <section class="tab-view" data-view="inspire" aria-labelledby="nav-inspire" hidden>
+      <header class="screen-head compact">
+        <div class="eyebrow">DISCOVER</div>
+        <h1>找新的關係</h1>
+        <p>從你已選的顏色往外探索</p>
+      </header>
 
-  <section class="section">
-    <div class="section-head">
-      <div>
+      <section class="app-section first" id="intelligenceSection">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">COLOR INTELLIGENCE</div>
+            <h2 id="intelHeading">推薦補色</h2>
+            <div class="section-desc" id="intelDescription">依感知距離 明暗與色相關係產生</div>
+          </div>
+        </div>
+        <div class="rec-scroll" id="recommendations"></div>
+      </section>
+
+      <section class="section app-section">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">VARIATIONS</div>
+            <h2>不同氣氛</h2>
+            <div class="section-desc">同一組起點可以走向不同方向</div>
+          </div>
+        </div>
+        <div class="ideas-wrap"><div class="ideas" id="ideas"></div></div>
+      </section>
+    </section>
+
+    <section class="tab-view" data-view="photo" aria-labelledby="nav-photo" hidden>
+      <header class="screen-head compact">
+        <div class="eyebrow">PHOTO</div>
+        <h1>從畫面取色</h1>
+        <p>精準取一色 或直接挑照片主要色</p>
+      </header>
+
+      <section class="photo-screen app-section first">
+        <button class="primary photo-select" id="photoTrigger" type="button">選擇照片 <span class="arrow">＋</span></button>
+        <input id="photoInput" type="file" accept="image/*" hidden>
+
+        <div class="photo-panel" id="photoPanel">
+          <div class="photo-frame" id="photoFrame">
+            <canvas id="photoCanvas" aria-label="點照片選取顏色"></canvas>
+            <div class="pick-marker" id="pickMarker"></div>
+            <div class="magnifier" id="magnifier">
+              <canvas id="magnifierCanvas" width="112" height="112"></canvas>
+              <div class="pick-readout" id="pickReadout">#68705E</div>
+            </div>
+          </div>
+          <div class="photo-caption">
+            <div class="photo-hint">按住拖動 精準取色</div>
+            <button class="photo-change" id="photoChange" type="button">更換照片</button>
+          </div>
+          <div class="photo-auto" id="photoAuto" hidden>
+            <div class="photo-auto-head">
+              <div class="photo-auto-title">照片主要色</div>
+              <div class="photo-auto-note">點一下加入目前色槽</div>
+            </div>
+            <div class="photo-swatches" id="photoSwatches"></div>
+          </div>
+        </div>
+
+        <div class="photo-target-note">
+          <span>目前會加入</span>
+          <strong id="photoTarget">COLOR 1</strong>
+          <button type="button" class="text-action" data-jump="compose">切換色槽</button>
+        </div>
+      </section>
+    </section>
+
+    <section class="tab-view" data-view="library" aria-labelledby="nav-library" hidden>
+      <header class="screen-head compact">
         <div class="eyebrow">LIBRARY</div>
-        <h2>我的收藏</h2>
-        <div class="section-desc">只留下你真的想再用一次的組合。</div>
-      </div>
-    </div>
-    <div id="saved"></div>
-  </section>
+        <h1>我的收藏</h1>
+        <p>只留下你真的想再用一次的組合</p>
+      </header>
 
-  <div class="footer">Color Lab V0.6<br>美，不是把漂亮的東西放在一起。美，是讓它們之間的關係成立。</div>
+      <section class="app-section first">
+        <div id="saved"></div>
+      </section>
+    </section>
+  </main>
+
+  <div class="footer app-footer">Color Lab V0.7</div>
 </div>
+
+<nav class="bottom-nav" aria-label="主要功能" role="tablist">
+  <button id="nav-compose" class="nav-item active" data-tab="compose" role="tab" aria-selected="true">
+    <span class="nav-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><circle cx="12" cy="16" r="3"/></svg>
+    </span>
+    <span>配色</span>
+  </button>
+  <button id="nav-inspire" class="nav-item" data-tab="inspire" role="tab" aria-selected="false">
+    <span class="nav-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M12 3l1.4 4.1L17.5 8.5l-4.1 1.4L12 14l-1.4-4.1L6.5 8.5l4.1-1.4L12 3z"/><path d="M18 14l.8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8L18 14z"/></svg>
+    </span>
+    <span>靈感</span>
+  </button>
+  <button id="nav-photo" class="nav-item" data-tab="photo" role="tab" aria-selected="false">
+    <span class="nav-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M5 17l4-4 3 3 2-2 5 3"/></svg>
+    </span>
+    <span>相片</span>
+  </button>
+  <button id="nav-library" class="nav-item" data-tab="library" role="tab" aria-selected="false">
+    <span class="nav-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M6 4h12v17l-6-4-6 4V4z"/></svg>
+    </span>
+    <span>收藏</span>
+  </button>
+</nav>
 <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true">已複製</div>
 
 <script src="https://colorjs.io/dist/color.global.js"></script>
@@ -700,7 +887,7 @@ function applyRecommendation(index){
   r.added.forEach((hex,k)=>{if(empties[k]!==undefined)selectedColors[empties[k]]=hex});
   const firstEmpty=selectedColors.findIndex(v=>!v);
   activeSlot=firstEmpty>=0?firstEmpty:0;
-  syncEditor();generate(false);toast('已加入推薦顏色');
+  syncEditor();generate(false);switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'});toast('已加入推薦顏色');
 }
 function renderRecommendations(){
   const box=$('#recommendations');if(!box)return;
@@ -808,7 +995,7 @@ function setColorAtActive(hex){
   renderComboSlots();
 }
 function setActiveSlot(i,openPicker=false){
-  activeSlot=i;
+  activeSlot=i;updatePhotoTarget();
   if(selectedColors[i]){
     seed=selectedColors[i];
     $('#color').value=seed;
@@ -1065,9 +1252,40 @@ document.addEventListener('click',e=>{
   const c=e.target.closest('[data-copy]');if(c)copy(c.dataset.copy);
   const s=e.target.closest('[data-shuffle]');if(s)shuffle(s.dataset.shuffle);
   const rn=e.target.closest('[data-rename]');if(rn){renameSaved(+rn.dataset.rename);return}
-  const l=e.target.closest('[data-load]');if(l){const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),x=data[+l.dataset.load];if(x){seed=x.seed;mode=x.mode;palette={...x.palette};selectedColors=x.selectedColors?[...x.selectedColors]:[x.seed,null,null];while(selectedColors.length<3)selectedColors.push(null);activeSlot=Math.max(0,selectedColors.findIndex(Boolean));currentComboName=(x.name&&x.name.trim())||'未命名配色';$('#comboName').value=currentComboName==='未命名配色'?'':currentComboName;syncEditor();renderModes();render();$('#result').scrollIntoView({behavior:'smooth',block:'start'})}}
+  const l=e.target.closest('[data-load]');if(l){const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),x=data[+l.dataset.load];if(x){seed=x.seed;mode=x.mode;palette={...x.palette};selectedColors=x.selectedColors?[...x.selectedColors]:[x.seed,null,null];while(selectedColors.length<3)selectedColors.push(null);activeSlot=Math.max(0,selectedColors.findIndex(Boolean));currentComboName=(x.name&&x.name.trim())||'未命名配色';$('#comboName').value=currentComboName==='未命名配色'?'':currentComboName;syncEditor();renderModes();render();switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'})}}
 });
+
+function switchTab(name,scrollTop=true){
+  const valid=['compose','inspire','photo','library'];
+  if(!valid.includes(name))name='compose';
+  document.querySelectorAll('.tab-view').forEach(v=>{
+    const on=v.dataset.view===name;
+    v.hidden=!on;
+    v.classList.toggle('active',on);
+  });
+  document.querySelectorAll('.nav-item[data-tab]').forEach(b=>{
+    const on=b.dataset.tab===name;
+    b.classList.toggle('active',on);
+    b.setAttribute('aria-selected',on?'true':'false');
+  });
+  localStorage.setItem('colorlab.tab',name);
+  updatePhotoTarget();
+  if(scrollTop)window.scrollTo({top:0,left:0,behavior:'auto'});
+}
+function updatePhotoTarget(){
+  const el=$('#photoTarget');
+  if(el)el.textContent='COLOR '+(activeSlot+1);
+}
+document.querySelectorAll('.nav-item[data-tab]').forEach(b=>{
+  b.addEventListener('click',()=>switchTab(b.dataset.tab,true));
+});
+document.addEventListener('click',e=>{
+  const jump=e.target.closest('[data-jump]');
+  if(jump){switchTab(jump.dataset.jump,true);return}
+});
+
 renderModes();renderComboSlots();generate(false);$('#comboName').value='';
+switchTab(localStorage.getItem('colorlab.tab')||'compose',false);updatePhotoTarget();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body>
