@@ -3,6 +3,7 @@ import fs from 'node:fs';
 const html=fs.readFileSync('index.html','utf8');
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
+const fashion=fs.readFileSync('data/fashion-palettes.js','utf8');
 
 const fail=(msg)=>{console.error('FAIL:',msg);process.exitCode=1};
 const pass=(msg)=>console.log('PASS:',msg);
@@ -60,7 +61,7 @@ for(const fn of requiredFunctions){
 }
 pass('core functions present');
 
-const localScripts=['./vendor/poline.umd.js','./vendor/iro.min.js','./vendor/Sortable.min.js'];
+const localScripts=['./vendor/poline.umd.js','./vendor/iro.min.js','./vendor/Sortable.min.js','./data/fashion-palettes.js'];
 for(const src of localScripts){
   if(!html.includes('<script src="'+src+'"></script>')) fail('local dependency missing: '+src);
   const asset=src.replace('./','./');
@@ -69,7 +70,7 @@ for(const src of localScripts){
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v121")) fail('service worker cache version is not V1.2.1');
+if(!sw.includes("color-lab-v13")) fail('service worker cache version is not V1.3');
 else pass('service worker cache version');
 
 if(manifest.display!=='standalone') fail('manifest display must be standalone');
@@ -127,5 +128,21 @@ const completeBlock=completeStart>=0&&completeEnd>completeStart?html.slice(compl
 if(completeBlock.includes('bestRoleAssignment(')) fail('completeCombo still reassigns user color roles');
 else pass('completeCombo never reassigns user roles');
 
+
+try { new Function(fashion); pass('fashion reference library syntax'); }
+catch(e){ fail('fashion reference library syntax: '+e.message); }
+
+const fashionCount=(fashion.match(/\{house:/g)||[]).length;
+if(fashionCount<50) fail('fashion reference library too small: '+fashionCount);
+else pass('fashion reference library size '+fashionCount);
+
+for(const fn of ['fashionAffinity','fashionTransferPool','fashionReferenceCombos','getFashionReferenceRows']){
+  if(!html.includes('function '+fn+'(')) fail('fashion function missing: '+fn);
+}
+pass('fashion recommendation functions present');
+
+if(!html.includes("Fashion Reference Library")) fail('fashion recommendation description missing');
+else pass('fashion recommendation UI description');
+
 if(process.exitCode) process.exit(process.exitCode);
-console.log('Color Lab V1.2.1 verification complete.');
+console.log('Color Lab V1.3 verification complete.');
