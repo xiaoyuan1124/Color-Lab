@@ -1435,6 +1435,9 @@ function importBackupFile(file){
       if(Array.isArray(data.recent)){const imported=data.recent.filter(x=>typeof x==='string'&&normHex(x)).map(x=>normHex(x));recentColors=[...new Set([...recentColors,...imported])].slice(0,20);localStorage.setItem('colorlab.recent',JSON.stringify(recentColors))}
       if(data.compareA){compareA=data.compareA;localStorage.setItem('colorlab.compareA',JSON.stringify(compareA))}
       if(data.compareB){compareB=data.compareB;localStorage.setItem('colorlab.compareB',JSON.stringify(compareB))}
+      if(data.draft&&Array.isArray(data.draft.selectedColors)){
+        localStorage.setItem('colorlab.draft',JSON.stringify(data.draft));
+      }
       renderSaved();renderRecentColors();renderCompare();toast('備份已匯入');
     }catch(_){toast('不是有效的 Color Lab 備份')}
   };
@@ -2095,8 +2098,10 @@ function switchTab(name,scrollTop=true){
   });
   localStorage.setItem('colorlab.tab',name);
   updatePhotoTarget();
-  const targetY=scrollTop?(tabScroll[name]??0):window.scrollY;
-  requestAnimationFrame(()=>window.scrollTo({top:targetY,left:0,behavior:'auto'}));
+  if(scrollTop){
+    const targetY=tabScroll[name]??0;
+    requestAnimationFrame(()=>window.scrollTo({top:targetY,left:0,behavior:'auto'}));
+  }
 }
 function updatePhotoTarget(){
   const el=$('#photoTarget');
