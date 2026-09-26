@@ -233,5 +233,32 @@ if(!sw.includes("request.mode==='navigate'")||!sw.includes("if(sameOrigin)")){
   fail('V1.6 service worker routing strategy missing');
 }else pass('V1.6 service worker routing strategy');
 
+
+if(!html.includes("function safeJsonRead(")||!html.includes("function readRecentColors(")){
+  fail('safe startup storage readers missing');
+}else pass('safe startup storage readers');
+
+const startupWindow=html.slice(0,html.indexOf("function openResilienceDB"));
+if(startupWindow.includes("JSON.parse(localStorage.getItem('colorlab.compareA')")||
+   startupWindow.includes("JSON.parse(localStorage.getItem('colorlab.compareB')")||
+   startupWindow.includes("JSON.parse(localStorage.getItem('colorlab.recent')")){
+  fail('unsafe startup localStorage JSON parse returned');
+}else pass('startup storage parsing hardened');
+
+if(!html.includes("reader.onerror=()=>toast('備份檔讀取失敗')")){
+  fail('backup FileReader error handling missing');
+}else pass('backup FileReader error handling');
+
+if(!html.includes("predicate=()=>true")||
+   !html.includes("x=>x.c>=.05&&x.l>.16&&x.l<.88")||
+   !html.includes("x=>x.l<=.52")||
+   !html.includes("x=>x.l>=.58")){
+  fail('semantic photo role thresholds missing');
+}else pass('semantic photo role thresholds');
+
+if(html.includes("sanitizeDraftRecord(JSON.parse(localStorage.getItem('colorlab.draft')")){
+  fail('raw draft parse returned');
+}else pass('draft restore uses safe JSON reader');
+
 if(process.exitCode) process.exit(process.exitCode);
 console.log('Color Lab V1.6 verification complete.');
