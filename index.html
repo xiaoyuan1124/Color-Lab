@@ -2473,18 +2473,7 @@ function intelligentPool(inputs,style=mode){
     .filter(x=>inputs.every(i=>perceptualDistance(i,x)>.055));
   return unique;
 }
-function trioScore(colors){
-  const pal=bestRoleAssignment(colors);
-  const vals=[pal.base,pal.structure,pal.accent].map(stats);
-  const base=toOKLCH(pal.base),st=toOKLCH(pal.structure),ac=toOKLCH(pal.accent);
-  const d01=perceptualDistance(pal.base,pal.structure),d02=perceptualDistance(pal.base,pal.accent),d12=perceptualDistance(pal.structure,pal.accent);
-  let score=assignmentScore([pal.base,pal.structure,pal.accent]);
-  score+=Math.min(.45,d01+d02+d12)*2;
-  score+=Math.max(0,.18-Math.abs(base.l-.92));
-  score+=Math.max(0,.14-Math.abs(st.l-.28));
-  score+=Math.min(.24,ac.c)*.8;
-  return score;
-}
+function trioScore(colors){return orderedPaletteScore(colors)}
 function classifyCandidate(hex,inputs){
   const o=toOKLCH(hex),ds=inputs.map(i=>perceptualDistance(i,hex));
   const hueAvg=inputs.map(i=>toOKLCH(i).h);
@@ -2503,13 +2492,13 @@ function recommendationCombos(){
   if(inputs.length===2){
     for(const x of pool){
       const trio=[inputs[0],inputs[1],x];
-      candidates.push({added:[x],palette:bestRoleAssignment(trio),score:trioScore(trio),meta:classifyCandidate(x,inputs)});
+      candidates.push({added:[x],palette:orderedPalette(trio),score:trioScore(trio),meta:classifyCandidate(x,inputs)});
     }
   }else{
     for(let i=0;i<pool.length;i++){
       for(let j=i+1;j<Math.min(pool.length,i+16);j++){
         const trio=[inputs[0],pool[i],pool[j]];
-        candidates.push({added:[pool[i],pool[j]],palette:bestRoleAssignment(trio),score:trioScore(trio),meta:{label:'完整組合',sub:'從單色延伸'}});
+        candidates.push({added:[pool[i],pool[j]],palette:orderedPalette(trio),score:trioScore(trio),meta:{label:'完整組合',sub:'從單色延伸'}});
       }
     }
   }
@@ -2767,7 +2756,7 @@ function renderIdeas(){
     const cards=[{key:'original',label:'原始組合',colors:original}];
     ['quiet','warm','cool','luxe','natural','bold'].forEach(key=>cards.push({key,label:MODES[key].label,colors:trioVariation(original,key)}));
     cards.forEach((item,idx)=>{
-      const p=bestRoleAssignment(item.colors),btn=document.createElement('button');btn.className='idea';btn.type='button';
+      const p=orderedPalette(item.colors),btn=document.createElement('button');btn.className='idea';btn.type='button';
       btn.innerHTML=`<div class="idea-top"><i style="background:${p.base}"></i><i style="background:${p.structure}"></i><i style="background:${p.accent}"></i></div><div class="idea-name">${item.label}</div><div class="idea-meta">${item.colors.join(' · ')}</div>`;
       if(idx>0)btn.onclick=()=>{selectedColors=item.colors.map((hex,i)=>lockedSlots[i]?original[i]:hex);activeSlot=0;seed=selectedColors[0];syncEditor();generate(false);pushHistory();switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'});toast('已套用 '+item.label)};
       box.appendChild(btn);
