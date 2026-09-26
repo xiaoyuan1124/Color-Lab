@@ -4,6 +4,7 @@ const html=fs.readFileSync('index.html','utf8');
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const fashion=fs.readFileSync('data/fashion-palettes.js','utf8');
+const igStyles=fs.readFileSync('data/ig-style-patterns.js','utf8');
 
 const fail=(msg)=>{console.error('FAIL:',msg);process.exitCode=1};
 const pass=(msg)=>console.log('PASS:',msg);
@@ -61,7 +62,7 @@ for(const fn of requiredFunctions){
 }
 pass('core functions present');
 
-const localScripts=['./vendor/poline.umd.js','./vendor/iro.min.js','./vendor/Sortable.min.js','./data/fashion-palettes.js'];
+const localScripts=['./vendor/poline.umd.js','./vendor/iro.min.js','./vendor/Sortable.min.js','./data/fashion-palettes.js','./data/ig-style-patterns.js'];
 for(const src of localScripts){
   if(!html.includes('<script src="'+src+'"></script>')) fail('local dependency missing: '+src);
   const asset=src.replace('./','./');
@@ -70,7 +71,7 @@ for(const src of localScripts){
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v13")) fail('service worker cache version is not V1.3');
+if(!sw.includes("color-lab-v14")) fail('service worker cache version is not V1.4');
 else pass('service worker cache version');
 
 if(manifest.display!=='standalone') fail('manifest display must be standalone');
@@ -144,5 +145,21 @@ pass('fashion recommendation functions present');
 if(!html.includes("Fashion Reference Library")) fail('fashion recommendation description missing');
 else pass('fashion recommendation UI description');
 
+
+try { new Function(igStyles); pass('IG style pattern library syntax'); }
+catch(e){ fail('IG style pattern library syntax: '+e.message); }
+
+const igPatternCount=(igStyles.match(/\{\s*id:/g)||[]).length;
+if(igPatternCount<12) fail('IG style pattern library too small: '+igPatternCount);
+else pass('IG style pattern library size '+igPatternCount);
+
+for(const fn of ['igPatternAffinity','igStyleTransferPool','igStyleCombos','applyStyleDelta']){
+  if(!html.includes('function '+fn+'(')) fail('IG style function missing: '+fn);
+}
+pass('IG style recommendation functions present');
+
+if(!html.includes("IG 穿搭關係")) fail('IG styling recommendation description missing');
+else pass('IG styling recommendation UI description');
+
 if(process.exitCode) process.exit(process.exitCode);
-console.log('Color Lab V1.3 verification complete.');
+console.log('Color Lab V1.4 verification complete.');
