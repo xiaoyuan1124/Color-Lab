@@ -50,9 +50,10 @@ for(const id of requiredIds){
 pass('required unique IDs');
 
 const requiredFunctions=[
-  'setColorAtActive','reorderSlots','renderRelationshipExplanation','renderVision','renderContextPreview',
-  'fallbackPhotoPalette','finishPhotoRegion','renderSaved','toggleSavedPin','editSavedFolder',
-  'openSavedActions','exportBackup','importBackupFile','openResilienceDB','restoreResilienceIfNeeded','installApp'
+  'setColorAtActive','reorderSlots','ensureComboSortable','renderRelationshipExplanation','renderVision','renderContextPreview',
+  'fallbackPhotoPalette','finishPhotoRegion','setPhotoMode','renderSaved','toggleSavedPin','editSavedFolder',
+  'openSavedActions','exportBackup','importBackupFile','sanitizeSavedRecord','sanitizeCompareRecord',
+  'openResilienceDB','restoreResilienceIfNeeded','installApp'
 ];
 for(const fn of requiredFunctions){
   if(!html.includes('function '+fn+'(')) fail('function missing: '+fn);
@@ -82,12 +83,32 @@ const requiredMarkers=[
   'beforeinstallprompt',
   'color-lab-backup-v1',
   'data-saved-action="folder"',
-  'data-saved-action="pin"'
+  'data-saved-action="pin"',
+  'renderRelationshipExplanation()',
+  'sanitizeSavedRecord',
+  'librarySort',
+  'libraryFolderFilter',
+  'touch-action:none'
 ];
 for(const marker of requiredMarkers){
   if(!html.includes(marker)) fail('feature marker missing: '+marker);
 }
 pass('V1.1 feature markers');
+
+
+if(!sw.includes("request.method!=='GET'")) fail('service worker must ignore non-GET requests');
+else pass('service worker GET guard');
+
+if(!sw.includes("request.mode==='navigate'")||!sw.includes("caches.match('./index.html')")){
+  fail('offline navigation fallback missing');
+}else pass('offline navigation fallback');
+
+if(html.includes("renderPaletteHealth();renderRelationshipExplanation();renderVision();renderContextPreview();renderIdeas();renderRecommendations();renderSaved();")){
+  fail('palette render still redraws full saved library');
+}else pass('palette render avoids full library redraw');
+
+if(!html.includes("data.slice(0,300)")) fail('saved palette cap regression');
+else pass('saved palette capacity');
 
 if(process.exitCode) process.exit(process.exitCode);
 console.log('Color Lab V1.1 verification complete.');
