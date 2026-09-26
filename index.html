@@ -565,7 +565,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.8 EXPERIENCE PASS */
+/* V1.9 EXPERIENCE PASS */
 .screen-tools{
   display:flex;
   gap:var(--space-2);
@@ -688,7 +688,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.8 POWER TOOLS */
+/* V1.9 POWER TOOLS */
 .lock-toggle{
   min-height:34px;
   margin-top:var(--space-2);
@@ -791,7 +791,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.8 STUDIO */
+/* V1.9 STUDIO */
 .seed-inline-actions{display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap}
 .picker-open{color:var(--olive-11)}
 .vision-lab{
@@ -906,13 +906,13 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 .saved-tag-btn{border:0;background:transparent;color:var(--olive-11);padding:0;font-size:var(--text-sm);font-weight:600}
 
 
-/* V1.8.1 STABILIZATION */
+/* V1.9.1 STABILIZATION */
 .tab-view.active{animation:tab-in .18s ease-out both}
 @keyframes tab-in{from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.tab-view.active{animation:none}}
 
 
-/* V1.8 COMPLETE WORKFLOW */
+/* V1.9 COMPLETE WORKFLOW */
 .drag-note{
   margin:-14px 0 var(--space-5);
   color:var(--text-3);
@@ -1072,7 +1072,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.8 VISUAL POLISH — presentation only */
+/* V1.9 VISUAL POLISH — presentation only */
 :root{
   --glass:rgba(250,248,244,.82);
   --glass-strong:rgba(255,253,249,.92);
@@ -1571,7 +1571,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.8 COLOR QUALITY ENGINE */
+/* V1.9 COLOR QUALITY ENGINE */
 .photo-swatches{align-items:flex-start;padding-bottom:6px}
 .photo-swatch-card{
   flex:0 0 76px;
@@ -1608,7 +1608,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.8 PERFORMANCE */
+/* V1.9 PERFORMANCE */
 #result .section,
 #inspire .section,
 #library .section{
@@ -1617,13 +1617,34 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
 }
 .tab-view[hidden]{display:none!important}
 
+
+/* V1.9 PHOTO INTELLIGENCE */
+.photo-insight{
+  margin-top:18px;
+  padding-top:16px;
+  border-top:1px solid var(--border-subtle);
+}
+.photo-insight strong{
+  display:block;
+  font-size:14px;
+  line-height:1.35;
+  color:var(--text-1);
+}
+.photo-insight p{
+  margin:6px 0 0;
+  max-width:34ch;
+  font-size:12px;
+  line-height:1.55;
+  color:var(--text-2);
+}
+
 </style>
 </head>
 <body>
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V1.8</div>
+    <div class="version">V1.9</div>
   </div>
 
   <main class="app-main">
@@ -1806,6 +1827,10 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
               <div class="photo-auto-note">主體／鮮明／柔和／深色／淺色</div>
             </div>
             <div class="photo-swatches" id="photoSwatches" aria-live="polite" aria-label="照片分析配色"></div>
+            <div class="photo-insight" id="photoInsight" hidden>
+              <strong id="photoInsightLead"></strong>
+              <p id="photoInsightText"></p>
+            </div>
           </div>
         </div>
 
@@ -1859,7 +1884,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V1.8</div>
+  <div class="footer app-footer">Color Lab V1.9</div>
 </div>
 
 <nav class="bottom-nav" aria-label="主要功能" role="tablist">
@@ -3608,6 +3633,44 @@ function semanticRolesFromClusters(clusters){
   }
   return rows;
 }
+function photoCompositionProfile(clusters,roles=[]){
+  if(!Array.isArray(clusters)||!clusters.length)return null;
+  const usable=clusters.filter(x=>x&&Number.isFinite(x.proportion)&&Number.isFinite(x.l)&&Number.isFinite(x.c));
+  if(!usable.length)return null;
+  const total=usable.reduce((sum,x)=>sum+x.proportion,0)||1;
+  const avgL=usable.reduce((sum,x)=>sum+x.l*x.proportion,0)/total;
+  const avgC=usable.reduce((sum,x)=>sum+x.c*x.proportion,0)/total;
+  const minL=Math.min(...usable.map(x=>x.l)),maxL=Math.max(...usable.map(x=>x.l));
+  const lightnessSpan=maxL-minL;
+  const primary=roles.find(x=>x.label==='主體')||roles[0]||null;
+  const vivid=roles.find(x=>x.label==='鮮明')||null;
+
+  const chromaBand=avgC<.045?'低彩度':avgC<.105?'中彩度':'高彩度';
+  const lightnessBand=avgL>.72?'偏明亮':avgL<.38?'偏深':'中等明度';
+  const contrastBand=lightnessSpan>.48?'明暗跨度大':lightnessSpan>.28?'明暗層次中等':'明暗較柔和';
+  const focusBand=vivid
+    ?(vivid.proportion<=.22?'少量高彩度形成焦點':'高彩度顏色占比明顯')
+    :'沒有強烈高彩度焦點';
+
+  return{
+    avgL,avgC,lightnessSpan,chromaBand,lightnessBand,contrastBand,focusBand,
+    primaryHex:primary?.hex||usable[0].hex,
+    primaryShare:Number.isFinite(primary?.proportion)?primary.proportion:usable[0].proportion,
+    accentHex:vivid?.hex||null,
+    accentShare:Number.isFinite(vivid?.proportion)?vivid.proportion:0
+  };
+}
+function renderPhotoInsight(clusters,roles){
+  const host=$('#photoInsight'),lead=$('#photoInsightLead'),text=$('#photoInsightText');
+  if(!host||!lead||!text)return;
+  const profile=photoCompositionProfile(clusters,roles);
+  if(!profile){host.hidden=true;lead.textContent='';text.textContent='';return}
+  host.hidden=false;
+  lead.textContent='主體 '+profile.primaryHex+' 約 '+Math.round(profile.primaryShare*100)+'%';
+  const parts=[profile.chromaBand,profile.lightnessBand,profile.contrastBand,profile.focusBand];
+  if(profile.accentHex)parts.push('焦點色 '+profile.accentHex+' 約 '+Math.round(profile.accentShare*100)+'%');
+  text.textContent=parts.join(' · ');
+}
 function semanticPhotoSwatches(region=null){
   return semanticRolesFromClusters(fallbackPhotoClusters(region));
 }
@@ -3615,7 +3678,10 @@ function fallbackPhotoPalette(region=null){
   return fallbackPhotoClusters(region).map(x=>x.hex);
 }
 function extractPhotoPalette(region=null){
-  renderPhotoPalette(semanticPhotoSwatches(region));
+  const clusters=fallbackPhotoClusters(region);
+  const roles=semanticRolesFromClusters(clusters);
+  renderPhotoPalette(roles);
+  renderPhotoInsight(clusters,roles);
 }
 function setPhotoMode(next){
   photoMode=next==='region'?'region':'point';
