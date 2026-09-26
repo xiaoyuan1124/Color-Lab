@@ -3086,27 +3086,53 @@ function orderedPaletteScore(colors){
     igPatternAffinity(colors)*.9-
     duplicatePenalty;
 }
+function fastSingleColorTrios(seedHex,style=mode){
+  const out=[];
+  const fallback=derive(seedHex,style);
+  out.push([seedHex,fallback.structure,fallback.accent]);
+
+  const refs=[...(window.FASHION_PALETTES||[])]
+    .sort((a,b)=>(b.confidence||.7)-(a.confidence||.7))
+    .slice(0,12);
+  for(const ref of refs){
+    out.push([
+      seedHex,
+      transferFashionColor(seedHex,ref.colors[0],ref.colors[1]),
+      transferFashionColor(seedHex,ref.colors[0],ref.colors[2])
+    ]);
+  }
+
+  const patterns=[...(window.IG_STYLE_PATTERNS||[])]
+    .sort((a,b)=>(b.confidence||.7)-(a.confidence||.7))
+    .slice(0,8);
+  for(const pattern of patterns)out.push(igPatternExpected(pattern,seedHex));
+
+  const simple=candidateColors([seedHex],style).slice(0,7);
+  for(const structure of simple.slice(0,3)){
+    for(const accent of simple.slice(2,7)){
+      if(structure!==accent)out.push([seedHex,structure,accent]);
+    }
+  }
+  return out;
+}
 function completeCombo(inputs,style=mode){
   const chosen=inputs.map(x=>x.toUpperCase()).slice(0,3);
   if(chosen.length===3)return orderedPalette(chosen);
 
-  const pool=intelligentPool(chosen,style);
   let best=null,bestScore=-Infinity;
 
-  if(chosen.length===2){
+  if(chosen.length===1){
+    for(const raw of fastSingleColorTrios(chosen[0],style)){
+      const trio=qualityRefineGenerated(raw,1);
+      const sc=orderedPaletteScore(trio);
+      if(sc>bestScore){bestScore=sc;best=orderedPalette(trio)}
+    }
+  }else if(chosen.length===2){
+    const pool=intelligentPool(chosen,style);
     for(const x of pool){
       const trio=qualityRefineGenerated([chosen[0],chosen[1],x],2);
       const sc=orderedPaletteScore(trio);
       if(sc>bestScore){bestScore=sc;best=orderedPalette(trio)}
-    }
-  }else if(chosen.length===1){
-    for(let i=0;i<pool.length;i++){
-      for(let j=0;j<pool.length;j++){
-        if(i===j)continue;
-        const trio=qualityRefineGenerated([chosen[0],pool[i],pool[j]],1);
-        const sc=orderedPaletteScore(trio);
-        if(sc>bestScore){bestScore=sc;best=orderedPalette(trio)}
-      }
     }
   }
 
