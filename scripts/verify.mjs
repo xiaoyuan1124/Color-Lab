@@ -142,7 +142,7 @@ for(const fn of ['fashionAffinity','fashionTransferPool','fashionReferenceCombos
 }
 pass('fashion recommendation functions present');
 
-if(!html.includes("Fashion Reference Library")) fail('fashion recommendation description missing');
+if(!html.includes("Fashion Library")) fail('fashion recommendation description missing');
 else pass('fashion recommendation UI description');
 
 
