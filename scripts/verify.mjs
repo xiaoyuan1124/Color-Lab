@@ -279,9 +279,9 @@ if(!html.includes('function fastSingleColorTrios(')){
   fail('V1.7 compact single-color search missing');
 }else pass('V1.7 compact single-color search');
 
-const completeStart=html.indexOf('function completeCombo(inputs,style=mode){');
-const completeEnd=html.indexOf('function syncEditor()',completeStart);
-const completeBody=completeStart>=0&&completeEnd>completeStart?html.slice(completeStart,completeEnd):'';
+const perfCompleteStart=html.indexOf('function completeCombo(inputs,style=mode){');
+const perfCompleteEnd=html.indexOf('function syncEditor()',perfCompleteStart);
+const completeBody=perfCompleteStart>=0&&perfCompleteEnd>perfCompleteStart?html.slice(perfCompleteStart,perfCompleteEnd):'';
 if(completeBody.includes('for(let i=0;i<pool.length;i++){')&&completeBody.includes('for(let j=0;j<pool.length;j++){')){
   fail('quadratic single-color search returned');
 }else pass('single-color startup avoids quadratic pool search');
