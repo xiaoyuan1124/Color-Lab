@@ -565,7 +565,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.2 EXPERIENCE PASS */
+/* V1.2.1 EXPERIENCE PASS */
 .screen-tools{
   display:flex;
   gap:var(--space-2);
@@ -688,7 +688,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.2 POWER TOOLS */
+/* V1.2.1 POWER TOOLS */
 .lock-toggle{
   min-height:34px;
   margin-top:var(--space-2);
@@ -791,7 +791,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.2 STUDIO */
+/* V1.2.1 STUDIO */
 .seed-inline-actions{display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap}
 .picker-open{color:var(--olive-11)}
 .vision-lab{
@@ -906,13 +906,13 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 .saved-tag-btn{border:0;background:transparent;color:var(--olive-11);padding:0;font-size:var(--text-sm);font-weight:600}
 
 
-/* V1.2.1 STABILIZATION */
+/* V1.2.1.1 STABILIZATION */
 .tab-view.active{animation:tab-in .18s ease-out both}
 @keyframes tab-in{from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.tab-view.active{animation:none}}
 
 
-/* V1.2 COMPLETE WORKFLOW */
+/* V1.2.1 COMPLETE WORKFLOW */
 .drag-note{
   margin:-14px 0 var(--space-5);
   color:var(--text-3);
@@ -1072,7 +1072,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.2 VISUAL POLISH — presentation only */
+/* V1.2.1 VISUAL POLISH — presentation only */
 :root{
   --glass:rgba(250,248,244,.82);
   --glass-strong:rgba(255,253,249,.92);
@@ -1576,7 +1576,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V1.2</div>
+    <div class="version">V1.2.1</div>
   </div>
 
   <main class="app-main">
@@ -1584,7 +1584,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
       <header class="screen-head">
         <div class="eyebrow">COMPOSE</div>
         <h1>從顏色開始</h1>
-        <p>選 1 至 3 個顏色 系統補滿三色</p>
+        <p>Color 1 是主體 系統只補上你還沒選的顏色</p>
         <div class="screen-tools" aria-label="編輯工具">
           <button type="button" class="tool-btn" id="undoBtn" disabled>復原</button>
           <button type="button" class="tool-btn" id="redoBtn" disabled>重做</button>
@@ -1618,7 +1618,6 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
           <div class="recent-colors" id="recentColors"></div>
         </div>
 
-        <div class="modes" id="modes"></div>
         <button class="primary" id="generate">完成三色組合 <span class="arrow">→</span></button>
       </section>
 
@@ -1627,9 +1626,8 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
           <div>
             <div class="eyebrow">75 / 18 / 7</div>
             <h2>這組顏色的關係</h2>
-            <div class="section-desc">系統只安排角色 不改動你已選的顏色</div>
+            <div class="section-desc">Color 1 / 2 / 3 對應 75 / 18 / 7 不重新排序</div>
           </div>
-          <div class="mode-label" id="modeLabel"></div>
         </div>
 
         <div class="preview" id="preview"></div>
@@ -1814,7 +1812,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V1.2</div>
+  <div class="footer app-footer">Color Lab V1.2.1</div>
 </div>
 
 <nav class="bottom-nav" aria-label="主要功能" role="tablist">
@@ -2736,7 +2734,6 @@ function alternatives(role){const[h,s,l]=rgbToHsl(...hexToRgb(seed)),shifts=role
 function generate(scroll=false){palette=completeCombo(chosenColors(),mode);renderComboSlots();render();if(scroll)$('#result').scrollIntoView({behavior:'smooth',block:'start'})}
 function shuffle(role){if(role==='base'){const[h,s]=rgbToHsl(...hexToRgb(seed)),opts=[.89,.92,.95,.97];palette.base=hslHex(h,Math.min(.16,s*.22),opts[Math.floor(Math.random()*opts.length)])}else{const opts=alternatives(role);palette[role]=opts[Math.floor(Math.random()*Math.min(5,opts.length))]}render()}
 function render(){
-  $('#modeLabel').textContent=MODES[mode].label;
   const p=$('#palette');p.innerHTML='';
   const selectedSet=new Set(chosenColors());
   [['base','BASE','Calm',75],['structure','STRUCTURE','Order',18],['accent','ACCENT','Focus',7]].forEach(([k,label,meaning,pct])=>{
@@ -2770,7 +2767,7 @@ function renderIdeas(){
     box.appendChild(btn);
   })
 }
-function renderModes(){const el=$('#modes');el.innerHTML='';Object.entries(MODES).forEach(([k,m])=>{const b=document.createElement('button');b.className='chip'+(k===mode?' active':'');b.textContent=m.label;b.setAttribute('aria-pressed',k===mode?'true':'false');b.onclick=()=>{mode=k;renderModes();generate(false);pushHistory()};el.appendChild(b)})}
+function renderModes(){}
 function save(){
   const inputName=($('#comboName')?.value||'').trim();
   currentComboName=inputName||'未命名配色';
@@ -2809,12 +2806,12 @@ function openSavedActions(index){
 function closeSavedActions(){savedActionIndex=null;$('#savedActionBackdrop').hidden=true;document.body.style.overflow=''}
 function loadSaved(index){
   const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),x=data[index];if(!x)return;
-  seed=x.seed;mode=MODES[x.mode]?x.mode:'quiet';palette={...x.palette};
+  seed=x.seed;mode=MODES[x.mode]?x.mode:'quiet';
   selectedColors=x.selectedColors?[...x.selectedColors]:[x.seed,null,null];while(selectedColors.length<3)selectedColors.push(null);
   lockedSlots=Array.isArray(x.lockedSlots)?[...x.lockedSlots]:[false,false,false];while(lockedSlots.length<3)lockedSlots.push(false);
   activeSlot=Math.max(0,selectedColors.findIndex(Boolean));currentComboName=(x.name&&x.name.trim())||'未命名配色';
   $('#comboName').value=currentComboName==='未命名配色'?'':currentComboName;
-  syncEditor();renderModes();render();pushHistory();switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'});
+  syncEditor();renderModes();palette=completeCombo(chosenColors(),mode);render();pushHistory();switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function renderSaved(){
   const el=$('#saved'),data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
