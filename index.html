@@ -3080,6 +3080,21 @@ function candidateColors(inputs,style=mode){
 function orderedPalette(colors){
   return {base:colors[0],structure:colors[1],accent:colors[2]};
 }
+function quickPaletteScore(colors){
+  if(colors.length<3||colors.some(x=>!x))return-Infinity;
+  const [base,structure,accentHex]=colors;
+  const structureContrast=Math.min(1,contrastRatio(base,structure)/7);
+  const bs=perceptualDistance(base,structure);
+  const ba=perceptualDistance(base,accentHex);
+  const sa=perceptualDistance(structure,accentHex);
+  const accent=toOKLCH(accentHex);
+  const duplicatePenalty=(bs<.07?1.2:0)+(ba<.07?1.2:0)+(sa<.055?.8:0);
+  return structureContrast*3.2+
+    Math.min(.45,ba)*2.2+
+    Math.min(.45,sa)*1.2+
+    Math.min(.24,accent.c)*.9-
+    duplicatePenalty;
+}
 function paletteQualityProfile(colors){
   if(colors.length<3||colors.some(x=>!x))return null;
   const key=colors.map(x=>x.toUpperCase()).join('|');
@@ -3181,7 +3196,7 @@ function completeCombo(inputs,style=mode){
   if(chosen.length===1){
     for(const raw of fastSingleColorTrios(chosen[0],style)){
       const trio=qualityRefineGenerated(raw,1);
-      const sc=orderedPaletteScore(trio);
+      const sc=quickPaletteScore(trio);
       if(sc>bestScore){bestScore=sc;best=orderedPalette(trio)}
     }
   }else if(chosen.length===2){
