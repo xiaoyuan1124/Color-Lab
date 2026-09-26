@@ -38,6 +38,18 @@ button{cursor:pointer}
 .seed-kicker{font-size:12px;color:var(--muted);margin-bottom:8px}
 .hex{width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;padding:0 0 10px;font-size:28px;font-weight:600;letter-spacing:.02em;color:var(--ink);text-transform:uppercase;outline:none}
 .seed-note{font-size:13px;color:#8A857E;line-height:1.6;margin-top:10px}
+.source-actions{display:flex;align-items:center;gap:12px;margin:-4px 0 26px}
+.photo-trigger{border:0;background:transparent;color:var(--olive);padding:0;font-size:14px;font-weight:600}
+.photo-trigger::before{content:"＋";margin-right:7px;font-size:16px;font-weight:400}
+.photo-panel{display:none;margin:0 0 28px}
+.photo-panel.show{display:block}
+.photo-frame{position:relative;border-radius:20px;overflow:hidden;background:#DED9D1;line-height:0;touch-action:manipulation}
+.photo-frame canvas{display:block;width:100%;height:auto;max-height:420px;object-fit:contain;background:#DED9D1}
+.pick-marker{position:absolute;width:30px;height:30px;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.38),0 4px 14px rgba(0,0,0,.25);transform:translate(-50%,-50%);pointer-events:none;display:none}
+.pick-marker::after{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--picked,#68705E)}
+.photo-caption{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:12px;line-height:1.4}
+.photo-hint{font-size:12px;color:var(--muted)}
+.photo-change{border:0;background:transparent;padding:0;color:var(--ink);font-size:12px;font-weight:600}
 .modes{display:flex;gap:8px;overflow-x:auto;padding:1px 0 2px;scrollbar-width:none;margin:0 -2px 22px}
 .modes::-webkit-scrollbar{display:none}
 .chip{white-space:nowrap;border:1px solid var(--line);background:transparent;color:#625E58;border-radius:999px;padding:10px 14px;font-size:13px;font-weight:500}
@@ -94,7 +106,7 @@ button{cursor:pointer}
 </head>
 <body>
 <div class="app">
-  <div class="topline"><div class="brand">PERSONAL COLOR LAB</div><div class="version">V0.2</div></div>
+  <div class="topline"><div class="brand">PERSONAL COLOR LAB</div><div class="version">V0.3</div></div>
 
   <header class="hero">
     <h1>從一個顏色開始</h1>
@@ -108,6 +120,20 @@ button{cursor:pointer}
         <div class="seed-kicker">你的起始色</div>
         <input id="hex" class="hex" value="#68705E" maxlength="7" aria-label="HEX 顏色">
         <div class="seed-note">點左側色盤，或直接輸入 HEX。</div>
+      </div>
+    </div>
+    <div class="source-actions">
+      <button class="photo-trigger" id="photoTrigger" type="button">從照片取色</button>
+      <input id="photoInput" type="file" accept="image/*" hidden>
+    </div>
+    <div class="photo-panel" id="photoPanel">
+      <div class="photo-frame" id="photoFrame">
+        <canvas id="photoCanvas" aria-label="點照片選取顏色"></canvas>
+        <div class="pick-marker" id="pickMarker"></div>
+      </div>
+      <div class="photo-caption">
+        <div class="photo-hint">點照片上的顏色</div>
+        <button class="photo-change" id="photoChange" type="button">更換照片</button>
       </div>
     </div>
     <div class="modes" id="modes"></div>
@@ -150,7 +176,7 @@ button{cursor:pointer}
     <div id="saved"></div>
   </section>
 
-  <div class="footer">Color Lab V0.2<br>美，不是把漂亮的東西放在一起。美，是讓它們之間的關係成立。</div>
+  <div class="footer">Color Lab V0.3<br>美，不是把漂亮的東西放在一起。美，是讓它們之間的關係成立。</div>
 </div>
 <div id="toast" class="toast">已複製</div>
 
@@ -197,6 +223,55 @@ function save(){const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[
 function renderSaved(){const el=$('#saved'),data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');if(!data.length){el.innerHTML='<div class="saved-empty">還沒有收藏。先找到一組你真的想再用的顏色。</div>';return}el.innerHTML='<div class="saved-list"></div>';const list=el.firstChild;data.forEach((x,i)=>{const d=document.createElement('div');d.className='saved-item';d.innerHTML=`<div class="mini3"><i style="background:${x.palette.base}"></i><i style="background:${x.palette.structure}"></i><i style="background:${x.palette.accent}"></i></div><div class="saved-info"><b>${MODES[x.mode]?.label||x.mode}</b><div class="idea-meta">${x.seed}</div></div><button class="saved-copy" data-load="${i}">套用</button>`;list.appendChild(d)})}
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.remove('show'),1200)}
 function copy(v){navigator.clipboard?.writeText(v).then(()=>toast('已複製 '+v)).catch(()=>{})}
+
+const photoInput=$('#photoInput'),photoCanvas=$('#photoCanvas'),photoPanel=$('#photoPanel'),pickMarker=$('#pickMarker');
+const photoCtx=photoCanvas.getContext('2d',{willReadFrequently:true});
+let photoObjectURL=null;
+
+function openPhotoPicker(){photoInput.click()}
+function loadPhoto(file){
+  if(!file||!file.type.startsWith('image/'))return;
+  if(photoObjectURL)URL.revokeObjectURL(photoObjectURL);
+  photoObjectURL=URL.createObjectURL(file);
+  const img=new Image();
+  img.onload=()=>{
+    const maxSide=1600;
+    const scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
+    photoCanvas.width=Math.max(1,Math.round(img.naturalWidth*scale));
+    photoCanvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
+    photoCtx.clearRect(0,0,photoCanvas.width,photoCanvas.height);
+    photoCtx.drawImage(img,0,0,photoCanvas.width,photoCanvas.height);
+    photoPanel.classList.add('show');
+    pickMarker.style.display='none';
+    URL.revokeObjectURL(photoObjectURL);photoObjectURL=null;
+    toast('點照片選一個顏色');
+  };
+  img.onerror=()=>toast('照片讀取失敗');
+  img.src=photoObjectURL;
+}
+function pickFromPhoto(clientX,clientY){
+  if(!photoCanvas.width||!photoCanvas.height)return;
+  const r=photoCanvas.getBoundingClientRect();
+  const x=clamp((clientX-r.left)/r.width,0,.999999);
+  const y=clamp((clientY-r.top)/r.height,0,.999999);
+  const px=Math.floor(x*photoCanvas.width),py=Math.floor(y*photoCanvas.height);
+  const d=photoCtx.getImageData(px,py,1,1).data;
+  const picked=rgbToHex(d[0]/255,d[1]/255,d[2]/255);
+  seed=picked;
+  $('#color').value=picked;
+  $('#hex').value=picked;
+  pickMarker.style.left=(x*100)+'%';
+  pickMarker.style.top=(y*100)+'%';
+  pickMarker.style.setProperty('--picked',picked);
+  pickMarker.style.display='block';
+  generate(false);
+  toast('已取色 '+picked);
+}
+$('#photoTrigger').onclick=openPhotoPicker;
+$('#photoChange').onclick=openPhotoPicker;
+photoInput.addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(file)loadPhoto(file);e.target.value=''});
+photoCanvas.addEventListener('pointerdown',e=>pickFromPhoto(e.clientX,e.clientY));
+
 $('#color').addEventListener('input',e=>{seed=e.target.value.toUpperCase();$('#hex').value=seed;generate(false)});
 $('#hex').addEventListener('change',e=>{const h=normHex(e.target.value);if(h){seed=h;$('#color').value=h;$('#hex').value=h;generate(false)}else e.target.value=seed});
 $('#generate').onclick=()=>generate(true);
