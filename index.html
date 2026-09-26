@@ -92,7 +92,11 @@ button{cursor:pointer}
 .pct{font-size:23px;font-weight:650;letter-spacing:-.03em}
 .hex-mini{border:0;background:transparent;color:var(--muted);padding:0;font-size:13px;font-weight:500}
 .shuffle{border:0;background:transparent;color:#6E6963;font-size:13px;padding:10px 0 10px 14px}
-.save{margin-top:18px;width:100%;border:1px solid var(--ink);background:transparent;color:var(--ink);border-radius:14px;padding:14px 16px;font-size:14px;font-weight:600}
+.name-field{margin-top:22px}
+.name-label{font-size:11px;letter-spacing:.12em;color:#817C75;font-weight:700;margin-bottom:8px}
+.name-input{width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;padding:4px 0 11px;font-size:18px;font-weight:600;color:var(--ink);outline:none}
+.name-input::placeholder{color:#A59F97;font-weight:400}
+.save{margin-top:16px;width:100%;border:1px solid var(--ink);background:transparent;color:var(--ink);border-radius:14px;padding:14px 16px;font-size:14px;font-weight:600}
 .ideas-wrap{overflow:hidden;margin:0 -24px}
 .ideas{display:flex;gap:14px;overflow-x:auto;padding:2px 24px 8px;scroll-snap-type:x mandatory;scrollbar-width:none}
 .ideas::-webkit-scrollbar{display:none}
@@ -106,8 +110,11 @@ button{cursor:pointer}
 .saved-item:last-child{border-bottom:0}
 .mini3{display:grid;grid-template-columns:75fr 18fr 7fr;width:86px;height:48px;border-radius:13px;overflow:hidden;flex:none}
 .saved-info{min-width:0}
-.saved-info b{font-size:14px;font-weight:600}
-.saved-copy{margin-left:auto;border:0;background:transparent;color:var(--olive);font-size:13px;font-weight:600;padding:10px 0 10px 14px}
+.saved-info{flex:1;min-width:0}
+.saved-info b{font-size:14px;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.saved-actions{display:flex;align-items:center;gap:10px;margin-left:auto}
+.saved-rename,.saved-copy{border:0;background:transparent;color:var(--olive);font-size:13px;font-weight:600;padding:10px 0}
+.saved-rename{color:#7E7871}
 .footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--line);font-size:11px;line-height:1.7;color:#969089}
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translate(-50%,20px);background:#202220;color:#fff;padding:10px 14px;border-radius:999px;font-size:12px;opacity:0;pointer-events:none;transition:.22s ease}
 .toast.show{opacity:1;transform:translate(-50%,0)}
@@ -123,7 +130,7 @@ button{cursor:pointer}
 </head>
 <body>
 <div class="app">
-  <div class="topline"><div class="brand">PERSONAL COLOR LAB</div><div class="version">V0.4</div></div>
+  <div class="topline"><div class="brand">PERSONAL COLOR LAB</div><div class="version">V0.4.1</div></div>
 
   <header class="hero">
     <h1>從顏色開始</h1>
@@ -178,6 +185,10 @@ button{cursor:pointer}
 
     <div class="preview" id="preview"></div>
     <div class="relation-list" id="palette"></div>
+    <div class="name-field">
+      <div class="name-label">配色名稱</div>
+      <input id="comboName" class="name-input" maxlength="24" placeholder="例如 秋日下午">
+    </div>
     <button class="save" id="save">♡ 收藏這組配色</button>
   </section>
 
@@ -202,7 +213,7 @@ button{cursor:pointer}
     <div id="saved"></div>
   </section>
 
-  <div class="footer">Color Lab V0.4<br>美，不是把漂亮的東西放在一起。美，是讓它們之間的關係成立。</div>
+  <div class="footer">Color Lab V0.4.1<br>美，不是把漂亮的東西放在一起。美，是讓它們之間的關係成立。</div>
 </div>
 <div id="toast" class="toast">已複製</div>
 
@@ -216,7 +227,7 @@ const MODES={
   bold:{label:'大膽',baseL:.96,structureL:.16,accentShift:180,sat:.62}
 };
 let mode='quiet',seed='#68705E',palette={base:'#F2EDE4',structure:'#292B29',accent:'#68705E'};
-let selectedColors=['#68705E',null,null],activeSlot=0;
+let selectedColors=['#68705E',null,null],activeSlot=0,currentComboName='';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 function clamp(v,a=0,b=1){return Math.min(b,Math.max(a,v))}
 function hexToRgb(hex){hex=hex.replace('#','');if(hex.length===3)hex=hex.split('').map(x=>x+x).join('');return[0,2,4].map(i=>parseInt(hex.slice(i,i+2),16)/255)}
@@ -386,8 +397,38 @@ function renderIdeas(){const box=$('#ideas');box.innerHTML='';
   }
   Object.entries(MODES).forEach(([key,m])=>{const p=completeCombo(chosenColors(),key),btn=document.createElement('button');btn.className='idea';btn.innerHTML=`<div class="idea-top"><i style="background:${p.base}"></i><i style="background:${p.structure}"></i><i style="background:${p.accent}"></i></div><div class="idea-name">${m.label}</div><div class="idea-meta">${p.base} · ${p.structure} · ${p.accent}</div>`;btn.onclick=()=>{mode=key;palette=p;renderModes();render();$('#result').scrollIntoView({behavior:'smooth',block:'start'})};box.appendChild(btn)})}
 function renderModes(){const el=$('#modes');el.innerHTML='';Object.entries(MODES).forEach(([k,m])=>{const b=document.createElement('button');b.className='chip'+(k===mode?' active':'');b.textContent=m.label;b.onclick=()=>{mode=k;renderModes();generate(false)};el.appendChild(b)})}
-function save(){const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');data.unshift({seed,selectedColors:[...selectedColors],mode,palette:{...palette},date:Date.now()});localStorage.setItem('colorlab.saved',JSON.stringify(data.slice(0,30)));renderSaved();toast('已收藏')}
-function renderSaved(){const el=$('#saved'),data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');if(!data.length){el.innerHTML='<div class="saved-empty">還沒有收藏。先找到一組你真的想再用的顏色。</div>';return}el.innerHTML='<div class="saved-list"></div>';const list=el.firstChild;data.forEach((x,i)=>{const d=document.createElement('div');d.className='saved-item';d.innerHTML=`<div class="mini3"><i style="background:${x.palette.base}"></i><i style="background:${x.palette.structure}"></i><i style="background:${x.palette.accent}"></i></div><div class="saved-info"><b>${MODES[x.mode]?.label||x.mode}</b><div class="idea-meta">${x.seed}</div></div><button class="saved-copy" data-load="${i}">套用</button>`;list.appendChild(d)})}
+function save(){
+  const inputName=($('#comboName')?.value||'').trim();
+  currentComboName=inputName||'未命名配色';
+  const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
+  data.unshift({name:currentComboName,seed,selectedColors:[...selectedColors],mode,palette:{...palette},date:Date.now()});
+  localStorage.setItem('colorlab.saved',JSON.stringify(data.slice(0,30)));
+  renderSaved();
+  toast('已收藏 '+currentComboName);
+}
+function renderSaved(){
+  const el=$('#saved'),data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
+  if(!data.length){el.innerHTML='<div class="saved-empty">還沒有收藏。先找到一組你真的想再用的顏色。</div>';return}
+  el.innerHTML='<div class="saved-list"></div>';
+  const list=el.firstChild;
+  data.forEach((x,i)=>{
+    const d=document.createElement('div');d.className='saved-item';
+    const title=(x.name&&x.name.trim())||'未命名配色';
+    d.innerHTML=`<div class="mini3"><i style="background:${x.palette.base}"></i><i style="background:${x.palette.structure}"></i><i style="background:${x.palette.accent}"></i></div><div class="saved-info"><b>${title}</b><div class="idea-meta">${x.seed}</div></div><div class="saved-actions"><button class="saved-rename" data-rename="${i}">改名</button><button class="saved-copy" data-load="${i}">套用</button></div>`;
+    list.appendChild(d);
+  })
+}
+function renameSaved(index){
+  const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
+  const item=data[index]; if(!item)return;
+  const oldName=(item.name&&item.name.trim())||'未命名配色';
+  const next=prompt('配色名稱',oldName);
+  if(next===null)return;
+  item.name=next.trim()||'未命名配色';
+  localStorage.setItem('colorlab.saved',JSON.stringify(data));
+  renderSaved();
+  toast('已改名');
+}
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.remove('show'),1200)}
 function copy(v){navigator.clipboard?.writeText(v).then(()=>toast('已複製 '+v)).catch(()=>{})}
 
@@ -507,9 +548,10 @@ document.addEventListener('click',e=>{
   const sl=e.target.closest('[data-slot]');if(sl){setActiveSlot(+sl.dataset.slot,!selectedColors[+sl.dataset.slot]);return}
   const c=e.target.closest('[data-copy]');if(c)copy(c.dataset.copy);
   const s=e.target.closest('[data-shuffle]');if(s)shuffle(s.dataset.shuffle);
-  const l=e.target.closest('[data-load]');if(l){const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),x=data[+l.dataset.load];if(x){seed=x.seed;mode=x.mode;palette={...x.palette};selectedColors=x.selectedColors?[...x.selectedColors]:[x.seed,null,null];while(selectedColors.length<3)selectedColors.push(null);activeSlot=Math.max(0,selectedColors.findIndex(Boolean));syncEditor();renderModes();render();$('#result').scrollIntoView({behavior:'smooth',block:'start'})}}
+  const rn=e.target.closest('[data-rename]');if(rn){renameSaved(+rn.dataset.rename);return}
+  const l=e.target.closest('[data-load]');if(l){const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),x=data[+l.dataset.load];if(x){seed=x.seed;mode=x.mode;palette={...x.palette};selectedColors=x.selectedColors?[...x.selectedColors]:[x.seed,null,null];while(selectedColors.length<3)selectedColors.push(null);activeSlot=Math.max(0,selectedColors.findIndex(Boolean));currentComboName=(x.name&&x.name.trim())||'未命名配色';$('#comboName').value=currentComboName==='未命名配色'?'':currentComboName;syncEditor();renderModes();render();$('#result').scrollIntoView({behavior:'smooth',block:'start'})}}
 });
-renderModes();renderComboSlots();generate(false);
+renderModes();renderComboSlots();generate(false);$('#comboName').value='';
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body>
