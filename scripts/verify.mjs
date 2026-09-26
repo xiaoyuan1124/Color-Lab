@@ -316,5 +316,23 @@ if(!html.includes("const clusters=fallbackPhotoClusters(region);")||!html.includ
   fail('photo extraction does not reuse one cluster analysis pass');
 }else pass('photo extraction reuses cluster analysis');
 
+
+for(const fn of ['photoDominanceScore','photoCompositionProfile','detectPhotoColorCapability','updatePhotoColorSpaceNote']){
+  if(!html.includes('function '+fn+'(')) fail('V1.9 photo analysis function missing: '+fn);
+}
+pass('V1.9 edge-aware photo analysis functions present');
+
+if(!html.includes('edgeShare:counts[i]?edgeCounts[i]/counts[i]:0')){
+  fail('photo clusters do not track edge share');
+}else pass('photo clusters track edge share');
+
+if(!html.includes("邊緣色 '+profile.edgeHex+' 可能是背景")){
+  fail('photo background-candidate explanation missing');
+}else pass('photo background-candidate explanation');
+
+if(!html.includes("P3 顯示可用 · 分析統一為 sRGB")){
+  fail('photo color-space disclosure missing');
+}else pass('photo color-space disclosure');
+
 if(process.exitCode) process.exit(process.exitCode);
 console.log('Color Lab V1.9 verification complete.');
