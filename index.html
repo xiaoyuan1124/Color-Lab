@@ -2953,7 +2953,7 @@ function selectDiverseRecommendations(candidates,limit=5){
       const item=remaining[i];
       const diversity=out.length?Math.min(...out.map(x=>recommendationDistance(item,x))):1;
       const repeatedLabel=out.some(x=>x.meta.label===item.meta.label);
-      const utility=item.score+diversity*.72-(repeatedLabel?.18:0);
+      const utility=item.score+diversity*.72-(repeatedLabel ? .18 : 0);
       if(utility>bestUtility){bestUtility=utility;bestIndex=i}
     }
     out.push(remaining.splice(bestIndex,1)[0]);
