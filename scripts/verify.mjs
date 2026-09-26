@@ -71,7 +71,7 @@ for(const src of localScripts){
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v14")) fail('service worker cache version is not V1.4');
+if(!sw.includes("color-lab-v15")) fail('service worker cache version is not V1.5');
 else pass('service worker cache version');
 
 if(manifest.display!=='standalone') fail('manifest display must be standalone');
@@ -161,5 +161,31 @@ pass('IG style recommendation functions present');
 if(!html.includes("IG 穿搭關係")) fail('IG styling recommendation description missing');
 else pass('IG styling recommendation UI description');
 
+
+for(const fn of ['gamutMapOKLCH','cohesionPass','qualityRefineGenerated','qualityMetrics','semanticPhotoSwatches','fallbackPhotoClusters']){
+  if(!html.includes('function '+fn+'(')) fail('V1.5 quality function missing: '+fn);
+}
+pass('V1.5 quality engine functions present');
+
+if(!html.includes('Fashion × IG × Cohesion × 色域保護')) fail('V1.5 intelligence description missing');
+else pass('V1.5 intelligence description');
+
+if(!html.includes('主體／鮮明／柔和／深色／淺色')) fail('semantic photo swatch UI missing');
+else pass('semantic photo swatch UI');
+
+if(!html.includes("if(chosen.length===3)return orderedPalette(chosen);")){
+  fail('V1.5 must preserve all three user-selected colors');
+}else pass('three user-selected colors remain untouched');
+
+const recommendStart=html.indexOf('function recommendationCombos(){');
+const recommendEnd=html.indexOf('function applyRecommendation',recommendStart);
+const recommendBlock=recommendStart>=0&&recommendEnd>recommendStart?html.slice(recommendStart,recommendEnd):'';
+if(!recommendBlock.includes('qualityRefineGenerated')) fail('recommendations bypass quality refinement');
+else pass('recommendations use quality refinement');
+
+if(!html.includes("added:inputs.length===1?[refined[1],refined[2]]:[refined[2]]")){
+  fail('refined recommendation colors are not applied');
+}else pass('recommendation preview and applied colors aligned');
+
 if(process.exitCode) process.exit(process.exitCode);
-console.log('Color Lab V1.4 verification complete.');
+console.log('Color Lab V1.5 verification complete.');
