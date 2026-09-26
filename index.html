@@ -565,7 +565,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.7 EXPERIENCE PASS */
+/* V1.8 EXPERIENCE PASS */
 .screen-tools{
   display:flex;
   gap:var(--space-2);
@@ -688,7 +688,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.7 POWER TOOLS */
+/* V1.8 POWER TOOLS */
 .lock-toggle{
   min-height:34px;
   margin-top:var(--space-2);
@@ -791,7 +791,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.7 STUDIO */
+/* V1.8 STUDIO */
 .seed-inline-actions{display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap}
 .picker-open{color:var(--olive-11)}
 .vision-lab{
@@ -906,13 +906,13 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 .saved-tag-btn{border:0;background:transparent;color:var(--olive-11);padding:0;font-size:var(--text-sm);font-weight:600}
 
 
-/* V1.7.1 STABILIZATION */
+/* V1.8.1 STABILIZATION */
 .tab-view.active{animation:tab-in .18s ease-out both}
 @keyframes tab-in{from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.tab-view.active{animation:none}}
 
 
-/* V1.7 COMPLETE WORKFLOW */
+/* V1.8 COMPLETE WORKFLOW */
 .drag-note{
   margin:-14px 0 var(--space-5);
   color:var(--text-3);
@@ -1072,7 +1072,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.7 VISUAL POLISH — presentation only */
+/* V1.8 VISUAL POLISH — presentation only */
 :root{
   --glass:rgba(250,248,244,.82);
   --glass-strong:rgba(255,253,249,.92);
@@ -1571,7 +1571,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.7 COLOR QUALITY ENGINE */
+/* V1.8 COLOR QUALITY ENGINE */
 .photo-swatches{align-items:flex-start;padding-bottom:6px}
 .photo-swatch-card{
   flex:0 0 76px;
@@ -1608,7 +1608,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.7 PERFORMANCE */
+/* V1.8 PERFORMANCE */
 #result .section,
 #inspire .section,
 #library .section{
@@ -1623,7 +1623,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V1.7</div>
+    <div class="version">V1.8</div>
   </div>
 
   <main class="app-main">
@@ -1859,7 +1859,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V1.7</div>
+  <div class="footer app-footer">Color Lab V1.8</div>
 </div>
 
 <nav class="bottom-nav" aria-label="主要功能" role="tablist">
@@ -1985,6 +1985,7 @@ let igRelationCache=null;
 const lazyScriptPromises=new Map();
 const oklchCache=new Map();
 const luminanceCache=new Map();
+const qualityScoreCache=new Map();
 let secondaryRenderToken=0;
 let sortableLoadToken=0;
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -2932,6 +2933,33 @@ function classifyCandidate(hex,inputs){
   if(o.l<.38)return{label:'結構',sub:'適合建立深色重量'};
   return{label:'平衡',sub:'整體關係穩定'};
 }
+function recommendationDistance(a,b){
+  const d1=perceptualDistance(a.palette.structure,b.palette.structure);
+  const d2=perceptualDistance(a.palette.accent,b.palette.accent);
+  const h1=hueDistance(toOKLCH(a.palette.accent).h,toOKLCH(b.palette.accent).h)/180;
+  return clamp(d1*.9+d2*1.15+h1*.08,0,1);
+}
+function selectDiverseRecommendations(candidates,limit=5){
+  const unique=[],signatures=new Set();
+  for(const item of candidates){
+    const signature=[item.palette.base,item.palette.structure,item.palette.accent].join('|');
+    if(signatures.has(signature))continue;
+    signatures.add(signature);unique.push(item);
+  }
+  const remaining=[...unique],out=[];
+  while(remaining.length&&out.length<limit){
+    let bestIndex=0,bestUtility=-Infinity;
+    for(let i=0;i<remaining.length;i++){
+      const item=remaining[i];
+      const diversity=out.length?Math.min(...out.map(x=>recommendationDistance(item,x))):1;
+      const repeatedLabel=out.some(x=>x.meta.label===item.meta.label);
+      const utility=item.score+diversity*.72-(repeatedLabel?.18:0);
+      if(utility>bestUtility){bestUtility=utility;bestIndex=i}
+    }
+    out.push(remaining.splice(bestIndex,1)[0]);
+  }
+  return out;
+}
 function recommendationCombos(){
   const inputs=chosenColors();
   if(inputs.length>=3)return[];
@@ -2974,22 +3002,7 @@ function recommendationCombos(){
     }
   }
 
-  candidates.sort((a,b)=>b.score-a.score);
-  const out=[],labels=new Set(),signatures=new Set();
-  for(const item of candidates){
-    const signature=[item.palette.base,item.palette.structure,item.palette.accent].join('|');
-    if(signatures.has(signature))continue;
-    const type=item.meta.label;
-    if(labels.has(type)&&out.length<4)continue;
-    const tooClose=out.some(o=>{
-      const d1=perceptualDistance(o.palette.structure,item.palette.structure);
-      const d2=perceptualDistance(o.palette.accent,item.palette.accent);
-      return d1<.055&&d2<.055;
-    });
-    if(tooClose)continue;
-    out.push(item);labels.add(type);signatures.add(signature);
-    if(out.length>=5)break;
-  }
+  const out=selectDiverseRecommendations(candidates,5);
   recommendationCacheKey=cacheKey;
   recommendationCacheValue=out;
   return out;
@@ -3067,24 +3080,67 @@ function candidateColors(inputs,style=mode){
 function orderedPalette(colors){
   return {base:colors[0],structure:colors[1],accent:colors[2]};
 }
-function orderedPaletteScore(colors){
-  if(colors.length<3||colors.some(x=>!x))return-Infinity;
-  const p=orderedPalette(colors);
-  const structureContrast=Math.min(1,contrastRatio(p.base,p.structure)/7);
-  const accentBase=perceptualDistance(p.base,p.accent);
-  const accentStructure=perceptualDistance(p.structure,p.accent);
-  const accent=toOKLCH(p.accent);
+function paletteQualityProfile(colors){
+  if(colors.length<3||colors.some(x=>!x))return null;
+  const key=colors.map(x=>x.toUpperCase()).join('|');
+  const cached=qualityScoreCache.get(key);
+  if(cached)return cached;
+
+  const [base,structure,accentHex]=colors;
+  const baseO=toOKLCH(base),structureO=toOKLCH(structure),accent=toOKLCH(accentHex);
+  const bs=perceptualDistance(base,structure);
+  const ba=perceptualDistance(base,accentHex);
+  const sa=perceptualDistance(structure,accentHex);
+  const minAccentDistance=Math.min(ba,sa);
+  const averageDistance=(bs+ba+sa)/3;
+  const structureRatio=contrastRatio(base,structure);
+
+  const hierarchy=clamp((structureRatio-1)/4.5,0,1);
+  const distinctiveness=clamp(minAccentDistance/.18,0,1);
+  const enoughSeparation=clamp(averageDistance/.11,0,1);
+  const notScattered=1-clamp((averageDistance-.46)/.28,0,1);
+  const cohesion=clamp(enoughSeparation*notScattered,0,1);
+
+  const neutralChroma=(baseO.c+structureO.c)/2;
+  const accentLift=accent.c/(neutralChroma+.035);
+  const focus=clamp(accentLift/2,0,1)*.55+distinctiveness*.45;
+
+  const lightnessUsability=
+    1-clamp((Math.abs(structureO.l-.5)-.43)/.12,0,1);
+  const chromaUsability=
+    1-clamp((accent.c-.30)/.16,0,1);
+  const practicality=clamp(lightnessUsability*.55+chromaUsability*.45,0,1);
+
+  const fashion=fashionAffinity(colors);
+  const ig=igPatternAffinity(colors);
+  const reference=Math.max(fashion,ig*.96);
+  const accessibility=clamp((structureRatio-2.4)/3.1,0,1);
+  const gamut=qualityMetrics(colors).gamut?1:.65;
+
   const duplicatePenalty=
-    (perceptualDistance(p.base,p.structure)<.07?1.2:0)+
-    (accentBase<.07?1.2:0)+
-    (accentStructure<.055?.8:0);
-  return structureContrast*3.2+
-    Math.min(.45,accentBase)*2.2+
-    Math.min(.45,accentStructure)*1.2+
-    Math.min(.24,accent.c)*.9+
-    fashionAffinity(colors)*1.05+
-    igPatternAffinity(colors)*.9-
+    (bs<.07?1.15:0)+
+    (ba<.07?1.15:0)+
+    (sa<.055?.8:0);
+
+  const composite=
+    hierarchy*1.65+
+    distinctiveness*1.35+
+    cohesion*1.1+
+    focus*.8+
+    practicality*.55+
+    reference*1.0+
+    accessibility*.55+
+    gamut*.25-
     duplicatePenalty;
+
+  return boundedCacheSet(qualityScoreCache,key,Object.freeze({
+    hierarchy,distinctiveness,cohesion,focus,practicality,
+    reference,accessibility,gamut,duplicatePenalty,composite
+  }),1024);
+}
+function orderedPaletteScore(colors){
+  const q=paletteQualityProfile(colors);
+  return q?q.composite:-Infinity;
 }
 function fastSingleColorTrios(seedHex,style=mode){
   const out=[];
