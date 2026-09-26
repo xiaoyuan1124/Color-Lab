@@ -49,7 +49,7 @@ const functionNames=[
   'isLinearSrgbInGamut','gamutMapOKLCH','hueDistance','signedHueDelta',
   'hueToward','contrastRatio','ensureStructureContrast','cohesionPass','qualityRefineGenerated',
   'qualityMetrics','relationVector','relationVectorDistance',
-  'semanticRolesFromClusters'
+  'semanticRolesFromClusters','photoCompositionProfile'
 ];
 
 const sandbox={console};
@@ -172,6 +172,8 @@ const greyClusters=[
 ];
 const greyRoles=A.semanticRolesFromClusters(greyClusters);
 check('grey photo does not invent vivid role',!greyRoles.some(x=>x.label==='鮮明'),JSON.stringify(greyRoles));
+const greyProfile=A.photoCompositionProfile(greyClusters,greyRoles);
+check('grey photo profile is low chroma',greyProfile?.chromaBand==='低彩度',JSON.stringify(greyProfile));
 
 const lightClusters=[
   {hex:'#F5F0E8',proportion:.45,l:.96,c:.015,h:80},
@@ -188,6 +190,8 @@ const darkClusters=[
 ];
 const darkRoles=A.semanticRolesFromClusters(darkClusters);
 check('dark photo does not invent light role',!darkRoles.some(x=>x.label==='淺色'),JSON.stringify(darkRoles));
+const darkProfile=A.photoCompositionProfile(darkClusters,darkRoles);
+check('dark photo profile is dark',darkProfile?.lightnessBand==='偏深',JSON.stringify(darkProfile));
 
 const vividClusters=[
   {hex:'#F8F8F8',proportion:.60,l:.98,c:.004,h:0},
@@ -195,6 +199,8 @@ const vividClusters=[
 ];
 const vividRoles=A.semanticRolesFromClusters(vividClusters);
 check('white background can yield to meaningful subject',vividRoles[0]?.hex==='#D43C5A',JSON.stringify(vividRoles));
+const vividProfile=A.photoCompositionProfile(vividClusters,vividRoles);
+check('photo profile exposes primary share',Number.isFinite(vividProfile?.primaryShare)&&vividProfile.primaryShare>0,JSON.stringify(vividProfile));
 check('vivid subject represented semantically',vividRoles.some(x=>x.hex==='#D43C5A'&&['主體','鮮明'].includes(x.label)),JSON.stringify(vividRoles));
 
 const mixedClusters=[
