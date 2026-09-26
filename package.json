@@ -1,0 +1,16 @@
+{
+  "name": "color-lab-quality",
+  "private": true,
+  "version": "1.6.0",
+  "type": "module",
+  "scripts": {
+    "test:verify": "node scripts/verify.mjs",
+    "test:torture": "node scripts/torture.mjs",
+    "test:property": "node scripts/property.mjs",
+    "audit:lighthouse": "lhci autorun --config=lighthouserc.cjs"
+  },
+  "devDependencies": {
+    "@lhci/cli": "0.15.1",
+    "fast-check": "4.10.2"
+  }
+}
