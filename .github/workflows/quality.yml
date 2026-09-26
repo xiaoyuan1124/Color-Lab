@@ -26,6 +26,9 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Lighthouse CI
         run: npm run audit:lighthouse
+      - name: Summarize Lighthouse
+        if: always()
+        run: node scripts/lighthouse-summary.mjs
       - name: Upload Lighthouse reports
         if: always()
         uses: actions/upload-artifact@v4
