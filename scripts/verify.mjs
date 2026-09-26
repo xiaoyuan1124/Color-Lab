@@ -14,6 +14,29 @@ else {
   catch(e){ fail('JavaScript syntax: '+e.message); }
 }
 
+
+const forbiddenPatterns=[
+  {re:/\$\([^\n;]+\)\.forEach\(/g,label:'single-element helper $() used with forEach'},
+  {re:/\$\([^\n;]+\)\.map\(/g,label:'single-element helper $() used with map'},
+  {re:/\$\([^\n;]+\)\.filter\(/g,label:'single-element helper $() used with filter'}
+];
+for(const item of forbiddenPatterns){
+  if(item.re.test(html)) fail(item.label);
+}
+pass('selector helper usage');
+
+const duplicateIdMatches=[...html.matchAll(/id="([^"]+)"/g)].map(m=>m[1]);
+const idCounts=new Map();
+for(const id of duplicateIdMatches) idCounts.set(id,(idCounts.get(id)||0)+1);
+for(const [id,count] of idCounts){
+  if(count>1) fail('duplicate id '+id+' count='+count);
+}
+pass('global ID uniqueness');
+
+if(!html.includes("data-view=\"compose\"")||!html.includes("data-view=\"inspire\"")||!html.includes("data-view=\"photo\"")||!html.includes("data-view=\"library\"")){
+  fail('one or more app tabs missing');
+}else pass('four app views present');
+
 const requiredIds=[
   'color','hex','comboSlots','generate','palette','relationshipExplain','visionPreview','uiPreview',
   'recommendations','ideas','photoTrigger','photoCanvas','regionBox','photoSwatches','saved',
