@@ -1239,10 +1239,16 @@ async function exportPaletteImage(){
   }
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
-function exportBackup(){
+async function exportBackup(){
   const payload={schema:'color-lab-backup-v1',exportedAt:new Date().toISOString(),saved:JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),recent:recentColors,draft:snapshotState(),compareA,compareB};
-  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200);toast('已匯出備份');
+  const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const file=new File([blob],name,{type:'application/json'});
+  if(navigator.canShare?.({files:[file]})&&navigator.share){
+    try{await navigator.share({files:[file],title:'Color Lab 備份'});return}catch(e){if(e?.name==='AbortError')return}
+  }
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200);toast('已匯出備份');
 }
 function importBackupFile(file){
   if(!file)return;
@@ -1256,7 +1262,7 @@ function importBackupFile(file){
       const seen=new Set(current.map(sig)),merged=[...current];
       data.saved.forEach(x=>{if(x&&x.palette?.base&&x.palette?.structure&&x.palette?.accent&&!seen.has(sig(x))){merged.push(x);seen.add(sig(x))}});
       localStorage.setItem('colorlab.saved',JSON.stringify(merged.slice(0,300)));
-      if(Array.isArray(data.recent)){recentColors=[...new Set([...recentColors,...data.recent.filter(normHex)])].slice(0,20);localStorage.setItem('colorlab.recent',JSON.stringify(recentColors))}
+      if(Array.isArray(data.recent)){const imported=data.recent.filter(x=>typeof x==='string'&&normHex(x)).map(x=>normHex(x));recentColors=[...new Set([...recentColors,...imported])].slice(0,20);localStorage.setItem('colorlab.recent',JSON.stringify(recentColors))}
       if(data.compareA){compareA=data.compareA;localStorage.setItem('colorlab.compareA',JSON.stringify(compareA))}
       if(data.compareB){compareB=data.compareB;localStorage.setItem('colorlab.compareB',JSON.stringify(compareB))}
       renderSaved();renderRecentColors();renderCompare();toast('備份已匯入');
