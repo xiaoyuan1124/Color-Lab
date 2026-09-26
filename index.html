@@ -1482,12 +1482,25 @@ async function restoreResilienceIfNeeded(){
     db.close();
     if(!snap||!Array.isArray(snap.saved)||!snap.saved.length)return;
     localStorage.setItem('colorlab.saved',JSON.stringify(snap.saved));
-    if(Array.isArray(snap.recent))localStorage.setItem('colorlab.recent',JSON.stringify(snap.recent));
-    if(snap.draft)localStorage.setItem('colorlab.draft',JSON.stringify(snap.draft));
-    if(snap.compareA)localStorage.setItem('colorlab.compareA',JSON.stringify(snap.compareA));
-    if(snap.compareB)localStorage.setItem('colorlab.compareB',JSON.stringify(snap.compareB));
-    renderSaved();
-    toast('已從本機備份恢復收藏');
+    if(Array.isArray(snap.recent)){
+      recentColors=snap.recent.filter(x=>typeof x==='string'&&normHex(x)).map(x=>normHex(x));
+      localStorage.setItem('colorlab.recent',JSON.stringify(recentColors));
+    }
+    if(snap.compareA){compareA=snap.compareA;localStorage.setItem('colorlab.compareA',JSON.stringify(compareA))}
+    if(snap.compareB){compareB=snap.compareB;localStorage.setItem('colorlab.compareB',JSON.stringify(compareB))}
+    if(snap.draft&&Array.isArray(snap.draft.selectedColors)){
+      localStorage.setItem('colorlab.draft',JSON.stringify(snap.draft));
+      const d=snap.draft;
+      selectedColors=d.selectedColors.slice(0,3);while(selectedColors.length<3)selectedColors.push(null);
+      lockedSlots=Array.isArray(d.lockedSlots)?d.lockedSlots.slice(0,3).map(Boolean):[false,false,false];while(lockedSlots.length<3)lockedSlots.push(false);
+      activeSlot=Math.max(0,Math.min(2,Number.isInteger(d.activeSlot)?d.activeSlot:0));
+      if(MODES[d.mode])mode=d.mode;
+      currentComboName=d.comboName||'';
+      seed=selectedColors[activeSlot]||selectedColors.find(Boolean)||'#68705E';
+      $('#comboName').value=currentComboName;syncEditor();renderModes();generate(false);updateLockToggle();updatePhotoTarget();
+    }
+    renderSaved();renderRecentColors();renderCompare();
+    toast('已從本機備份恢復資料');
   }catch(_){}
 }
 
@@ -2383,8 +2396,9 @@ function loadPhoto(file){
     extractPhotoPalette();
     pickMarker.style.display='none';
     magnifier.style.display='none';
+    $('#regionBox').style.display='none';regionStart=null;
     URL.revokeObjectURL(photoObjectURL);photoObjectURL=null;
-    toast('按住照片拖動取色');
+    toast(photoMode==='region'?'拖曳框選區域':'按住照片拖動取色');
   };
   img.onerror=()=>toast('照片讀取失敗');
   img.src=photoObjectURL;
