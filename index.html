@@ -3115,7 +3115,8 @@ function paletteQualityProfile(colors){
   const ig=igPatternAffinity(colors);
   const reference=Math.max(fashion,ig*.96);
   const accessibility=clamp((structureRatio-2.4)/3.1,0,1);
-  const gamut=qualityMetrics(colors).gamut?1:.65;
+  // All current palette outputs are normalized HEX/sRGB. P3 support can replace this constant later.
+  const gamut=1;
 
   const duplicatePenalty=
     (bs<.07?1.15:0)+
@@ -3334,7 +3335,9 @@ function scheduleSecondaryRender(){
   const token=++secondaryRenderToken;
   const run=()=>{
     if(token!==secondaryRenderToken)return;
-    renderVision();renderContextPreview();renderIdeas();renderRecommendations();
+    const active=document.querySelector('.tab-view.active')?.dataset.view||'compose';
+    if(active==='compose'){renderVision();renderContextPreview()}
+    else if(active==='inspire'){renderIdeas();renderRecommendations()}
   };
   if('requestIdleCallback'in window)requestIdleCallback(run,{timeout:180});
   else setTimeout(run,24);
@@ -3817,6 +3820,11 @@ function switchTab(name,scrollTop=true){
   localStorage.setItem('colorlab.tab',name);
   updatePhotoTarget();
   if(name==='library')renderSaved();
+  if(name==='inspire'){
+    renderCompare();
+    requestAnimationFrame(()=>{renderIdeas();renderRecommendations()});
+  }
+  if(name==='compose')requestAnimationFrame(()=>{renderVision();renderContextPreview()});
   if(scrollTop){
     const targetY=tabScroll[name]??0;
     requestAnimationFrame(()=>window.scrollTo({top:targetY,left:0,behavior:'auto'}));
