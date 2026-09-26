@@ -45,8 +45,14 @@ button{cursor:pointer}
 .photo-panel.show{display:block}
 .photo-frame{position:relative;border-radius:20px;overflow:hidden;background:#DED9D1;line-height:0;touch-action:manipulation}
 .photo-frame canvas{display:block;width:100%;height:auto;background:#DED9D1}
-.pick-marker{position:absolute;width:30px;height:30px;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.38),0 4px 14px rgba(0,0,0,.25);transform:translate(-50%,-50%);pointer-events:none;display:none}
-.pick-marker::after{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--picked,#68705E)}
+.pick-marker{position:absolute;width:28px;height:28px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 4px 14px rgba(0,0,0,.22);transform:translate(-50%,-50%);pointer-events:none;display:none}
+.pick-marker::after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--picked,#68705E)}
+.magnifier{position:absolute;width:112px;height:112px;border-radius:56px;border:4px solid #fff;box-shadow:0 12px 30px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.28);overflow:hidden;pointer-events:none;display:none;background:#111;z-index:4}
+.magnifier canvas{width:112px!important;height:112px!important;image-rendering:pixelated;background:#111}
+.magnifier::before,.magnifier::after{content:"";position:absolute;z-index:5;background:rgba(255,255,255,.95)}
+.magnifier::before{left:54px;top:0;width:2px;height:112px}
+.magnifier::after{top:54px;left:0;height:2px;width:112px}
+.pick-readout{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:6;background:rgba(20,20,20,.78);color:#fff;font-size:10px;line-height:1;padding:6px 8px;border-radius:999px;letter-spacing:.04em;white-space:nowrap}
 .photo-caption{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:12px;line-height:1.4}
 .photo-hint{font-size:12px;color:var(--muted)}
 .photo-change{border:0;background:transparent;padding:0;color:var(--ink);font-size:12px;font-weight:600}
@@ -106,7 +112,7 @@ button{cursor:pointer}
 </head>
 <body>
 <div class="app">
-  <div class="topline"><div class="brand">PERSONAL COLOR LAB</div><div class="version">V0.3.1</div></div>
+  <div class="topline"><div class="brand">PERSONAL COLOR LAB</div><div class="version">V0.3.2</div></div>
 
   <header class="hero">
     <h1>從一個顏色開始</h1>
@@ -130,9 +136,13 @@ button{cursor:pointer}
       <div class="photo-frame" id="photoFrame">
         <canvas id="photoCanvas" aria-label="點照片選取顏色"></canvas>
         <div class="pick-marker" id="pickMarker"></div>
+        <div class="magnifier" id="magnifier">
+          <canvas id="magnifierCanvas" width="112" height="112"></canvas>
+          <div class="pick-readout" id="pickReadout">#68705E</div>
+        </div>
       </div>
       <div class="photo-caption">
-        <div class="photo-hint">點照片上的顏色</div>
+        <div class="photo-hint">按住拖動 精準取色</div>
         <button class="photo-change" id="photoChange" type="button">更換照片</button>
       </div>
     </div>
@@ -176,7 +186,7 @@ button{cursor:pointer}
     <div id="saved"></div>
   </section>
 
-  <div class="footer">Color Lab V0.3.1<br>美，不是把漂亮的東西放在一起。美，是讓它們之間的關係成立。</div>
+  <div class="footer">Color Lab V0.3.2<br>美，不是把漂亮的東西放在一起。美，是讓它們之間的關係成立。</div>
 </div>
 <div id="toast" class="toast">已複製</div>
 
@@ -225,8 +235,9 @@ function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show'
 function copy(v){navigator.clipboard?.writeText(v).then(()=>toast('已複製 '+v)).catch(()=>{})}
 
 const photoInput=$('#photoInput'),photoCanvas=$('#photoCanvas'),photoPanel=$('#photoPanel'),pickMarker=$('#pickMarker');
-const photoCtx=photoCanvas.getContext('2d',{willReadFrequently:true});
-let photoObjectURL=null;
+const photoCtx=photoCanvas.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'});
+const magnifier=$('#magnifier'),magnifierCanvas=$('#magnifierCanvas'),magnifierCtx=magnifierCanvas.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'}),pickReadout=$('#pickReadout');
+let photoObjectURL=null,photoPicking=false,lastPicked=null;
 
 function openPhotoPicker(){photoInput.click()}
 function loadPhoto(file){
@@ -235,60 +246,103 @@ function loadPhoto(file){
   photoObjectURL=URL.createObjectURL(file);
   const img=new Image();
   img.onload=()=>{
-    const maxSide=1600;
+    const maxSide=2200;
     const scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
     photoCanvas.width=Math.max(1,Math.round(img.naturalWidth*scale));
     photoCanvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
     photoCtx.clearRect(0,0,photoCanvas.width,photoCanvas.height);
+    photoCtx.imageSmoothingEnabled=true;
     photoCtx.drawImage(img,0,0,photoCanvas.width,photoCanvas.height);
     photoPanel.classList.add('show');
     pickMarker.style.display='none';
+    magnifier.style.display='none';
     URL.revokeObjectURL(photoObjectURL);photoObjectURL=null;
-    toast('點照片選一個顏色');
+    toast('按住照片拖動取色');
   };
   img.onerror=()=>toast('照片讀取失敗');
   img.src=photoObjectURL;
 }
-function pickFromPhoto(clientX,clientY){
-  if(!photoCanvas.width||!photoCanvas.height)return;
+function mapPhotoPoint(clientX,clientY){
   const r=photoCanvas.getBoundingClientRect();
   const frameR=$('#photoFrame').getBoundingClientRect();
+  const localX=clamp(clientX-r.left,0,r.width-0.001);
+  const localY=clamp(clientY-r.top,0,r.height-0.001);
+  const px=Math.min(photoCanvas.width-1,Math.max(0,Math.floor(localX*photoCanvas.width/r.width)));
+  const py=Math.min(photoCanvas.height-1,Math.max(0,Math.floor(localY*photoCanvas.height/r.height)));
+  return {r,frameR,localX,localY,px,py};
+}
+function exactPixel(px,py){
+  const d=photoCtx.getImageData(px,py,1,1).data;
+  return rgbToHex(d[0]/255,d[1]/255,d[2]/255);
+}
+function drawMagnifier(px,py,picked,clientX,clientY,frameR){
+  const sample=11, zoom=112/sample;
+  const sx=Math.max(0,Math.min(photoCanvas.width-sample,px-Math.floor(sample/2)));
+  const sy=Math.max(0,Math.min(photoCanvas.height-sample,py-Math.floor(sample/2)));
+  magnifierCtx.imageSmoothingEnabled=false;
+  magnifierCtx.clearRect(0,0,112,112);
+  magnifierCtx.drawImage(photoCanvas,sx,sy,sample,sample,0,0,112,112);
 
-  const localX=clamp(clientX-r.left,0,r.width-.001);
-  const localY=clamp(clientY-r.top,0,r.height-.001);
-  const px=Math.floor(localX*(photoCanvas.width/r.width));
-  const py=Math.floor(localY*(photoCanvas.height/r.height));
+  const localPointerX=clientX-frameR.left;
+  const localPointerY=clientY-frameR.top;
+  const size=112;
+  let left=localPointerX-size/2;
+  let top=localPointerY-size-38;
+  if(top<8) top=localPointerY+38;
+  left=Math.max(8,Math.min(frameR.width-size-8,left));
+  top=Math.max(8,Math.min(frameR.height-size-8,top));
+  magnifier.style.left=left+'px';
+  magnifier.style.top=top+'px';
+  magnifier.style.display='block';
+  pickReadout.textContent=picked;
+}
+function updatePhotoPick(clientX,clientY,commit=false){
+  if(!photoCanvas.width||!photoCanvas.height)return;
+  const p=mapPhotoPoint(clientX,clientY);
+  const picked=exactPixel(p.px,p.py);
+  lastPicked=picked;
 
-  // Average a small neighborhood instead of trusting one compressed/anti-aliased pixel.
-  const radius=2;
-  const sx=Math.max(0,px-radius), sy=Math.max(0,py-radius);
-  const ex=Math.min(photoCanvas.width-1,px+radius), ey=Math.min(photoCanvas.height-1,py+radius);
-  const w=ex-sx+1, h=ey-sy+1;
-  const data=photoCtx.getImageData(sx,sy,w,h).data;
-  let rr=0,gg=0,bb=0,count=0;
-  for(let i=0;i<data.length;i+=4){
-    if(data[i+3]===0)continue;
-    rr+=data[i];gg+=data[i+1];bb+=data[i+2];count++;
-  }
-  if(!count)return;
-  const picked=rgbToHex((rr/count)/255,(gg/count)/255,(bb/count)/255);
-
-  seed=picked;
-  $('#color').value=picked;
-  $('#hex').value=picked;
-
-  pickMarker.style.left=((r.left-frameR.left)+localX)+'px';
-  pickMarker.style.top=((r.top-frameR.top)+localY)+'px';
+  pickMarker.style.left=((p.r.left-p.frameR.left)+p.localX)+'px';
+  pickMarker.style.top=((p.r.top-p.frameR.top)+p.localY)+'px';
   pickMarker.style.setProperty('--picked',picked);
   pickMarker.style.display='block';
 
-  generate(false);
-  toast('已取色 '+picked);
+  drawMagnifier(p.px,p.py,picked,clientX,clientY,p.frameR);
+
+  if(commit){
+    seed=picked;
+    $('#color').value=picked;
+    $('#hex').value=picked;
+    generate(false);
+    toast('已取色 '+picked);
+  }
 }
 $('#photoTrigger').onclick=openPhotoPicker;
 $('#photoChange').onclick=openPhotoPicker;
 photoInput.addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(file)loadPhoto(file);e.target.value=''});
-photoCanvas.addEventListener('pointerdown',e=>pickFromPhoto(e.clientX,e.clientY));
+
+photoCanvas.addEventListener('pointerdown',e=>{
+  photoPicking=true;
+  try{photoCanvas.setPointerCapture(e.pointerId)}catch(_){}
+  updatePhotoPick(e.clientX,e.clientY,false);
+});
+photoCanvas.addEventListener('pointermove',e=>{
+  if(!photoPicking)return;
+  e.preventDefault();
+  updatePhotoPick(e.clientX,e.clientY,false);
+});
+function finishPhotoPick(e){
+  if(!photoPicking)return;
+  photoPicking=false;
+  updatePhotoPick(e.clientX,e.clientY,true);
+  setTimeout(()=>magnifier.style.display='none',120);
+  try{photoCanvas.releasePointerCapture(e.pointerId)}catch(_){}
+}
+photoCanvas.addEventListener('pointerup',finishPhotoPick);
+photoCanvas.addEventListener('pointercancel',()=>{
+  photoPicking=false;
+  magnifier.style.display='none';
+});
 
 $('#color').addEventListener('input',e=>{seed=e.target.value.toUpperCase();$('#hex').value=seed;generate(false)});
 $('#hex').addEventListener('change',e=>{const h=normHex(e.target.value);if(h){seed=h;$('#color').value=h;$('#hex').value=h;generate(false)}else e.target.value=seed});
