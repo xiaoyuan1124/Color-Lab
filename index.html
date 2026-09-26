@@ -44,7 +44,7 @@ button{cursor:pointer}
 .photo-panel{display:none;margin:0 0 28px}
 .photo-panel.show{display:block}
 .photo-frame{position:relative;border-radius:20px;overflow:hidden;background:#DED9D1;line-height:0;touch-action:manipulation}
-.photo-frame canvas{display:block;width:100%;height:auto;max-height:420px;object-fit:contain;background:#DED9D1}
+.photo-frame canvas{display:block;width:100%;height:auto;background:#DED9D1}
 .pick-marker{position:absolute;width:30px;height:30px;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.38),0 4px 14px rgba(0,0,0,.25);transform:translate(-50%,-50%);pointer-events:none;display:none}
 .pick-marker::after{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--picked,#68705E)}
 .photo-caption{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:12px;line-height:1.4}
@@ -106,7 +106,7 @@ button{cursor:pointer}
 </head>
 <body>
 <div class="app">
-  <div class="topline"><div class="brand">PERSONAL COLOR LAB</div><div class="version">V0.3</div></div>
+  <div class="topline"><div class="brand">PERSONAL COLOR LAB</div><div class="version">V0.3.1</div></div>
 
   <header class="hero">
     <h1>從一個顏色開始</h1>
@@ -176,7 +176,7 @@ button{cursor:pointer}
     <div id="saved"></div>
   </section>
 
-  <div class="footer">Color Lab V0.3<br>美，不是把漂亮的東西放在一起。美，是讓它們之間的關係成立。</div>
+  <div class="footer">Color Lab V0.3.1<br>美，不是把漂亮的東西放在一起。美，是讓它們之間的關係成立。</div>
 </div>
 <div id="toast" class="toast">已複製</div>
 
@@ -252,18 +252,36 @@ function loadPhoto(file){
 function pickFromPhoto(clientX,clientY){
   if(!photoCanvas.width||!photoCanvas.height)return;
   const r=photoCanvas.getBoundingClientRect();
-  const x=clamp((clientX-r.left)/r.width,0,.999999);
-  const y=clamp((clientY-r.top)/r.height,0,.999999);
-  const px=Math.floor(x*photoCanvas.width),py=Math.floor(y*photoCanvas.height);
-  const d=photoCtx.getImageData(px,py,1,1).data;
-  const picked=rgbToHex(d[0]/255,d[1]/255,d[2]/255);
+  const frameR=$('#photoFrame').getBoundingClientRect();
+
+  const localX=clamp(clientX-r.left,0,r.width-.001);
+  const localY=clamp(clientY-r.top,0,r.height-.001);
+  const px=Math.floor(localX*(photoCanvas.width/r.width));
+  const py=Math.floor(localY*(photoCanvas.height/r.height));
+
+  // Average a small neighborhood instead of trusting one compressed/anti-aliased pixel.
+  const radius=2;
+  const sx=Math.max(0,px-radius), sy=Math.max(0,py-radius);
+  const ex=Math.min(photoCanvas.width-1,px+radius), ey=Math.min(photoCanvas.height-1,py+radius);
+  const w=ex-sx+1, h=ey-sy+1;
+  const data=photoCtx.getImageData(sx,sy,w,h).data;
+  let rr=0,gg=0,bb=0,count=0;
+  for(let i=0;i<data.length;i+=4){
+    if(data[i+3]===0)continue;
+    rr+=data[i];gg+=data[i+1];bb+=data[i+2];count++;
+  }
+  if(!count)return;
+  const picked=rgbToHex((rr/count)/255,(gg/count)/255,(bb/count)/255);
+
   seed=picked;
   $('#color').value=picked;
   $('#hex').value=picked;
-  pickMarker.style.left=(x*100)+'%';
-  pickMarker.style.top=(y*100)+'%';
+
+  pickMarker.style.left=((r.left-frameR.left)+localX)+'px';
+  pickMarker.style.top=((r.top-frameR.top)+localY)+'px';
   pickMarker.style.setProperty('--picked',picked);
   pickMarker.style.display='block';
+
   generate(false);
   toast('已取色 '+picked);
 }
