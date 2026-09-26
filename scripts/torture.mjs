@@ -44,7 +44,7 @@ function extractFunction(name){
 }
 
 const functionNames=[
-  'clamp','hexToRgb','rgbToHex','lum','srgbToLinear','linearToSrgb',
+  'clamp','hexToRgb','rgbToHex','boundedCacheSet','lum','srgbToLinear','linearToSrgb',
   'toOKLCH','fromOKLCH','perceptualDistance','oklchLinearRgb',
   'isLinearSrgbInGamut','gamutMapOKLCH','hueDistance','signedHueDelta',
   'hueToward','contrastRatio','ensureStructureContrast','cohesionPass','qualityRefineGenerated',
@@ -55,7 +55,7 @@ const functionNames=[
 const sandbox={console};
 vm.createContext(sandbox);
 vm.runInContext(
-  functionNames.map(extractFunction).join('\n')+
+  'const oklchCache=new Map();const luminanceCache=new Map();\n'+functionNames.map(extractFunction).join('\n')+
   '\nthis.API={'+functionNames.join(',')+'};',
   sandbox,
   {timeout:2000}
