@@ -565,7 +565,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V0.8 EXPERIENCE PASS */
+/* V0.9 EXPERIENCE PASS */
 .screen-tools{
   display:flex;
   gap:var(--space-2);
@@ -687,13 +687,116 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
   .health-strip{grid-template-columns:1fr}
 }
 
+
+/* V0.9 POWER TOOLS */
+.lock-toggle{
+  min-height:34px;
+  margin-top:var(--space-2);
+  padding:0;
+  border:0;
+  background:transparent;
+  color:var(--text-3);
+  font-size:var(--text-xs);
+  font-weight:600;
+}
+.lock-toggle.active{color:var(--olive-12)}
+.slot-lock-mark{
+  position:absolute;
+  left:10px;
+  top:8px;
+  font-size:9px;
+  letter-spacing:.08em;
+  font-weight:800;
+  opacity:.78;
+  pointer-events:none;
+}
+.palette-actions-three{grid-template-columns:repeat(3,1fr)}
+.compare-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:var(--space-3);
+  margin-top:var(--space-3);
+}
+.compare-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:var(--space-3);
+}
+.compare-card{
+  min-width:0;
+  padding:var(--space-3);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-xl);
+  background:rgba(255,253,249,.3);
+}
+.compare-card.empty{
+  min-height:180px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  color:var(--text-3);
+  font-size:var(--text-sm);
+}
+.compare-tag{
+  font-size:var(--text-xs);
+  letter-spacing:.12em;
+  font-weight:800;
+  color:var(--olive-11);
+  margin-bottom:var(--space-2);
+}
+.compare-swatches{
+  display:grid;
+  grid-template-columns:75fr 18fr 7fr;
+  height:100px;
+  overflow:hidden;
+  border-radius:var(--radius-lg);
+  margin-bottom:var(--space-3);
+}
+.compare-name{
+  font-size:var(--text-sm);
+  font-weight:700;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.compare-metrics{
+  display:grid;
+  gap:5px;
+  margin-top:var(--space-3);
+  color:var(--text-2);
+  font-size:11px;
+}
+.compare-use{
+  width:100%;
+  min-height:40px;
+  margin-top:var(--space-3);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-1);
+  font-size:var(--text-xs);
+  font-weight:700;
+}
+.library-tools{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:var(--space-3);
+  margin-bottom:var(--space-5);
+}
+@media(max-width:360px){
+  .compare-grid{grid-template-columns:1fr}
+  .palette-actions-three{grid-template-columns:1fr 1fr}
+  #exportPaletteImage{grid-column:1/-1}
+}
+
 </style>
 </head>
 <body>
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V0.8</div>
+    <div class="version">V0.9</div>
   </div>
 
   <main class="app-main">
@@ -716,6 +819,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
             <div class="seed-kicker">目前編輯</div>
             <input id="hex" class="hex" value="#68705E" maxlength="7" aria-label="HEX 顏色">
             <div class="seed-note">選色槽後可用色盤或 HEX</div>
+            <button type="button" class="lock-toggle" id="slotLockToggle" aria-pressed="false">鎖定此色</button>
           </div>
         </div>
 
@@ -755,9 +859,14 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
           <div class="real-preview" id="uiPreview"></div>
         </div>
 
-        <div class="palette-actions">
-          <button type="button" class="utility-btn" id="copyPalette">複製三色</button>
+        <div class="palette-actions palette-actions-three">
+          <button type="button" class="utility-btn" id="copyPalette">複製</button>
           <button type="button" class="utility-btn" id="sharePalette">分享</button>
+          <button type="button" class="utility-btn" id="exportPaletteImage">圖片</button>
+        </div>
+        <div class="compare-actions">
+          <button type="button" class="utility-btn" id="setCompareA">設為 A</button>
+          <button type="button" class="utility-btn" id="setCompareB">設為 B</button>
         </div>
 
         <div class="name-field">
@@ -775,7 +884,18 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
         <p>從你已選的顏色往外探索</p>
       </header>
 
-      <section class="app-section first" id="intelligenceSection">
+      <section class="compare-section app-section first">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">A / B</div>
+            <h2>配色比較</h2>
+            <div class="section-desc">把兩組方案放在一起看 不替你決定</div>
+          </div>
+        </div>
+        <div id="comparePanel"></div>
+      </section>
+
+      <section class="section app-section" id="intelligenceSection">
         <div class="section-head">
           <div>
             <div class="eyebrow">COLOR INTELLIGENCE</div>
@@ -850,12 +970,17 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
         <div class="library-search-wrap">
           <input id="librarySearch" class="library-search" type="search" placeholder="搜尋名稱或 HEX" autocomplete="off" aria-label="搜尋收藏配色">
         </div>
+        <div class="library-tools">
+          <button type="button" class="utility-btn" id="exportBackup">匯出備份</button>
+          <button type="button" class="utility-btn" id="importBackup">匯入備份</button>
+          <input id="backupInput" type="file" accept="application/json,.json" hidden>
+        </div>
         <div id="saved"></div>
       </section>
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V0.8</div>
+  <div class="footer app-footer">Color Lab V0.9</div>
 </div>
 
 <nav class="bottom-nav" aria-label="主要功能" role="tablist">
@@ -886,9 +1011,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true">已複製</div>
 
-<script src="https://colorjs.io/dist/color.global.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/poline@0.13.1/dist/index.umd.js"></script>
-<script src="https://unpkg.com/colorthief@3/dist/umd/color-thief.global.js"></script>
+<script src="./vendor/poline.umd.js"></script>
 <script>
 const MODES={
   quiet:{label:'安靜',baseL:.93,structureL:.27,accentShift:22,sat:.26},
@@ -900,6 +1023,9 @@ const MODES={
 };
 let mode='quiet',seed='#68705E',palette={base:'#F2EDE4',structure:'#292B29',accent:'#68705E'};
 let selectedColors=['#68705E',null,null],activeSlot=0,currentComboName='';
+let lockedSlots=[false,false,false];
+let compareA=JSON.parse(localStorage.getItem('colorlab.compareA')||'null');
+let compareB=JSON.parse(localStorage.getItem('colorlab.compareB')||'null');
 let historyStack=[],historyIndex=-1,isHistoryRestore=false;
 let recentColors=JSON.parse(localStorage.getItem('colorlab.recent')||'[]');
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -915,6 +1041,7 @@ function normHex(v){v=v.trim();if(!v.startsWith('#'))v='#'+v;return/^#[0-9a-fA-F
 function snapshotState(){
   return {
     selectedColors:[...selectedColors],
+    lockedSlots:[...lockedSlots],
     activeSlot,
     mode,
     comboName:($('#comboName')?.value||currentComboName||'').trim()
@@ -930,6 +1057,8 @@ function restoreDraft(){
     if(!d||!Array.isArray(d.selectedColors))return;
     selectedColors=d.selectedColors.slice(0,3);
     while(selectedColors.length<3)selectedColors.push(null);
+    lockedSlots=Array.isArray(d.lockedSlots)?d.lockedSlots.slice(0,3).map(Boolean):[false,false,false];
+    while(lockedSlots.length<3)lockedSlots.push(false);
     if(!selectedColors.some(Boolean))selectedColors[0]='#68705E';
     activeSlot=Math.max(0,Math.min(2,Number.isInteger(d.activeSlot)?d.activeSlot:0));
     if(MODES[d.mode])mode=d.mode;
@@ -951,6 +1080,8 @@ function restoreHistoryState(s){
   if(!s)return;
   isHistoryRestore=true;
   selectedColors=[...s.selectedColors];while(selectedColors.length<3)selectedColors.push(null);
+  lockedSlots=Array.isArray(s.lockedSlots)?[...s.lockedSlots]:[false,false,false];
+  while(lockedSlots.length<3)lockedSlots.push(false);
   activeSlot=s.activeSlot;mode=MODES[s.mode]?s.mode:'quiet';
   currentComboName=s.comboName||'';
   seed=selectedColors[activeSlot]||selectedColors.find(Boolean)||'#68705E';
@@ -981,7 +1112,7 @@ function renderRecentColors(){
   });
 }
 function resetCombo(){
-  selectedColors=['#68705E',null,null];activeSlot=0;mode='quiet';currentComboName='';seed='#68705E';
+  selectedColors=['#68705E',null,null];lockedSlots=[false,false,false];activeSlot=0;mode='quiet';currentComboName='';seed='#68705E';
   $('#comboName').value='';$('#color').value=seed;$('#hex').value=seed;
   renderModes();renderComboSlots();generate(false);pushHistory();updatePhotoTarget();toast('已建立新配色');
 }
@@ -1035,28 +1166,132 @@ function deleteSaved(index){
   data.splice(index,1);localStorage.setItem('colorlab.saved',JSON.stringify(data));renderSaved();toast('已刪除');
 }
 
+
+function updateLockToggle(){
+  const b=$('#slotLockToggle');if(!b)return;
+  const on=!!lockedSlots[activeSlot];
+  b.classList.toggle('active',on);b.setAttribute('aria-pressed',on?'true':'false');
+  b.textContent=on?'已鎖定此色':'鎖定此色';
+}
+function toggleActiveLock(){
+  if(!selectedColors[activeSlot]){toast('先加入顏色');return}
+  lockedSlots[activeSlot]=!lockedSlots[activeSlot];
+  renderComboSlots();updateLockToggle();pushHistory();
+  toast(lockedSlots[activeSlot]?'已鎖定 COLOR '+(activeSlot+1):'已解除鎖定');
+}
+function compareSnapshot(){
+  return {name:(($('#comboName')?.value||currentComboName||'').trim()||'未命名配色'),palette:{...palette},colors:[...selectedColors],mode,date:Date.now()};
+}
+function saveCompare(which){
+  const snap=compareSnapshot();
+  if(which==='A'){compareA=snap;localStorage.setItem('colorlab.compareA',JSON.stringify(snap))}
+  else{compareB=snap;localStorage.setItem('colorlab.compareB',JSON.stringify(snap))}
+  renderCompare();toast('已設為方案 '+which);
+}
+function compareMetrics(p){
+  if(!p)return null;
+  const vals=Object.values(p.palette).map(x=>toOKLCH(x));
+  const contrast=contrastRatio(p.palette.base,p.palette.structure);
+  const accent=toOKLCH(p.palette.accent).c;
+  const lightSpread=Math.max(...vals.map(x=>x.l))-Math.min(...vals.map(x=>x.l));
+  return {contrast,accent,lightSpread};
+}
+function renderCompare(){
+  const host=$('#comparePanel');if(!host)return;
+  const card=(item,label)=>{
+    if(!item)return '<div class="compare-card empty">先在配色頁<br>設為方案 '+label+'</div>';
+    const m=compareMetrics(item);
+    return '<div class="compare-card"><div class="compare-tag">方案 '+label+'</div><div class="compare-swatches"><i style="background:'+item.palette.base+'"></i><i style="background:'+item.palette.structure+'"></i><i style="background:'+item.palette.accent+'"></i></div><div class="compare-name">'+escapeHtml(item.name)+'</div><div class="compare-metrics"><span>文字對比 '+m.contrast.toFixed(1)+':1</span><span>Accent 彩度 '+m.accent.toFixed(3)+'</span><span>明暗跨度 '+m.lightSpread.toFixed(2)+'</span></div><button class="compare-use" data-use-compare="'+label+'">套用 '+label+'</button></div>';
+  };
+  host.innerHTML='<div class="compare-grid">'+card(compareA,'A')+card(compareB,'B')+'</div>';
+}
+function useCompare(which){
+  const x=which==='A'?compareA:compareB;if(!x)return;
+  selectedColors=(x.colors||[x.palette.base,x.palette.structure,x.palette.accent]).slice(0,3);
+  while(selectedColors.length<3)selectedColors.push(null);
+  lockedSlots=[false,false,false];activeSlot=0;mode=MODES[x.mode]?x.mode:'quiet';currentComboName=x.name||'';
+  seed=selectedColors[0]||x.palette.base;$('#comboName').value=currentComboName;syncEditor();renderModes();generate(false);pushHistory();switchTab('compose',false);toast('已套用方案 '+which);
+}
+function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+function drawPaletteCard(){
+  const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=1350;const x=canvas.getContext('2d');
+  const title=(($('#comboName')?.value||currentComboName||'Color Lab').trim()||'Color Lab');
+  x.fillStyle='#F3EFE8';x.fillRect(0,0,1080,1350);
+  x.fillStyle='#242624';x.font='700 42px -apple-system, BlinkMacSystemFont, sans-serif';x.fillText('COLOR LAB',72,92);
+  x.font='700 72px -apple-system, BlinkMacSystemFont, sans-serif';x.fillText(title.slice(0,22),72,190);
+  const y=280,h=720,w=936,parts=[['BASE',palette.base,.75],['STRUCTURE',palette.structure,.18],['ACCENT',palette.accent,.07]];
+  let xx=72;
+  parts.forEach(([label,hex,ratio])=>{
+    const ww=w*ratio;x.fillStyle=hex;x.fillRect(xx,y,ww,h);x.fillStyle=textFor(hex);x.font='700 25px -apple-system, BlinkMacSystemFont, sans-serif';x.fillText(label,xx+18,y+h-68);x.font='600 24px -apple-system, BlinkMacSystemFont, sans-serif';x.fillText(hex,xx+18,y+h-32);xx+=ww;
+  });
+  x.fillStyle='#77736D';x.font='500 28px -apple-system, BlinkMacSystemFont, sans-serif';x.fillText('75 / 18 / 7',72,1090);
+  x.font='500 24px -apple-system, BlinkMacSystemFont, sans-serif';x.fillText('Base '+palette.base+'   Structure '+palette.structure+'   Accent '+palette.accent,72,1150);
+  x.fillStyle='#242624';x.font='600 25px -apple-system, BlinkMacSystemFont, sans-serif';x.fillText('美 是讓顏色之間的關係成立',72,1260);
+  return canvas;
+}
+async function exportPaletteImage(){
+  const canvas=drawPaletteCard();
+  const blob=await new Promise(res=>canvas.toBlob(res,'image/png',1));if(!blob){toast('圖片產生失敗');return}
+  const safe=((($('#comboName')?.value||'color-lab').trim()||'color-lab').replace(/[^\w\u4e00-\u9fff-]+/g,'-')).slice(0,40);
+  const file=new File([blob],safe+'.png',{type:'image/png'});
+  if(navigator.canShare?.({files:[file]})&&navigator.share){
+    try{await navigator.share({files:[file],title:'Color Lab 配色'});return}catch(e){if(e?.name==='AbortError')return}
+  }
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
+}
+function exportBackup(){
+  const payload={schema:'color-lab-backup-v1',exportedAt:new Date().toISOString(),saved:JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),recent:recentColors,draft:snapshotState(),compareA,compareB};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200);toast('已匯出備份');
+}
+function importBackupFile(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(String(reader.result||''));
+      if(data.schema!=='color-lab-backup-v1'||!Array.isArray(data.saved))throw new Error('invalid');
+      const current=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
+      const sig=x=>[x.name,x.palette?.base,x.palette?.structure,x.palette?.accent].join('|');
+      const seen=new Set(current.map(sig)),merged=[...current];
+      data.saved.forEach(x=>{if(x&&x.palette?.base&&x.palette?.structure&&x.palette?.accent&&!seen.has(sig(x))){merged.push(x);seen.add(sig(x))}});
+      localStorage.setItem('colorlab.saved',JSON.stringify(merged.slice(0,300)));
+      if(Array.isArray(data.recent)){recentColors=[...new Set([...recentColors,...data.recent.filter(normHex)])].slice(0,20);localStorage.setItem('colorlab.recent',JSON.stringify(recentColors))}
+      if(data.compareA){compareA=data.compareA;localStorage.setItem('colorlab.compareA',JSON.stringify(compareA))}
+      if(data.compareB){compareB=data.compareB;localStorage.setItem('colorlab.compareB',JSON.stringify(compareB))}
+      renderSaved();renderRecentColors();renderCompare();toast('備份已匯入');
+    }catch(_){toast('不是有效的 Color Lab 備份')}
+  };
+  reader.readAsText(file);
+}
 function chosenColors(){return selectedColors.filter(Boolean)}
 function hueDistance(a,b){let d=Math.abs(a-b)%360;return Math.min(d,360-d)}
 function stats(hex){const [h,s,l]=rgbToHsl(...hexToRgb(hex));return{hex,h,s,l,y:lum(hex)}}
-function hasColorJS(){return typeof window.Color==='function'}
+
+function srgbToLinear(v){return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)}
+function linearToSrgb(v){return v<=.0031308?12.92*v:1.055*Math.pow(Math.max(0,v),1/2.4)-.055}
 function toOKLCH(hex){
-  if(hasColorJS()){
-    try{
-      const x=new Color(hex).to('oklch');
-      return {l:x.coords[0],c:x.coords[1],h:Number.isFinite(x.coords[2])?x.coords[2]:0};
-    }catch(_){}
-  }
-  const [h,s,l]=rgbToHsl(...hexToRgb(hex));
-  return {l, c:s*.28, h};
+  const [r0,g0,b0]=hexToRgb(hex),r=srgbToLinear(r0),g=srgbToLinear(g0),b=srgbToLinear(b0);
+  const l=Math.cbrt(.4122214708*r+.5363325363*g+.0514459929*b);
+  const m=Math.cbrt(.2119034982*r+.6806995451*g+.1073969566*b);
+  const s=Math.cbrt(.0883024619*r+.2817188376*g+.6299787005*b);
+  const L=.2104542553*l+.793617785*m-.0040720468*s;
+  const a=1.9779984951*l-2.428592205*m+.4505937099*s;
+  const bb=.0259040371*l+.7827717662*m-.808675766*s;
+  const C=Math.sqrt(a*a+bb*bb);
+  let h=Math.atan2(bb,a)*180/Math.PI;if(h<0)h+=360;
+  return {l:L,c:C,h:C<.00001?0:h};
 }
-function fromOKLCH(l,c,h){
-  if(hasColorJS()){
-    try{
-      const x=new Color('oklch',[clamp(l,0,1),Math.max(0,c),((h%360)+360)%360]).to('srgb');
-      return rgbToHex(x.coords[0],x.coords[1],x.coords[2]);
-    }catch(_){}
-  }
-  return hslHex(h,clamp(c/.28,0,1),clamp(l,0,1));
+function fromOKLCH(L,C,h){
+  const rad=((h%360)+360)%360*Math.PI/180,a=C*Math.cos(rad),bb=C*Math.sin(rad);
+  const l_=L+.3963377774*a+.2158037573*bb;
+  const m_=L-.1055613458*a-.0638541728*bb;
+  const s_=L-.0894841775*a-1.291485548*bb;
+  const l=l_*l_*l_,m=m_*m_*m_,s=s_*s_*s_;
+  const r=4.0767416621*l-3.3077115913*m+.2309699292*s;
+  const g=-1.2684380046*l+2.6097574011*m-.3413193965*s;
+  const b=-.0041960863*l-.7034186147*m+1.707614701*s;
+  return rgbToHex(linearToSrgb(r),linearToSrgb(g),linearToSrgb(b));
 }
 function perceptualDistance(a,b){
   const A=toOKLCH(a),B=toOKLCH(b);
@@ -1262,6 +1497,7 @@ function syncEditor(){
 function setColorAtActive(hex){
   const h=normHex(hex);
   if(!h)return;
+  if(lockedSlots[activeSlot]&&selectedColors[activeSlot]&&selectedColors[activeSlot]!==h){toast('這個顏色已鎖定');return}
   selectedColors[activeSlot]=h;
   seed=h;
   $('#color').value=h;
@@ -1278,10 +1514,11 @@ function setActiveSlot(i,openPicker=false){
     $('#color').value=seed;
     $('#hex').value=seed;
   }
-  renderComboSlots();
+  renderComboSlots();updateLockToggle();
   if(openPicker&&!selectedColors[i])setTimeout(()=>$('#color').click(),0);
 }
 function removeSlot(i){
+  if(lockedSlots[i]){toast('先解除鎖定');return}
   if(chosenColors().length<=1){toast('至少保留一個顏色');return}
   selectedColors[i]=null;
   if(activeSlot===i){
@@ -1305,7 +1542,7 @@ function renderComboSlots(){
     if(hex){
       btn.style.background=hex;
       btn.style.color=textFor(hex);
-      btn.innerHTML='<span class="slot-no">COLOR '+(i+1)+'</span><span class="slot-hex">'+hex+'</span>';
+      btn.innerHTML=(lockedSlots[i]?'<span class="slot-lock-mark">LOCK</span>':'')+'<span class="slot-no">COLOR '+(i+1)+'</span><span class="slot-hex">'+hex+'</span>';
       if(chosenColors().length>1){
         const rm=document.createElement('button');rm.type='button';rm.className='slot-remove';rm.dataset.removeSlot=i;rm.textContent='×';rm.setAttribute('aria-label','移除顏色 '+(i+1));wrap.appendChild(rm);
       }
@@ -1345,7 +1582,7 @@ function renderIdeas(){
     cards.forEach((item,idx)=>{
       const p=bestRoleAssignment(item.colors),btn=document.createElement('button');btn.className='idea';btn.type='button';
       btn.innerHTML=`<div class="idea-top"><i style="background:${p.base}"></i><i style="background:${p.structure}"></i><i style="background:${p.accent}"></i></div><div class="idea-name">${item.label}</div><div class="idea-meta">${item.colors.join(' · ')}</div>`;
-      if(idx>0)btn.onclick=()=>{selectedColors=[...item.colors];activeSlot=0;seed=selectedColors[0];syncEditor();generate(false);pushHistory();switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'});toast('已套用 '+item.label)};
+      if(idx>0)btn.onclick=()=>{selectedColors=item.colors.map((hex,i)=>lockedSlots[i]?original[i]:hex);activeSlot=0;seed=selectedColors[0];syncEditor();generate(false);pushHistory();switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'});toast('已套用 '+item.label)};
       box.appendChild(btn);
     });
     return;
@@ -1362,7 +1599,7 @@ function save(){
   const inputName=($('#comboName')?.value||'').trim();
   currentComboName=inputName||'未命名配色';
   const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
-  data.unshift({name:currentComboName,seed,selectedColors:[...selectedColors],mode,palette:{...palette},date:Date.now()});
+  data.unshift({name:currentComboName,seed,selectedColors:[...selectedColors],lockedSlots:[...lockedSlots],mode,palette:{...palette},date:Date.now()});
   localStorage.setItem('colorlab.saved',JSON.stringify(data.slice(0,30)));
   renderSaved();
   persistDraft();
@@ -1429,15 +1666,7 @@ function fallbackPhotoPalette(){
   return [...buckets.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k])=>rgbToHex(...k.split(',').map(Number).map(v=>v/255)));
 }
 function extractPhotoPalette(){
-  let hexes=[];
-  try{
-    if(window.ColorThief?.getPaletteSync){
-      const p=window.ColorThief.getPaletteSync(photoCanvas,{colorCount:8,quality:4,colorSpace:'oklch',ignoreWhite:false})||[];
-      hexes=p.map(x=>x.hex().toUpperCase());
-    }
-  }catch(_){}
-  if(!hexes.length)hexes=fallbackPhotoPalette();
-  renderPhotoPalette(hexes);
+  renderPhotoPalette(fallbackPhotoPalette());
 }
 function openPhotoPicker(){photoInput.click()}
 function loadPhoto(file){
@@ -1547,6 +1776,7 @@ $('#hex').addEventListener('change',e=>{const h=normHex(e.target.value);if(h)set
 $('#generate').onclick=()=>generate(true);
 $('#save').onclick=save;
 document.addEventListener('click',e=>{
+  const cmp=e.target.closest('[data-use-compare]');if(cmp){useCompare(cmp.dataset.useCompare);return}
   const recent=e.target.closest('[data-recent-color]');if(recent){setColorAtActive(recent.dataset.recentColor);return}
   const del=e.target.closest('[data-delete]');if(del){deleteSaved(+del.dataset.delete);return}
   const pc=e.target.closest('[data-photo-color]');if(pc){setColorAtActive(pc.dataset.photoColor);toast('已加入 '+pc.dataset.photoColor);return}
@@ -1556,7 +1786,7 @@ document.addEventListener('click',e=>{
   const c=e.target.closest('[data-copy]');if(c)copy(c.dataset.copy);
   const s=e.target.closest('[data-shuffle]');if(s)shuffle(s.dataset.shuffle);
   const rn=e.target.closest('[data-rename]');if(rn){renameSaved(+rn.dataset.rename);return}
-  const l=e.target.closest('[data-load]');if(l){const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),x=data[+l.dataset.load];if(x){seed=x.seed;mode=x.mode;palette={...x.palette};selectedColors=x.selectedColors?[...x.selectedColors]:[x.seed,null,null];while(selectedColors.length<3)selectedColors.push(null);activeSlot=Math.max(0,selectedColors.findIndex(Boolean));currentComboName=(x.name&&x.name.trim())||'未命名配色';$('#comboName').value=currentComboName==='未命名配色'?'':currentComboName;syncEditor();renderModes();render();pushHistory();switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'})}}
+  const l=e.target.closest('[data-load]');if(l){const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),x=data[+l.dataset.load];if(x){seed=x.seed;mode=x.mode;palette={...x.palette};selectedColors=x.selectedColors?[...x.selectedColors]:[x.seed,null,null];while(selectedColors.length<3)selectedColors.push(null);lockedSlots=Array.isArray(x.lockedSlots)?[...x.lockedSlots]:[false,false,false];while(lockedSlots.length<3)lockedSlots.push(false);activeSlot=Math.max(0,selectedColors.findIndex(Boolean));currentComboName=(x.name&&x.name.trim())||'未命名配色';$('#comboName').value=currentComboName==='未命名配色'?'':currentComboName;syncEditor();renderModes();render();pushHistory();switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'})}}
 });
 
 function switchTab(name,scrollTop=true){
@@ -1593,12 +1823,19 @@ $('#comboName').value=currentComboName||'';
 $('#undoBtn').onclick=undoState;
 $('#redoBtn').onclick=redoState;
 $('#newComboBtn').onclick=resetCombo;
+$('#slotLockToggle').onclick=toggleActiveLock;
+$('#setCompareA').onclick=()=>saveCompare('A');
+$('#setCompareB').onclick=()=>saveCompare('B');
+$('#exportPaletteImage').onclick=exportPaletteImage;
+$('#exportBackup').onclick=exportBackup;
+$('#importBackup').onclick=()=>$('#backupInput').click();
+$('#backupInput').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(file)importBackupFile(file);e.target.value=''});
 $('#clearRecent').onclick=()=>{recentColors=[];localStorage.removeItem('colorlab.recent');renderRecentColors();toast('已清除最近用色')};
 $('#copyPalette').onclick=()=>{navigator.clipboard?.writeText(paletteText()).then(()=>toast('已複製三色')).catch(()=>toast('無法複製'))};
 $('#sharePalette').onclick=sharePalette;
 $('#librarySearch').addEventListener('input',renderSaved);
 $('#comboName').addEventListener('input',e=>{currentComboName=e.target.value;persistDraft()});
-renderModes();renderComboSlots();renderRecentColors();generate(false);
+renderModes();renderComboSlots();renderRecentColors();generate(false);renderCompare();updateLockToggle();
 historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();persistDraft();
 switchTab(localStorage.getItem('colorlab.tab')||'compose',false);updatePhotoTarget();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
