@@ -1949,18 +1949,29 @@ const MODES={
   natural:{label:'自然',baseL:.91,structureShift:-8,accentShift:38,sat:.28},
   bold:{label:'大膽',baseL:.96,structureL:.16,accentShift:180,sat:.62}
 };
+function safeJsonRead(key,fallback=null){
+  try{
+    const raw=localStorage.getItem(key);
+    return raw==null?fallback:JSON.parse(raw);
+  }catch(_){return fallback}
+}
+function readRecentColors(){
+  const raw=safeJsonRead('colorlab.recent',[]);
+  if(!Array.isArray(raw))return[];
+  return [...new Set(raw.filter(x=>typeof x==='string').map(x=>normHex(x)).filter(Boolean))].slice(0,20);
+}
 let mode='quiet',seed='#68705E',palette={base:'#F2EDE4',structure:'#292B29',accent:'#68705E'};
 let selectedColors=['#68705E',null,null],activeSlot=0,currentComboName='';
 let lockedSlots=[false,false,false];
-let compareA=JSON.parse(localStorage.getItem('colorlab.compareA')||'null');
-let compareB=JSON.parse(localStorage.getItem('colorlab.compareB')||'null');
+let compareA=sanitizeCompareRecord(safeJsonRead('colorlab.compareA',null));
+let compareB=sanitizeCompareRecord(safeJsonRead('colorlab.compareB',null));
 let visionMode='normal',previewContext='app',libraryTagFilter='';
 let librarySort=localStorage.getItem('colorlab.librarySort')||'recent',libraryFolderFilter='';
 let savedActionIndex=null,deferredInstallPrompt=null;
 let comboSortable=null,photoMode='point',regionStart=null;
 let iroPicker=null,pickerDraft='#68705E',iroSyncing=false,pickerReturnFocus=null;
 let historyStack=[],historyIndex=-1,isHistoryRestore=false;
-let recentColors=JSON.parse(localStorage.getItem('colorlab.recent')||'[]');
+let recentColors=readRecentColors();
 let recommendationCacheKey='',recommendationCacheValue=[];
 let igRelationCache=null;
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -1999,10 +2010,10 @@ async function writeResilienceSnapshot(){
     const payload={
       schema:'color-lab-shadow-v1',updatedAt:Date.now(),
       saved:readSavedData(),
-      recent:JSON.parse(localStorage.getItem('colorlab.recent')||'[]'),
-      draft:JSON.parse(localStorage.getItem('colorlab.draft')||'null'),
-      compareA:JSON.parse(localStorage.getItem('colorlab.compareA')||'null'),
-      compareB:JSON.parse(localStorage.getItem('colorlab.compareB')||'null')
+      recent:readRecentColors(),
+      draft:sanitizeDraftRecord(safeJsonRead('colorlab.draft',null)),
+      compareA:sanitizeCompareRecord(safeJsonRead('colorlab.compareA',null)),
+      compareB:sanitizeCompareRecord(safeJsonRead('colorlab.compareB',null))
     };
     await new Promise((resolve,reject)=>{
       const tx=db.transaction('snapshots','readwrite');
@@ -2353,6 +2364,7 @@ function importBackupFile(file){
   if(!file)return;
   if(file.size>5*1024*1024){toast('備份檔過大');return}
   const reader=new FileReader();
+  reader.onerror=()=>toast('備份檔讀取失敗');
   reader.onload=()=>{
     try{
       const data=JSON.parse(String(reader.result||''));
