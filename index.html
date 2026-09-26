@@ -2534,18 +2534,29 @@ function hueToward(from,to,amount){
 function ensureStructureContrast(baseHex,structureHex,minRatio=2.55){
   if(contrastRatio(baseHex,structureHex)>=minRatio)return structureHex;
   const b=toOKLCH(baseHex),s=toOKLCH(structureHex);
-  const direction=b.l<=.42?1:(b.l>=.62?-1:(s.l<b.l?-1:1));
-  let l=s.l,best=structureHex,bestRatio=contrastRatio(baseHex,structureHex);
 
-  for(let i=0;i<28;i++){
-    l=clamp(l+direction*.025,.04,.96);
-    const candidate=gamutMapOKLCH(l,s.c,s.h);
-    const ratio=contrastRatio(baseHex,candidate);
-    if(ratio>bestRatio){best=candidate;bestRatio=ratio}
-    if(ratio>=minRatio)return candidate;
-    if((direction>0&&l>=.96)||(direction<0&&l<=.04))break;
-  }
-  return best;
+  const probe=direction=>{
+    let l=s.l,best=structureHex,bestRatio=contrastRatio(baseHex,structureHex);
+    for(let i=0;i<40;i++){
+      l=clamp(l+direction*.025,.02,.98);
+      const candidate=gamutMapOKLCH(l,s.c,s.h);
+      const ratio=contrastRatio(baseHex,candidate);
+      if(ratio>bestRatio){best=candidate;bestRatio=ratio}
+      if(ratio>=minRatio){
+        return{candidate,ratio,delta:Math.abs(l-s.l),reached:true};
+      }
+      if((direction>0&&l>=.98)||(direction<0&&l<=.02))break;
+    }
+    return{candidate:best,ratio:bestRatio,delta:Infinity,reached:false};
+  };
+
+  const preferred=b.l<=.42?1:(b.l>=.62?-1:(s.l<b.l?-1:1));
+  const first=probe(preferred),second=probe(-preferred);
+
+  if(first.reached&&second.reached)return first.delta<=second.delta?first.candidate:second.candidate;
+  if(first.reached)return first.candidate;
+  if(second.reached)return second.candidate;
+  return first.ratio>=second.ratio?first.candidate:second.candidate;
 }
 function cohesionPass(colors,preserveCount=1){
   if(!Array.isArray(colors)||colors.length<3)return colors;
