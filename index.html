@@ -1824,7 +1824,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
           <div class="photo-auto" id="photoAuto" hidden>
             <div class="photo-auto-head">
               <div class="photo-auto-title">照片色彩角色</div>
-              <div class="photo-auto-note">主體／鮮明／柔和／深色／淺色</div>
+              <div class="photo-auto-note" id="photoColorSpaceNote">主體／鮮明／柔和／深色／淺色 · sRGB 分析</div>
             </div>
             <div class="photo-swatches" id="photoSwatches" aria-live="polite" aria-label="照片分析配色"></div>
             <div class="photo-insight" id="photoInsight" hidden>
@@ -3525,6 +3525,15 @@ async function copy(v){
   }catch(_){toast('無法複製')}
 }
 
+function detectPhotoColorCapability(){
+  try{
+    const cv=document.createElement('canvas');
+    const ctx=cv.getContext('2d',{colorSpace:'display-p3'});
+    const attrs=ctx?.getContextAttributes?.();
+    return attrs?.colorSpace==='display-p3'?'display-p3':'srgb';
+  }catch(_){return'srgb'}
+}
+const photoDisplayCapability=detectPhotoColorCapability();
 const photoInput=$('#photoInput'),photoCanvas=$('#photoCanvas'),photoPanel=$('#photoPanel'),pickMarker=$('#pickMarker');
 const photoCtx=photoCanvas.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'});
 const magnifier=$('#magnifier'),magnifierCanvas=$('#magnifierCanvas'),magnifierCtx=magnifierCanvas.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'}),pickReadout=$('#pickReadout');
@@ -3557,41 +3566,53 @@ function fallbackPhotoClusters(region=null){
   else cx.drawImage(photoCanvas,0,0,size,size);
 
   const d=cx.getImageData(0,0,size,size).data,pts=[];
+  const edgeBand=Math.max(2,Math.round(size*.10));
   for(let i=0;i<d.length;i+=4){
     if(d[i+3]<220)continue;
+    const pixel=i/4,x=pixel%size,y=Math.floor(pixel/size);
+    const edge=x<edgeBand||y<edgeBand||x>=size-edgeBand||y>=size-edgeBand;
     const hex=rgbToHex(d[i]/255,d[i+1]/255,d[i+2]/255),o=toOKLCH(hex);
     const extremeNeutral=(o.l>.975||o.l<.028)&&o.c<.018;
-    if(extremeNeutral&&((i/4)%5)!==0)continue;
-    pts.push([d[i],d[i+1],d[i+2]]);
+    if(extremeNeutral&&pixel%5!==0)continue;
+    pts.push([d[i],d[i+1],d[i+2],edge?1:0]);
   }
   if(!pts.length)return[];
 
-  const k=Math.min(10,pts.length),centers=[pts[Math.floor(pts.length/2)].slice()];
+  const k=Math.min(10,pts.length),centers=[pts[Math.floor(pts.length/2)].slice(0,3)];
   while(centers.length<k){
     let best=pts[0],bestD=-1;
     for(let n=0;n<pts.length;n+=3){
       const p=pts[n],dist=Math.min(...centers.map(cc=>(p[0]-cc[0])**2+(p[1]-cc[1])**2+(p[2]-cc[2])**2));
       if(dist>bestD){bestD=dist;best=p}
     }
-    centers.push(best.slice());
+    centers.push(best.slice(0,3));
   }
 
-  let counts=new Array(k).fill(0);
   for(let iter=0;iter<8;iter++){
-    const sums=Array.from({length:k},()=>[0,0,0]),nextCounts=new Array(k).fill(0);
+    const sums=Array.from({length:k},()=>[0,0,0]),counts=new Array(k).fill(0);
     for(const p of pts){
       let bi=0,bd=Infinity;
       centers.forEach((cc,i)=>{const dd=(p[0]-cc[0])**2+(p[1]-cc[1])**2+(p[2]-cc[2])**2;if(dd<bd){bd=dd;bi=i}});
-      sums[bi][0]+=p[0];sums[bi][1]+=p[1];sums[bi][2]+=p[2];nextCounts[bi]++;
+      sums[bi][0]+=p[0];sums[bi][1]+=p[1];sums[bi][2]+=p[2];counts[bi]++;
     }
-    centers.forEach((cc,i)=>{if(nextCounts[i])centers[i]=sums[i].map(v=>v/nextCounts[i])});
-    counts=nextCounts;
+    centers.forEach((cc,i)=>{if(counts[i])centers[i]=sums[i].map(v=>v/counts[i])});
+  }
+
+  const counts=new Array(k).fill(0),edgeCounts=new Array(k).fill(0);
+  for(const p of pts){
+    let bi=0,bd=Infinity;
+    centers.forEach((cc,i)=>{const dd=(p[0]-cc[0])**2+(p[1]-cc[1])**2+(p[2]-cc[2])**2;if(dd<bd){bd=dd;bi=i}});
+    counts[bi]++;if(p[3])edgeCounts[bi]++;
   }
 
   const total=counts.reduce((a,b)=>a+b,0)||1;
   const raw=centers.map((p,i)=>{
     const hex=rgbToHex(p[0]/255,p[1]/255,p[2]/255),o=toOKLCH(hex);
-    return{hex,count:counts[i],proportion:counts[i]/total,l:o.l,c:o.c,h:o.h};
+    return{
+      hex,count:counts[i],proportion:counts[i]/total,
+      edgeShare:counts[i]?edgeCounts[i]/counts[i]:0,
+      l:o.l,c:o.c,h:o.h
+    };
   }).filter(x=>x.count>0&&x.proportion>=.004).sort((a,b)=>b.count-a.count);
 
   const out=[];
@@ -3600,6 +3621,13 @@ function fallbackPhotoClusters(region=null){
     if(out.length>=9)break;
   }
   return out;
+}
+function photoDominanceScore(x){
+  if(!x||!Number.isFinite(x.proportion))return-Infinity;
+  const extremeNeutral=((x.l>.94||x.l<.07)&&x.c<.025)?0.46:1;
+  const edgeShare=Number.isFinite(x.edgeShare)?x.edgeShare:0;
+  const edgeNeutralPenalty=edgeShare>.55&&x.c<.06?Math.max(.30,1-(edgeShare-.50)*1.35):1;
+  return x.proportion*5*extremeNeutral*edgeNeutralPenalty+x.c*.30;
 }
 function semanticRolesFromClusters(clusters){
   if(!Array.isArray(clusters)||!clusters.length)return[];
@@ -3614,11 +3642,7 @@ function semanticRolesFromClusters(clusters){
     if(best){used.add(best.index);rows.push({hex:best.hex,label,proportion:best.proportion})}
   };
 
-  const dominantWeight=x=>{
-    const extremeNeutral=((x.l>.94||x.l<.07)&&x.c<.025)?0.46:1;
-    return x.proportion*5*extremeNeutral+x.c*.25;
-  };
-  take('主體',dominantWeight);
+  take('主體',photoDominanceScore);
   take('鮮明',x=>x.c*5-Math.abs(x.l-.58)*.8+x.proportion,x=>x.c>=.05&&x.l>.16&&x.l<.88);
   take('柔和',x=>(.16-Math.min(.16,x.c))*4-Math.abs(x.l-.62)*.45+x.proportion*.5,x=>x.c<=.12&&x.l>.20&&x.l<.92);
   take('深色',x=>(1-x.l)*3+x.proportion*.4-(x.l<.03&&x.c<.015?.8:0),x=>x.l<=.52);
@@ -3644,20 +3668,28 @@ function photoCompositionProfile(clusters,roles=[]){
   const lightnessSpan=maxL-minL;
   const primary=roles.find(x=>x.label==='主體')||roles[0]||null;
   const vivid=roles.find(x=>x.label==='鮮明')||null;
+  const edgeCandidate=[...usable]
+    .filter(x=>(x.edgeShare||0)>=.58&&x.proportion>=.14&&x.c<.075)
+    .sort((a,b)=>(b.edgeShare*b.proportion)-(a.edgeShare*a.proportion))[0]||null;
 
+  const primaryShare=Number.isFinite(primary?.proportion)?primary.proportion:usable[0].proportion;
   const chromaBand=avgC<.045?'低彩度':avgC<.105?'中彩度':'高彩度';
   const lightnessBand=avgL>.72?'偏明亮':avgL<.38?'偏深':'中等明度';
   const contrastBand=lightnessSpan>.48?'明暗跨度大':lightnessSpan>.28?'明暗層次中等':'明暗較柔和';
+  const dominanceBand=primaryShare>=.52?'單一主色明確':primaryShare>=.32?'主次清楚':'多色分布較平均';
   const focusBand=vivid
     ?(vivid.proportion<=.22?'少量高彩度形成焦點':'高彩度顏色占比明顯')
     :'沒有強烈高彩度焦點';
 
   return{
-    avgL,avgC,lightnessSpan,chromaBand,lightnessBand,contrastBand,focusBand,
+    avgL,avgC,lightnessSpan,chromaBand,lightnessBand,contrastBand,dominanceBand,focusBand,
     primaryHex:primary?.hex||usable[0].hex,
-    primaryShare:Number.isFinite(primary?.proportion)?primary.proportion:usable[0].proportion,
+    primaryShare,
     accentHex:vivid?.hex||null,
-    accentShare:Number.isFinite(vivid?.proportion)?vivid.proportion:0
+    accentShare:Number.isFinite(vivid?.proportion)?vivid.proportion:0,
+    edgeHex:edgeCandidate?.hex||null,
+    edgeProportion:edgeCandidate?.proportion||0,
+    edgeShare:edgeCandidate?.edgeShare||0
   };
 }
 function renderPhotoInsight(clusters,roles){
@@ -3667,9 +3699,18 @@ function renderPhotoInsight(clusters,roles){
   if(!profile){host.hidden=true;lead.textContent='';text.textContent='';return}
   host.hidden=false;
   lead.textContent='主體 '+profile.primaryHex+' 約 '+Math.round(profile.primaryShare*100)+'%';
-  const parts=[profile.chromaBand,profile.lightnessBand,profile.contrastBand,profile.focusBand];
+  const parts=[profile.dominanceBand,profile.chromaBand,profile.lightnessBand,profile.contrastBand,profile.focusBand];
   if(profile.accentHex)parts.push('焦點色 '+profile.accentHex+' 約 '+Math.round(profile.accentShare*100)+'%');
+  if(profile.edgeHex&&profile.edgeHex!==profile.primaryHex){
+    parts.push('邊緣色 '+profile.edgeHex+' 可能是背景');
+  }
   text.textContent=parts.join(' · ');
+}
+function updatePhotoColorSpaceNote(){
+  const note=$('#photoColorSpaceNote');if(!note)return;
+  note.textContent=photoDisplayCapability==='display-p3'
+    ?'主體／鮮明／柔和／深色／淺色 · P3 顯示可用 · 分析統一為 sRGB'
+    :'主體／鮮明／柔和／深色／淺色 · sRGB 分析';
 }
 function semanticPhotoSwatches(region=null){
   return semanticRolesFromClusters(fallbackPhotoClusters(region));
@@ -3959,7 +4000,7 @@ $('#librarySort').value=librarySort;
 $('#librarySort').addEventListener('change',e=>{librarySort=e.target.value;localStorage.setItem('colorlab.librarySort',librarySort);renderSaved()});
 $('#libraryFolderFilter').addEventListener('change',e=>{libraryFolderFilter=e.target.value;renderSaved()});
 $('#comboName').addEventListener('input',e=>{currentComboName=e.target.value;persistDraft()});
-renderModes();renderComboSlots();renderRecentColors();generate(false);renderCompare();updateLockToggle();setPhotoMode('point');updateInstallCard();
+renderModes();renderComboSlots();renderRecentColors();generate(false);renderCompare();updateLockToggle();setPhotoMode('point');updatePhotoColorSpaceNote();updateInstallCard();
 historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();persistDraft();
 switchTab(localStorage.getItem('colorlab.tab')||'compose',false);updatePhotoTarget();restoreResilienceIfNeeded();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
