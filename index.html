@@ -565,7 +565,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.0.1 EXPERIENCE PASS */
+/* V1.1 EXPERIENCE PASS */
 .screen-tools{
   display:flex;
   gap:var(--space-2);
@@ -688,7 +688,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.0.1 POWER TOOLS */
+/* V1.1 POWER TOOLS */
 .lock-toggle{
   min-height:34px;
   margin-top:var(--space-2);
@@ -791,7 +791,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.0.1 STUDIO */
+/* V1.1 STUDIO */
 .seed-inline-actions{display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap}
 .picker-open{color:var(--olive-11)}
 .vision-lab{
@@ -906,10 +906,170 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 .saved-tag-btn{border:0;background:transparent;color:var(--olive-11);padding:0;font-size:var(--text-sm);font-weight:600}
 
 
-/* V1.0.1.1 STABILIZATION */
+/* V1.1.1 STABILIZATION */
 .tab-view.active{animation:tab-in .18s ease-out both}
 @keyframes tab-in{from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.tab-view.active{animation:none}}
+
+
+/* V1.1 COMPLETE WORKFLOW */
+.drag-note{
+  margin:-14px 0 var(--space-5);
+  color:var(--text-3);
+  font-size:var(--text-xs);
+  text-align:right;
+}
+.drag-note span{font-weight:800;letter-spacing:-.1em}
+.drag-handle{
+  position:absolute;
+  right:8px;
+  bottom:7px;
+  width:28px;height:28px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:10px;
+  background:rgba(255,255,255,.24);
+  color:inherit;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:-.12em;
+  cursor:grab;
+  touch-action:none;
+  z-index:3;
+}
+.drag-handle:active{cursor:grabbing}
+.sortable-ghost{opacity:.28}
+.sortable-chosen{transform:scale(1.02)}
+.relationship-explain{margin-bottom:var(--space-5)}
+.explain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-2)}
+.explain-card{
+  min-width:0;
+  padding:var(--space-3);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-lg);
+  background:rgba(255,253,249,.25);
+}
+.explain-card b{display:block;font-size:var(--text-xs);margin-bottom:5px}
+.explain-card span{display:block;color:var(--text-2);font-size:11px;line-height:1.45}
+.photo-mode-bar{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:4px;
+  padding:4px;
+  margin-bottom:var(--space-4);
+  border-radius:var(--radius-lg);
+  background:var(--olive-2);
+}
+.photo-mode{
+  min-height:40px;
+  border:0;
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-2);
+  font-size:var(--text-sm);
+  font-weight:650;
+}
+.photo-mode.active{background:var(--surface-2);color:var(--olive-12);box-shadow:0 2px 10px rgba(36,38,36,.06)}
+.region-box{
+  position:absolute;
+  display:none;
+  border:2px solid #fff;
+  border-radius:8px;
+  box-shadow:0 0 0 1px rgba(0,0,0,.42),0 8px 24px rgba(0,0,0,.18);
+  background:rgba(255,255,255,.09);
+  pointer-events:none;
+  z-index:3;
+}
+.library-organize{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:var(--space-3);
+  margin-bottom:var(--space-4);
+}
+.select-wrap{
+  display:grid;
+  gap:5px;
+  color:var(--text-3);
+  font-size:11px;
+}
+.select-wrap select{
+  width:100%;
+  min-height:44px;
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-md);
+  background:rgba(255,253,249,.32);
+  color:var(--text-1);
+  padding:0 32px 0 12px;
+}
+.saved-menu{
+  width:44px;height:44px;min-width:44px;
+  border:0;border-radius:22px;
+  background:transparent;
+  color:var(--text-2);
+  font-size:20px;
+  letter-spacing:.08em;
+}
+.saved-pin-line{
+  display:flex;align-items:center;gap:6px;
+  margin-top:4px;
+  color:var(--text-3);font-size:10px;
+}
+.saved-pin-line .pin{color:var(--olive-11);font-weight:800}
+.saved-folder{
+  display:inline-flex;align-items:center;
+  min-height:22px;
+  border-radius:999px;
+  background:var(--olive-2);
+  color:var(--olive-11);
+  padding:0 7px;
+}
+.action-sheet{padding-bottom:calc(env(safe-area-inset-bottom) + 18px)}
+.action-list{display:grid;gap:4px}
+.action-row{
+  width:100%;
+  min-height:52px;
+  display:flex;align-items:center;justify-content:space-between;
+  border:0;border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-1);
+  padding:0 var(--space-3);
+  font-size:var(--text-md);
+  text-align:left;
+}
+.action-row:active{background:var(--olive-2)}
+.action-row.danger{color:#8B594B}
+.install-card{
+  margin-top:var(--space-7);
+  padding:var(--space-4);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-xl);
+  background:rgba(255,253,249,.28);
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:var(--space-4);
+  align-items:center;
+}
+.install-card[hidden]{display:none}
+.install-card strong{font-size:var(--text-sm)}
+.install-card p{margin:4px 0 0;color:var(--text-2);font-size:var(--text-xs);line-height:1.45}
+.install-card .utility-btn{padding:0 var(--space-4)}
+.install-steps{display:grid;gap:var(--space-3);padding-bottom:var(--space-4)}
+.install-steps div{display:grid;grid-template-columns:34px 1fr;gap:var(--space-3);align-items:center}
+.install-steps b{
+  width:34px;height:34px;border-radius:17px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--olive-2);color:var(--olive-12);font-size:var(--text-sm)
+}
+.install-steps span{font-size:var(--text-md)}
+.data-status{
+  margin-top:var(--space-4);
+  text-align:center;
+  color:var(--text-3);
+  font-size:11px;
+}
+@media(max-width:370px){
+  .explain-grid{grid-template-columns:1fr}
+  .library-organize{grid-template-columns:1fr}
+}
 
 </style>
 </head>
@@ -917,7 +1077,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V1.0.1</div>
+    <div class="version">V1.1</div>
   </div>
 
   <main class="app-main">
@@ -952,6 +1112,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
           <div class="combo-count" id="comboCount">1 / 3</div>
         </div>
         <div class="combo-slots" id="comboSlots"></div>
+        <div class="drag-note">拖曳 <span>⋮⋮</span> 調整三色順序</div>
 
         <div class="recent-block" id="recentBlock" hidden>
           <div class="micro-head"><span>最近用色</span><button type="button" id="clearRecent">清除</button></div>
@@ -975,6 +1136,11 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
         <div class="preview" id="preview"></div>
 
         <div class="health-strip" id="paletteHealth"></div>
+
+        <div class="relationship-explain">
+          <div class="micro-head"><span>為什麼這組成立</span><span>依目前三色關係</span></div>
+          <div class="explain-grid" id="relationshipExplain"></div>
+        </div>
 
         <div class="vision-lab">
           <div class="micro-head"><span>視覺模擬</span><span>近似模擬</span></div>
@@ -1071,10 +1237,16 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
         <button class="primary photo-select" id="photoTrigger" type="button">選擇照片 <span class="arrow">＋</span></button>
         <input id="photoInput" type="file" accept="image/*" hidden>
 
+        <div class="photo-mode-bar" id="photoModeBar">
+          <button type="button" class="photo-mode active" data-photo-mode="point">精準取色</button>
+          <button type="button" class="photo-mode" data-photo-mode="region">區域分析</button>
+        </div>
+
         <div class="photo-panel" id="photoPanel">
           <div class="photo-frame" id="photoFrame">
             <canvas id="photoCanvas" aria-label="點照片選取顏色"></canvas>
             <div class="pick-marker" id="pickMarker"></div>
+            <div class="region-box" id="regionBox"></div>
             <div class="magnifier" id="magnifier">
               <canvas id="magnifierCanvas" width="112" height="112"></canvas>
               <div class="pick-readout" id="pickReadout">#68705E</div>
@@ -1113,17 +1285,37 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
           <input id="librarySearch" class="library-search" type="search" placeholder="搜尋名稱 HEX 或標籤" autocomplete="off" aria-label="搜尋收藏配色">
         </div>
         <div class="tag-filters" id="libraryFilters"></div>
+        <div class="library-organize">
+          <label class="select-wrap"><span>排序</span><select id="librarySort">
+            <option value="recent">最近加入</option>
+            <option value="pinned">置頂優先</option>
+            <option value="name">名稱</option>
+            <option value="oldest">最早加入</option>
+          </select></label>
+          <label class="select-wrap"><span>分類</span><select id="libraryFolderFilter">
+            <option value="">全部分類</option>
+          </select></label>
+        </div>
         <div class="library-tools">
           <button type="button" class="utility-btn" id="exportBackup">匯出備份</button>
           <button type="button" class="utility-btn" id="importBackup">匯入備份</button>
           <input id="backupInput" type="file" accept="application/json,.json" hidden>
         </div>
         <div id="saved"></div>
+
+        <div class="install-card" id="installCard" hidden>
+          <div>
+            <strong>把 Color Lab 裝成 App</strong>
+            <p id="installCopy">從主畫面直接開啟 並保留獨立 App 體驗</p>
+          </div>
+          <button type="button" class="utility-btn" id="installAppBtn">安裝</button>
+        </div>
+        <div class="data-status" id="dataStatus">資料保存在此裝置</div>
       </section>
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V1.0.1</div>
+  <div class="footer app-footer">Color Lab V1.1</div>
 </div>
 
 <nav class="bottom-nav" aria-label="主要功能" role="tablist">
@@ -1152,6 +1344,45 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
     <span>收藏</span>
   </button>
 </nav>
+<div class="sheet-backdrop" id="savedActionBackdrop" hidden>
+  <section class="picker-sheet action-sheet" role="dialog" aria-modal="true" aria-labelledby="savedActionTitle">
+    <div class="sheet-handle"></div>
+    <div class="picker-head">
+      <div>
+        <div class="eyebrow">LIBRARY</div>
+        <h2 id="savedActionTitle">配色操作</h2>
+      </div>
+      <button type="button" class="sheet-close" id="closeSavedActions" aria-label="關閉">×</button>
+    </div>
+    <div class="action-list">
+      <button type="button" class="action-row" data-saved-action="load"><span>套用配色</span><span>→</span></button>
+      <button type="button" class="action-row" data-saved-action="pin"><span id="savedPinActionLabel">置頂</span><span>☆</span></button>
+      <button type="button" class="action-row" data-saved-action="rename"><span>重新命名</span><span>Aa</span></button>
+      <button type="button" class="action-row" data-saved-action="tags"><span>編輯標籤</span><span>#</span></button>
+      <button type="button" class="action-row" data-saved-action="folder"><span>移動分類</span><span>⌁</span></button>
+      <button type="button" class="action-row danger" data-saved-action="delete"><span>刪除配色</span><span>×</span></button>
+    </div>
+  </section>
+</div>
+
+<div class="sheet-backdrop" id="installBackdrop" hidden>
+  <section class="picker-sheet install-sheet" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+    <div class="sheet-handle"></div>
+    <div class="picker-head">
+      <div>
+        <div class="eyebrow">INSTALL</div>
+        <h2 id="installTitle">加入主畫面</h2>
+      </div>
+      <button type="button" class="sheet-close" id="closeInstallGuide" aria-label="關閉">×</button>
+    </div>
+    <div class="install-steps">
+      <div><b>1</b><span>使用 Safari 開啟 Color Lab</span></div>
+      <div><b>2</b><span>點下方分享按鈕</span></div>
+      <div><b>3</b><span>選「加入主畫面」</span></div>
+    </div>
+  </section>
+</div>
+
 <div class="sheet-backdrop" id="pickerBackdrop" hidden>
   <section class="picker-sheet" id="pickerSheet" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
     <div class="sheet-handle"></div>
@@ -1172,6 +1403,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 
 <script src="./vendor/poline.umd.js"></script>
 <script src="./vendor/iro.min.js"></script>
+<script src="./vendor/Sortable.min.js"></script>
 <script>
 const MODES={
   quiet:{label:'安靜',baseL:.93,structureL:.27,accentShift:22,sat:.26},
@@ -1187,6 +1419,9 @@ let lockedSlots=[false,false,false];
 let compareA=JSON.parse(localStorage.getItem('colorlab.compareA')||'null');
 let compareB=JSON.parse(localStorage.getItem('colorlab.compareB')||'null');
 let visionMode='normal',previewContext='app',libraryTagFilter='';
+let librarySort=localStorage.getItem('colorlab.librarySort')||'recent',libraryFolderFilter='';
+let savedActionIndex=null,deferredInstallPrompt=null;
+let comboSortable=null,photoMode='point',regionStart=null;
 let iroPicker=null,pickerDraft='#68705E',iroSyncing=false,pickerReturnFocus=null;
 let historyStack=[],historyIndex=-1,isHistoryRestore=false;
 let recentColors=JSON.parse(localStorage.getItem('colorlab.recent')||'[]');
@@ -1200,6 +1435,62 @@ function hslHex(h,s,l){return rgbToHex(...hslToRgb(h,clamp(s),clamp(l)))}
 function lum(hex){const c=hexToRgb(hex).map(v=>v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4));return.2126*c[0]+.7152*c[1]+.0722*c[2]}
 function textFor(bg){return lum(bg)>.48?'#242624':'#FFFDF9'}
 function normHex(v){v=v.trim();if(!v.startsWith('#'))v='#'+v;return/^#[0-9a-fA-F]{6}$/.test(v)?v.toUpperCase():null}
+let resilienceTimer=null;
+function openResilienceDB(){
+  return new Promise((resolve,reject)=>{
+    if(!('indexedDB'in window)){reject(new Error('idb-unavailable'));return}
+    const req=indexedDB.open('color-lab-resilience',1);
+    req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains('snapshots'))db.createObjectStore('snapshots')};
+    req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+  });
+}
+async function writeResilienceSnapshot(){
+  try{
+    const db=await openResilienceDB();
+    const payload={
+      schema:'color-lab-shadow-v1',updatedAt:Date.now(),
+      saved:JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),
+      recent:JSON.parse(localStorage.getItem('colorlab.recent')||'[]'),
+      draft:JSON.parse(localStorage.getItem('colorlab.draft')||'null'),
+      compareA:JSON.parse(localStorage.getItem('colorlab.compareA')||'null'),
+      compareB:JSON.parse(localStorage.getItem('colorlab.compareB')||'null')
+    };
+    await new Promise((resolve,reject)=>{
+      const tx=db.transaction('snapshots','readwrite');
+      tx.objectStore('snapshots').put(payload,'latest');
+      tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+    });
+    db.close();
+    const s=$('#dataStatus');if(s)s.textContent='本機雙重備份已啟用';
+  }catch(_){
+    const s=$('#dataStatus');if(s)s.textContent='資料保存在此裝置';
+  }
+}
+function scheduleResilienceBackup(){
+  clearTimeout(resilienceTimer);
+  resilienceTimer=setTimeout(writeResilienceSnapshot,350);
+}
+async function restoreResilienceIfNeeded(){
+  try{
+    const current=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
+    if(current.length){scheduleResilienceBackup();return}
+    const db=await openResilienceDB();
+    const snap=await new Promise((resolve,reject)=>{
+      const tx=db.transaction('snapshots','readonly'),req=tx.objectStore('snapshots').get('latest');
+      req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error);
+    });
+    db.close();
+    if(!snap||!Array.isArray(snap.saved)||!snap.saved.length)return;
+    localStorage.setItem('colorlab.saved',JSON.stringify(snap.saved));
+    if(Array.isArray(snap.recent))localStorage.setItem('colorlab.recent',JSON.stringify(snap.recent));
+    if(snap.draft)localStorage.setItem('colorlab.draft',JSON.stringify(snap.draft));
+    if(snap.compareA)localStorage.setItem('colorlab.compareA',JSON.stringify(snap.compareA));
+    if(snap.compareB)localStorage.setItem('colorlab.compareB',JSON.stringify(snap.compareB));
+    renderSaved();
+    toast('已從本機備份恢復收藏');
+  }catch(_){}
+}
+
 function snapshotState(){
   return {
     selectedColors:[...selectedColors],
@@ -1212,6 +1503,7 @@ function snapshotState(){
 function stateKey(s){return JSON.stringify(s)}
 function persistDraft(){
   try{localStorage.setItem('colorlab.draft',JSON.stringify(snapshotState()))}catch(_){}
+  scheduleResilienceBackup();
 }
 function restoreDraft(){
   try{
@@ -1282,6 +1574,26 @@ function contrastRatio(a,b){
   const L1=lum(a),L2=lum(b),hi=Math.max(L1,L2),lo=Math.min(L1,L2);
   return (hi+.05)/(lo+.05);
 }
+
+function renderRelationshipExplanation(){
+  const host=$('#relationshipExplain');if(!host)return;
+  const b=toOKLCH(palette.base),s=toOKLCH(palette.structure),a=toOKLCH(palette.accent);
+  const lightGap=Math.abs(b.l-s.l);
+  const hueBA=hueDistance(b.h,a.h),hueSA=hueDistance(s.h,a.h);
+  const nearestHue=Math.min(hueBA,hueSA);
+  const structureText=lightGap>.45?'Base 與 Structure 明暗拉得很開 層級很清楚':lightGap>.28?'明暗差足以建立主要層級':'明暗較接近 適合更柔和的畫面';
+  let hueText='';
+  if(nearestHue<30)hueText='Accent 與主色接近 屬於同色系延伸';
+  else if(nearestHue<75)hueText='Accent 保留關聯 同時有可見色相變化';
+  else if(nearestHue<145)hueText='色相距離較大 會形成明顯焦點';
+  else hueText='Accent 接近對比方向 少量使用會更突出';
+  const avgC=(b.c+s.c)/2,focusRatio=a.c/(avgC+.015);
+  const focusText=focusRatio>1.6?'Accent 彩度明顯較高 很適合只放在 7%':focusRatio>.9?'Accent 彩度與整體平衡 焦點感較克制':'Accent 比主色更安靜 焦點主要來自明暗與色相';
+  host.innerHTML=
+    '<div class="explain-card"><b>明暗</b><span>'+structureText+'</span></div>'+
+    '<div class="explain-card"><b>色相</b><span>'+hueText+'</span></div>'+
+    '<div class="explain-card"><b>焦點</b><span>'+focusText+'</span></div>';
+}
 function renderPaletteHealth(){
   const host=$('#paletteHealth');if(!host)return;
   const bs=contrastRatio(palette.base,palette.structure);
@@ -1321,7 +1633,7 @@ function deleteSaved(index){
   const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');if(!data[index])return;
   const name=(data[index].name&&data[index].name.trim())||'未命名配色';
   if(!confirm('刪除「'+name+'」？'))return;
-  data.splice(index,1);localStorage.setItem('colorlab.saved',JSON.stringify(data));renderSaved();toast('已刪除');
+  data.splice(index,1);localStorage.setItem('colorlab.saved',JSON.stringify(data));scheduleResilienceBackup();renderSaved();toast('已刪除');
 }
 
 
@@ -1344,6 +1656,7 @@ function saveCompare(which){
   const snap=compareSnapshot();
   if(which==='A'){compareA=snap;localStorage.setItem('colorlab.compareA',JSON.stringify(snap))}
   else{compareB=snap;localStorage.setItem('colorlab.compareB',JSON.stringify(snap))}
+  scheduleResilienceBackup();
   renderCompare();toast('已設為方案 '+which);
 }
 function compareMetrics(p){
@@ -1438,7 +1751,7 @@ function importBackupFile(file){
       if(data.draft&&Array.isArray(data.draft.selectedColors)){
         localStorage.setItem('colorlab.draft',JSON.stringify(data.draft));
       }
-      renderSaved();renderRecentColors();renderCompare();toast('備份已匯入');
+      scheduleResilienceBackup();renderSaved();renderRecentColors();renderCompare();toast('備份已匯入');
     }catch(_){toast('不是有效的 Color Lab 備份')}
   };
   reader.readAsText(file);
@@ -1511,7 +1824,7 @@ function normalizeTags(v){
 function editSavedTags(index){
   const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),item=data[index];if(!item)return;
   const next=prompt('標籤 用逗號分隔',(item.tags||[]).join(', '));if(next===null)return;
-  item.tags=normalizeTags(next);localStorage.setItem('colorlab.saved',JSON.stringify(data));renderSaved();toast('標籤已更新');
+  item.tags=normalizeTags(next);localStorage.setItem('colorlab.saved',JSON.stringify(data));scheduleResilienceBackup();renderSaved();toast('標籤已更新');
 }
 function renderLibraryFilters(data){
   const host=$('#libraryFilters');if(!host)return;
@@ -1749,6 +2062,33 @@ function syncEditor(){
   $('#hex').value=current;
   renderComboSlots();
 }
+
+function reorderSlots(oldIndex,newIndex){
+  if(oldIndex==null||newIndex==null||oldIndex===newIndex)return;
+  const movedColor=selectedColors.splice(oldIndex,1)[0];selectedColors.splice(newIndex,0,movedColor);
+  const movedLock=lockedSlots.splice(oldIndex,1)[0];lockedSlots.splice(newIndex,0,movedLock);
+  if(activeSlot===oldIndex)activeSlot=newIndex;
+  else if(oldIndex<activeSlot&&newIndex>=activeSlot)activeSlot--;
+  else if(oldIndex>activeSlot&&newIndex<=activeSlot)activeSlot++;
+  seed=selectedColors[activeSlot]||selectedColors.find(Boolean)||'#68705E';
+  syncEditor();generate(false);pushHistory();updatePhotoTarget();toast('已調整顏色順序');
+}
+function ensureComboSortable(){
+  if(comboSortable){try{comboSortable.destroy()}catch(_){}comboSortable=null}
+  if(!window.Sortable)return;
+  const el=$('#comboSlots');if(!el)return;
+  comboSortable=window.Sortable.create(el,{
+    animation:160,
+    handle:'.drag-handle',
+    draggable:'.slot-wrap.filled-wrap',
+    ghostClass:'sortable-ghost',
+    chosenClass:'sortable-chosen',
+    delay:120,
+    delayOnTouchOnly:true,
+    touchStartThreshold:4,
+    onEnd:e=>reorderSlots(e.oldIndex,e.newIndex)
+  });
+}
 function setColorAtActive(hex){
   const h=normHex(hex);
   if(!h)return;
@@ -1789,7 +2129,7 @@ function renderComboSlots(){
   box.innerHTML='';
   $('#comboCount').textContent=chosenColors().length+' / 3';
   selectedColors.forEach((hex,i)=>{
-    const wrap=document.createElement('div');wrap.className='slot-wrap';
+    const wrap=document.createElement('div');wrap.className='slot-wrap '+(hex?'filled-wrap':'empty-wrap');
     const btn=document.createElement('button');
     btn.type='button';
     btn.className='combo-slot '+(hex?'':'empty')+(i===activeSlot?' active':'');
@@ -1801,12 +2141,16 @@ function renderComboSlots(){
       if(chosenColors().length>1){
         const rm=document.createElement('button');rm.type='button';rm.className='slot-remove';rm.dataset.removeSlot=i;rm.textContent='×';rm.setAttribute('aria-label','移除顏色 '+(i+1));wrap.appendChild(rm);
       }
+      if(chosenColors().length>1){
+        const drag=document.createElement('span');drag.className='drag-handle';drag.textContent='⋮⋮';drag.setAttribute('aria-hidden','true');wrap.appendChild(drag);
+      }
     }else{
       btn.innerHTML='<span>＋</span><span class="slot-no">ADD COLOR</span>';
     }
     wrap.insertBefore(btn,wrap.firstChild);
     box.appendChild(wrap);
   });
+  ensureComboSortable();
 }
 
 function derive(seed,style=mode){const[h,s,l]=rgbToHsl(...hexToRgb(seed)),m=MODES[style];let baseH=h,baseS=Math.min(.14,Math.max(.04,s*.22)),baseL=m.baseL;if(style==='warm')baseH=h-10;if(style==='cool')baseH=h+8;let structureH=h+(m.structureShift??0),structureS=Math.min(.34,Math.max(.08,s*.48)),structureL=m.structureL??(.24+(l>.62?-.04:.04));let accentH=h+m.accentShift,accentS=Math.min(.78,Math.max(m.sat,s*.78)),accentL=style==='bold'?.52:.48;if(style==='natural'){structureH=h-24;accentH=h+42;structureS=.20;accentS=.38}return{base:hslHex(baseH,baseS,baseL),structure:hslHex(structureH,structureS,structureL),accent:hslHex(accentH,accentS,accentL)}}
@@ -1826,7 +2170,7 @@ function render(){
   });
   const pv=$('#preview');pv.innerHTML='';
   [['base','75'],['structure','18'],['accent','7']].forEach(([k,t])=>{const d=document.createElement('div');d.style.background=palette[k];d.style.color=textFor(palette[k]);d.innerHTML=`<span>${t}</span>`;pv.appendChild(d)});
-  renderPaletteHealth();renderVision();renderContextPreview();renderIdeas();renderRecommendations();renderSaved();
+  renderPaletteHealth();renderRelationshipExplanation();renderVision();renderContextPreview();renderIdeas();renderRecommendations();renderSaved();
 }
 function renderIdeas(){
   const box=$('#ideas');box.innerHTML='';
@@ -1854,23 +2198,66 @@ function save(){
   const inputName=($('#comboName')?.value||'').trim();
   currentComboName=inputName||'未命名配色';
   const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
-  data.unshift({name:currentComboName,tags:[],seed,selectedColors:[...selectedColors],lockedSlots:[...lockedSlots],mode,palette:{...palette},date:Date.now()});
+  data.unshift({name:currentComboName,tags:[],folder:'',pinned:false,seed,selectedColors:[...selectedColors],lockedSlots:[...lockedSlots],mode,palette:{...palette},date:Date.now()});
   localStorage.setItem('colorlab.saved',JSON.stringify(data.slice(0,300)));
   renderSaved();
   persistDraft();
   toast('已收藏 '+currentComboName);
 }
+
+function renderFolderFilter(data){
+  const select=$('#libraryFolderFilter');if(!select)return;
+  const folders=[...new Set(data.map(x=>(x.folder||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'zh-Hant'));
+  const current=libraryFolderFilter;
+  select.innerHTML='<option value="">全部分類</option>'+folders.map(f=>'<option value="'+escapeHtml(f)+'">'+escapeHtml(f)+'</option>').join('');
+  if(folders.includes(current))select.value=current;else{libraryFolderFilter='';select.value=''}
+}
+function toggleSavedPin(index){
+  const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),item=data[index];if(!item)return;
+  item.pinned=!item.pinned;localStorage.setItem('colorlab.saved',JSON.stringify(data));scheduleResilienceBackup();renderSaved();
+  toast(item.pinned?'已置頂':'已取消置頂');
+}
+function editSavedFolder(index){
+  const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),item=data[index];if(!item)return;
+  const next=prompt('分類名稱 留空代表未分類',item.folder||'');if(next===null)return;
+  item.folder=next.trim().slice(0,20);localStorage.setItem('colorlab.saved',JSON.stringify(data));scheduleResilienceBackup();renderSaved();toast(item.folder?'已移到 '+item.folder:'已移出分類');
+}
+function openSavedActions(index){
+  const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),item=data[index];if(!item)return;
+  savedActionIndex=index;
+  $('#savedActionTitle').textContent=(item.name&&item.name.trim())||'未命名配色';
+  $('#savedPinActionLabel').textContent=item.pinned?'取消置頂':'置頂';
+  $('#savedActionBackdrop').hidden=false;document.body.style.overflow='hidden';
+}
+function closeSavedActions(){savedActionIndex=null;$('#savedActionBackdrop').hidden=true;document.body.style.overflow=''}
+function loadSaved(index){
+  const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),x=data[index];if(!x)return;
+  seed=x.seed;mode=MODES[x.mode]?x.mode:'quiet';palette={...x.palette};
+  selectedColors=x.selectedColors?[...x.selectedColors]:[x.seed,null,null];while(selectedColors.length<3)selectedColors.push(null);
+  lockedSlots=Array.isArray(x.lockedSlots)?[...x.lockedSlots]:[false,false,false];while(lockedSlots.length<3)lockedSlots.push(false);
+  activeSlot=Math.max(0,selectedColors.findIndex(Boolean));currentComboName=(x.name&&x.name.trim())||'未命名配色';
+  $('#comboName').value=currentComboName==='未命名配色'?'':currentComboName;
+  syncEditor();renderModes();render();pushHistory();switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'});
+}
 function renderSaved(){
   const el=$('#saved'),data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
-  renderLibraryFilters(data);
+  renderLibraryFilters(data);renderFolderFilter(data);
   const q=($('#librarySearch')?.value||'').trim().toLowerCase();
-  const rows=data.map((x,i)=>({x,i})).filter(({x})=>{
+  let rows=data.map((x,i)=>({x,i})).filter(({x})=>{
     const tags=Array.isArray(x.tags)?x.tags:[];
     if(libraryTagFilter&&!tags.includes(libraryTagFilter))return false;
+    if(libraryFolderFilter&&(x.folder||'')!==libraryFolderFilter)return false;
     if(!q)return true;
     const title=((x.name&&x.name.trim())||'未命名配色').toLowerCase();
     const colors=[x.seed,x.palette?.base,x.palette?.structure,x.palette?.accent,...(x.selectedColors||[])].filter(Boolean).join(' ').toLowerCase();
-    return title.includes(q)||colors.includes(q)||tags.join(' ').toLowerCase().includes(q);
+    const folder=(x.folder||'').toLowerCase();
+    return title.includes(q)||colors.includes(q)||tags.join(' ').toLowerCase().includes(q)||folder.includes(q);
+  });
+  rows.sort((a,b)=>{
+    if(librarySort==='pinned')return Number(!!b.x.pinned)-Number(!!a.x.pinned)||(b.x.date||0)-(a.x.date||0);
+    if(librarySort==='name')return ((a.x.name||'').localeCompare(b.x.name||'','zh-Hant'));
+    if(librarySort==='oldest')return (a.x.date||0)-(b.x.date||0);
+    return (b.x.date||0)-(a.x.date||0);
   });
   if(!data.length){el.innerHTML='<div class="saved-empty">還沒有收藏。先在配色頁存下第一組。</div>';return}
   if(!rows.length){el.innerHTML='<div class="saved-empty">找不到符合的收藏。</div>';return}
@@ -1880,7 +2267,7 @@ function renderSaved(){
     const d=document.createElement('div');d.className='saved-item';
     const title=(x.name&&x.name.trim())||'未命名配色';
     const tags=Array.isArray(x.tags)?x.tags:[];
-    d.innerHTML=`<div class="mini3"><i style="background:${x.palette.base}"></i><i style="background:${x.palette.structure}"></i><i style="background:${x.palette.accent}"></i></div><div class="saved-info"><b>${escapeHtml(title)}</b><div class="idea-meta">${x.seed}</div>${tags.length?'<div class="saved-tags">'+tags.map(t=>'<button type="button" class="saved-tag" data-tag-filter="'+escapeHtml(t)+'">'+escapeHtml(t)+'</button>').join('')+'</div>':''}</div><div class="saved-actions"><button class="saved-tag-btn" data-edit-tags="${i}">標籤</button><button class="saved-rename" data-rename="${i}">改名</button><button class="saved-copy" data-load="${i}">套用</button><button class="saved-delete" data-delete="${i}">刪除</button></div>`;
+    d.innerHTML=`<div class="mini3"><i style="background:${x.palette.base}"></i><i style="background:${x.palette.structure}"></i><i style="background:${x.palette.accent}"></i></div><div class="saved-info"><b>${x.pinned?'★ ':''}${escapeHtml(title)}</b><div class="idea-meta">${x.seed}</div><div class="saved-pin-line">${x.folder?'<span class="saved-folder">'+escapeHtml(x.folder)+'</span>':''}${x.pinned?'<span class="pin">PINNED</span>':''}</div>${tags.length?'<div class="saved-tags">'+tags.map(t=>'<button type="button" class="saved-tag" data-tag-filter="'+escapeHtml(t)+'">'+escapeHtml(t)+'</button>').join('')+'</div>':''}</div><button class="saved-menu" type="button" data-saved-menu="${i}" aria-label="配色更多操作">•••</button>`;
     list.appendChild(d);
   })
 }
@@ -1892,7 +2279,7 @@ function renameSaved(index){
   if(next===null)return;
   item.name=next.trim()||'未命名配色';
   localStorage.setItem('colorlab.saved',JSON.stringify(data));
-  renderSaved();
+  scheduleResilienceBackup();renderSaved();
   toast('已改名');
 }
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.remove('show'),1200)}
@@ -1912,10 +2299,15 @@ function renderPhotoPalette(hexes){
     const b=document.createElement('button');b.className='photo-swatch';b.type='button';b.dataset.photoColor=hex;b.style.background=hex;b.style.setProperty('--swatch-text',textFor(hex));b.title=hex;b.setAttribute('aria-label','加入照片顏色 '+hex);box.appendChild(b);
   });
 }
-function fallbackPhotoPalette(){
+function fallbackPhotoPalette(region=null){
   const w=photoCanvas.width,h=photoCanvas.height;if(!w||!h)return[];
   const size=72,cv=document.createElement('canvas');cv.width=size;cv.height=size;
-  const cx=cv.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'});cx.drawImage(photoCanvas,0,0,size,size);
+  const cx=cv.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'});
+  if(region){
+    cx.drawImage(photoCanvas,region.x,region.y,region.w,region.h,0,0,size,size);
+  }else{
+    cx.drawImage(photoCanvas,0,0,size,size);
+  }
   const d=cx.getImageData(0,0,size,size).data,pts=[];
   for(let i=0;i<d.length;i+=4){
     if(d[i+3]<220)continue;
@@ -1952,8 +2344,26 @@ function fallbackPhotoPalette(){
   }
   return out;
 }
-function extractPhotoPalette(){
-  renderPhotoPalette(fallbackPhotoPalette());
+function extractPhotoPalette(region=null){
+  renderPhotoPalette(fallbackPhotoPalette(region));
+}
+function setPhotoMode(next){
+  photoMode=next==='region'?'region':'point';
+  $('#photoModeBar [data-photo-mode]').forEach(b=>b.classList.toggle('active',b.dataset.photoMode===photoMode));
+  const hint=$('.photo-hint');if(hint)hint.textContent=photoMode==='region'?'拖曳框選區域 自動分析主要色':'按住拖動 精準取色';
+  if(photoMode==='point')$('#regionBox').style.display='none';
+}
+function updateRegionBox(start,p){
+  const box=$('#regionBox'),offsetX=p.r.left-p.frameR.left,offsetY=p.r.top-p.frameR.top;
+  const x=Math.min(start.localX,p.localX)+offsetX,y=Math.min(start.localY,p.localY)+offsetY;
+  const w=Math.abs(p.localX-start.localX),h=Math.abs(p.localY-start.localY);
+  box.style.left=x+'px';box.style.top=y+'px';box.style.width=w+'px';box.style.height=h+'px';box.style.display='block';
+}
+function finishPhotoRegion(p){
+  if(!regionStart)return;
+  const x=Math.min(regionStart.px,p.px),y=Math.min(regionStart.py,p.py),w=Math.abs(p.px-regionStart.px)+1,h=Math.abs(p.py-regionStart.py)+1;
+  if(w<12||h<12){toast('請框選大一點的區域');return}
+  extractPhotoPalette({x,y,w,h});toast('已分析框選區域');
 }
 function openPhotoPicker(){photoInput.click()}
 function loadPhoto(file){
@@ -2038,23 +2448,37 @@ photoInput.addEventListener('change',e=>{const file=e.target.files&&e.target.fil
 photoCanvas.addEventListener('pointerdown',e=>{
   photoPicking=true;
   try{photoCanvas.setPointerCapture(e.pointerId)}catch(_){}
-  updatePhotoPick(e.clientX,e.clientY,false);
+  if(photoMode==='region'){
+    regionStart=mapPhotoPoint(e.clientX,e.clientY);
+    pickMarker.style.display='none';magnifier.style.display='none';
+    updateRegionBox(regionStart,regionStart);
+  }else{
+    updatePhotoPick(e.clientX,e.clientY,false);
+  }
 });
 photoCanvas.addEventListener('pointermove',e=>{
   if(!photoPicking)return;
   e.preventDefault();
-  updatePhotoPick(e.clientX,e.clientY,false);
+  if(photoMode==='region'){
+    const p=mapPhotoPoint(e.clientX,e.clientY);updateRegionBox(regionStart,p);
+  }else{
+    updatePhotoPick(e.clientX,e.clientY,false);
+  }
 });
 function finishPhotoPick(e){
   if(!photoPicking)return;
   photoPicking=false;
-  updatePhotoPick(e.clientX,e.clientY,true);
-  setTimeout(()=>magnifier.style.display='none',120);
+  if(photoMode==='region'){
+    const p=mapPhotoPoint(e.clientX,e.clientY);updateRegionBox(regionStart,p);finishPhotoRegion(p);regionStart=null;
+  }else{
+    updatePhotoPick(e.clientX,e.clientY,true);
+    setTimeout(()=>magnifier.style.display='none',120);
+  }
   try{photoCanvas.releasePointerCapture(e.pointerId)}catch(_){}
 }
 photoCanvas.addEventListener('pointerup',finishPhotoPick);
 photoCanvas.addEventListener('pointercancel',()=>{
-  photoPicking=false;
+  photoPicking=false;regionStart=null;
   magnifier.style.display='none';
 });
 
@@ -2063,6 +2487,18 @@ $('#hex').addEventListener('change',e=>{const h=normHex(e.target.value);if(h)set
 $('#generate').onclick=()=>generate(true);
 $('#save').onclick=save;
 document.addEventListener('click',e=>{
+  const pm=e.target.closest('[data-photo-mode]');if(pm){setPhotoMode(pm.dataset.photoMode);return}
+  const menu=e.target.closest('[data-saved-menu]');if(menu){openSavedActions(+menu.dataset.savedMenu);return}
+  const action=e.target.closest('[data-saved-action]');if(action&&savedActionIndex!==null){
+    const i=savedActionIndex,kind=action.dataset.savedAction;closeSavedActions();
+    if(kind==='load')loadSaved(i);
+    else if(kind==='pin')toggleSavedPin(i);
+    else if(kind==='rename')renameSaved(i);
+    else if(kind==='tags')editSavedTags(i);
+    else if(kind==='folder')editSavedFolder(i);
+    else if(kind==='delete')deleteSaved(i);
+    return;
+  }
   const vf=e.target.closest('[data-vision]');if(vf){visionMode=vf.dataset.vision;renderVision();return}
   const ctx=e.target.closest('[data-context]');if(ctx){previewContext=ctx.dataset.context;renderContextPreview();return}
   const tf=e.target.closest('[data-tag-filter]');if(tf){libraryTagFilter=tf.dataset.tagFilter||'';renderSaved();return}
@@ -2073,13 +2509,40 @@ document.addEventListener('click',e=>{
   const pc=e.target.closest('[data-photo-color]');if(pc){setColorAtActive(pc.dataset.photoColor);toast('已加入 '+pc.dataset.photoColor);return}
   const rc=e.target.closest('[data-rec]');if(rc){applyRecommendation(+rc.dataset.rec);return}
   const rm=e.target.closest('[data-remove-slot]');if(rm){e.stopPropagation();removeSlot(+rm.dataset.removeSlot);return}
+  if(e.target.closest('.drag-handle'))return;
   const sl=e.target.closest('[data-slot]');if(sl){setActiveSlot(+sl.dataset.slot,!selectedColors[+sl.dataset.slot]);return}
   const c=e.target.closest('[data-copy]');if(c)copy(c.dataset.copy);
   const s=e.target.closest('[data-shuffle]');if(s)shuffle(s.dataset.shuffle);
   const rn=e.target.closest('[data-rename]');if(rn){renameSaved(+rn.dataset.rename);return}
-  const l=e.target.closest('[data-load]');if(l){const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),x=data[+l.dataset.load];if(x){seed=x.seed;mode=x.mode;palette={...x.palette};selectedColors=x.selectedColors?[...x.selectedColors]:[x.seed,null,null];while(selectedColors.length<3)selectedColors.push(null);lockedSlots=Array.isArray(x.lockedSlots)?[...x.lockedSlots]:[false,false,false];while(lockedSlots.length<3)lockedSlots.push(false);activeSlot=Math.max(0,selectedColors.findIndex(Boolean));currentComboName=(x.name&&x.name.trim())||'未命名配色';$('#comboName').value=currentComboName==='未命名配色'?'':currentComboName;syncEditor();renderModes();render();pushHistory();switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'})}}
+  const l=e.target.closest('[data-load]');if(l){loadSaved(+l.dataset.load)}
 });
 
+
+function isStandalone(){
+  return window.matchMedia?.('(display-mode: standalone)').matches||window.navigator.standalone===true;
+}
+function isIOSDevice(){return /iphone|ipad|ipod/i.test(navigator.userAgent)}
+function updateInstallCard(){
+  const card=$('#installCard');if(!card)return;
+  card.hidden=isStandalone();
+  if(!card.hidden){
+    $('#installCopy').textContent=isIOSDevice()?'Safari 分享 → 加入主畫面':'安裝後可從主畫面直接開啟';
+  }
+}
+async function installApp(){
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    try{await deferredInstallPrompt.userChoice}catch(_){}
+    deferredInstallPrompt=null;updateInstallCard();return;
+  }
+  if(isIOSDevice()){
+    $('#installBackdrop').hidden=false;document.body.style.overflow='hidden';return;
+  }
+  toast('請使用瀏覽器選單的「安裝 App」或「加入主畫面」');
+}
+function closeInstallGuide(){$('#installBackdrop').hidden=true;document.body.style.overflow=''}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;updateInstallCard()});
+window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;updateInstallCard();toast('Color Lab 已安裝')});
 const tabScroll={};
 function switchTab(name,scrollTop=true){
   const valid=['compose','inspire','photo','library'];
@@ -2125,8 +2588,18 @@ $('#openStudioPicker').onclick=openStudioPicker;
 $('#closeStudioPicker').onclick=closeStudioPicker;
 $('#applyStudioPicker').onclick=applyStudioPicker;
 $('#pickerBackdrop').addEventListener('click',e=>{if(e.target===$('#pickerBackdrop'))closeStudioPicker()});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#pickerBackdrop').hidden)closeStudioPicker()});
-window.addEventListener('pagehide',persistDraft);
+$('#closeSavedActions').onclick=closeSavedActions;
+$('#savedActionBackdrop').addEventListener('click',e=>{if(e.target===$('#savedActionBackdrop'))closeSavedActions()});
+$('#installAppBtn').onclick=installApp;
+$('#closeInstallGuide').onclick=closeInstallGuide;
+$('#installBackdrop').addEventListener('click',e=>{if(e.target===$('#installBackdrop'))closeInstallGuide()});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  if(!$('#pickerBackdrop').hidden)closeStudioPicker();
+  else if(!$('#savedActionBackdrop').hidden)closeSavedActions();
+  else if(!$('#installBackdrop').hidden)closeInstallGuide();
+});
+window.addEventListener('pagehide',()=>{persistDraft();writeResilienceSnapshot()});
 $('#setCompareA').onclick=()=>saveCompare('A');
 $('#setCompareB').onclick=()=>saveCompare('B');
 $('#exportPaletteImage').onclick=exportPaletteImage;
@@ -2137,10 +2610,13 @@ $('#clearRecent').onclick=()=>{recentColors=[];localStorage.removeItem('colorlab
 $('#copyPalette').onclick=()=>{navigator.clipboard?.writeText(paletteText()).then(()=>toast('已複製三色')).catch(()=>toast('無法複製'))};
 $('#sharePalette').onclick=sharePalette;
 $('#librarySearch').addEventListener('input',renderSaved);
+$('#librarySort').value=librarySort;
+$('#librarySort').addEventListener('change',e=>{librarySort=e.target.value;localStorage.setItem('colorlab.librarySort',librarySort);renderSaved()});
+$('#libraryFolderFilter').addEventListener('change',e=>{libraryFolderFilter=e.target.value;renderSaved()});
 $('#comboName').addEventListener('input',e=>{currentComboName=e.target.value;persistDraft()});
-renderModes();renderComboSlots();renderRecentColors();generate(false);renderCompare();updateLockToggle();
+renderModes();renderComboSlots();renderRecentColors();generate(false);renderCompare();updateLockToggle();setPhotoMode('point');updateInstallCard();
 historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();persistDraft();
-switchTab(localStorage.getItem('colorlab.tab')||'compose',false);updatePhotoTarget();
+switchTab(localStorage.getItem('colorlab.tab')||'compose',false);updatePhotoTarget();restoreResilienceIfNeeded();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body>
