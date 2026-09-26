@@ -69,7 +69,7 @@ for(const src of localScripts){
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v11")) fail('service worker cache version is not V1.1');
+if(!sw.includes("color-lab-v12")) fail('service worker cache version is not V1.2');
 else pass('service worker cache version');
 
 if(manifest.display!=='standalone') fail('manifest display must be standalone');
@@ -111,4 +111,4 @@ if(!html.includes("data.slice(0,300)")) fail('saved palette cap regression');
 else pass('saved palette capacity');
 
 if(process.exitCode) process.exit(process.exitCode);
-console.log('Color Lab V1.1 verification complete.');
+console.log('Color Lab V1.2 verification complete.');
