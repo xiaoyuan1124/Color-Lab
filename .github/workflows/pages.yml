@@ -22,10 +22,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install test tools
+        run: npm install --no-audit --no-fund
       - name: Verify Color Lab
-        run: node scripts/verify.mjs
+        run: npm run test:verify
       - name: Torture test color engine
-        run: node scripts/torture.mjs
+        run: npm run test:torture
+      - name: Property test color engine
+        run: npm run test:property
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
