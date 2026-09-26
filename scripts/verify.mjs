@@ -62,16 +62,21 @@ for(const fn of requiredFunctions){
 }
 pass('core functions present');
 
-const localScripts=['./vendor/poline.umd.js','./vendor/iro.min.js','./vendor/Sortable.min.js','./data/fashion-palettes.js','./data/ig-style-patterns.js'];
-for(const src of localScripts){
-  if(!html.includes('<script src="'+src+'"></script>')) fail('local dependency missing: '+src);
-  const asset=src.replace('./','./');
-  if(!sw.includes(asset)) fail('offline cache missing: '+asset);
+const eagerScripts=['./vendor/poline.umd.js','./data/fashion-palettes.js','./data/ig-style-patterns.js'];
+for(const src of eagerScripts){
+  if(!html.includes('<script src="'+src+'"></script>')) fail('eager local dependency missing: '+src);
+  if(!sw.includes(src)) fail('offline cache missing: '+src);
+}
+const lazyScripts=['./vendor/iro.min.js','./vendor/Sortable.min.js'];
+for(const src of lazyScripts){
+  if(html.includes('<script src="'+src+'"></script>')) fail('lazy dependency regressed to eager script: '+src);
+  if(!html.includes("loadScriptOnce('"+src+"'")) fail('lazy dependency loader missing: '+src);
+  if(!sw.includes(src)) fail('offline cache missing for lazy dependency: '+src);
 }
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v16")) fail('service worker cache version is not V1.6');
+if(!sw.includes("color-lab-v17")) fail('service worker cache version is not V1.7');
 else pass('service worker cache version');
 
 if(manifest.display!=='standalone') fail('manifest display must be standalone');
@@ -260,5 +265,14 @@ if(html.includes("sanitizeDraftRecord(JSON.parse(localStorage.getItem('colorlab.
   fail('raw draft parse returned');
 }else pass('draft restore uses safe JSON reader');
 
+
+if(!html.includes('function loadScriptOnce(')||!html.includes('const oklchCache=new Map()')||!html.includes('const luminanceCache=new Map()')){
+  fail('V1.7 lazy runtime or color caches missing');
+}else pass('V1.7 lazy runtime and color caches');
+
+if(!html.includes("requestIdleCallback(run,{timeout:180})")||!html.includes('content-visibility:auto')){
+  fail('V1.7 deferred rendering optimization missing');
+}else pass('V1.7 deferred rendering optimization');
+
 if(process.exitCode) process.exit(process.exitCode);
-console.log('Color Lab V1.6 verification complete.');
+console.log('Color Lab V1.7 verification complete.');
