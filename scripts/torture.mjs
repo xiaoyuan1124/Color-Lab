@@ -1,0 +1,204 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+
+const html=fs.readFileSync('index.html','utf8');
+const scriptMatch=html.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/);
+if(!scriptMatch){
+  console.error('FAIL inline app script not found');
+  process.exit(1);
+}
+const source=scriptMatch[1];
+
+function extractFunction(name){
+  const start=source.indexOf('function '+name+'(');
+  if(start<0)throw new Error('missing function '+name);
+  const open=source.indexOf('{',start);
+  let depth=0,quote=null,escape=false,lineComment=false,blockComment=false;
+  for(let i=open;i<source.length;i++){
+    const ch=source[i],next=source[i+1];
+
+    if(lineComment){
+      if(ch==='\n')lineComment=false;
+      continue;
+    }
+    if(blockComment){
+      if(ch==='*'&&next==='/'){blockComment=false;i++}
+      continue;
+    }
+    if(quote){
+      if(escape){escape=false;continue}
+      if(ch==='\\'){escape=true;continue}
+      if(ch===quote){quote=null}
+      continue;
+    }
+    if(ch==='/'&&next==='/'){lineComment=true;i++;continue}
+    if(ch==='/'&&next==='*'){blockComment=true;i++;continue}
+    if(ch==="'"||ch==='"'||ch==='\`'){quote=ch;continue}
+    if(ch==='{')depth++;
+    else if(ch==='}'){
+      depth--;
+      if(depth===0)return source.slice(start,i+1);
+    }
+  }
+  throw new Error('unterminated function '+name);
+}
+
+const functionNames=[
+  'clamp','hexToRgb','rgbToHex','lum','srgbToLinear','linearToSrgb',
+  'toOKLCH','fromOKLCH','perceptualDistance','oklchLinearRgb',
+  'isLinearSrgbInGamut','gamutMapOKLCH','hueDistance','signedHueDelta',
+  'hueToward','contrastRatio','cohesionPass','qualityRefineGenerated',
+  'qualityMetrics','relationVector','relationVectorDistance',
+  'semanticRolesFromClusters'
+];
+
+const sandbox={console};
+vm.createContext(sandbox);
+vm.runInContext(
+  functionNames.map(extractFunction).join('\n')+
+  '\nthis.API={'+functionNames.join(',')+'};',
+  sandbox,
+  {timeout:2000}
+);
+const A=sandbox.API;
+
+let passed=0,failed=0;
+function check(name,condition,detail=''){
+  if(condition){
+    passed++;
+    console.log('PASS',name);
+  }else{
+    failed++;
+    console.error('FAIL',name,detail);
+  }
+}
+function approx(a,b,t=.01){return Math.abs(a-b)<=t}
+function validHex(x){return /^#[0-9A-F]{6}$/.test(x)}
+function finiteObject(o){return Object.values(o).every(Number.isFinite)}
+
+const edgeHexes=[
+  '#000000','#FFFFFF','#010101','#FEFEFE','#808080',
+  '#FF0000','#00FF00','#0000FF','#FFFF00','#00FFFF','#FF00FF',
+  '#7F0000','#007F7F','#F3EFE8','#111827','#BADA55',
+  '#F7E7CE','#2A2A28','#68705E','#C8433D'
+];
+
+for(const hex of edgeHexes){
+  const o=A.toOKLCH(hex);
+  const back=A.fromOKLCH(o.l,o.c,o.h);
+  check('roundtrip '+hex,validHex(back)&&A.perceptualDistance(hex,back)<.012,back);
+}
+
+const Ls=[-1,0,.01,.14,.5,.9,.99,1,2,NaN];
+const Cs=[-1,0,.01,.05,.2,.5,1,Infinity,NaN];
+const Hs=[-720,-1,0,1,180,359,360,721,NaN];
+let gamutFailures=0;
+for(const l of Ls){
+  for(const c of Cs){
+    for(const h of Hs){
+      const hex=A.gamutMapOKLCH(l,c,h);
+      if(!validHex(hex))gamutFailures++;
+      else{
+        const o=A.toOKLCH(hex);
+        if(!A.isLinearSrgbInGamut(A.oklchLinearRgb(o.l,o.c,o.h)))gamutFailures++;
+      }
+    }
+  }
+}
+check('gamut torture grid',gamutFailures===0,'failures='+gamutFailures);
+
+check('contrast black white',approx(A.contrastRatio('#000000','#FFFFFF'),21,.05),A.contrastRatio('#000000','#FFFFFF'));
+check('contrast identity',approx(A.contrastRatio('#68705E','#68705E'),1,.0001),A.contrastRatio('#68705E','#68705E'));
+
+for(const a of edgeHexes.slice(0,10)){
+  for(const b of edgeHexes.slice(10,16)){
+    const ab=A.perceptualDistance(a,b),ba=A.perceptualDistance(b,a);
+    check('distance symmetry '+a+' '+b,Number.isFinite(ab)&&approx(ab,ba,1e-10),ab+' / '+ba);
+  }
+}
+for(const hex of edgeHexes){
+  check('distance identity '+hex,approx(A.perceptualDistance(hex,hex),0,1e-12),A.perceptualDistance(hex,hex));
+}
+
+const huePairs=[[350,10],[10,350],[0,180],[180,0],[721,-721],[-20,380]];
+for(const [a,b] of huePairs){
+  const d=A.signedHueDelta(a,b);
+  check('signed hue range '+a+' '+b,Number.isFinite(d)&&d>=-180&&d<180,d);
+  check('hue distance range '+a+' '+b,A.hueDistance(a,b)>=0&&A.hueDistance(a,b)<=180,A.hueDistance(a,b));
+}
+
+const original=['#123456','#ABCDEF','#FF00FF'];
+const p3=A.qualityRefineGenerated(original,3);
+check('preserve all three',JSON.stringify(p3)===JSON.stringify(original),JSON.stringify(p3));
+const p2=A.qualityRefineGenerated(original,2);
+check('preserve first two',p2[0]===original[0]&&p2[1]===original[1],JSON.stringify(p2));
+const p1=A.qualityRefineGenerated(original,1);
+check('preserve Color 1',p1[0]===original[0],JSON.stringify(p1));
+
+const dark=A.qualityRefineGenerated(['#080808','#101010','#FF5A6F'],1);
+check('dark primary gets visible structure',A.toOKLCH(dark[1]).l>A.toOKLCH(dark[0]).l&&A.contrastRatio(dark[0],dark[1])>=2.2,JSON.stringify(dark)+' ratio='+A.contrastRatio(dark[0],dark[1]));
+
+const light=A.qualityRefineGenerated(['#FAFAFA','#F4F4F4','#5677D8'],1);
+check('light primary gets darker structure',A.toOKLCH(light[1]).l<A.toOKLCH(light[0]).l&&A.contrastRatio(light[0],light[1])>=2.2,JSON.stringify(light)+' ratio='+A.contrastRatio(light[0],light[1]));
+
+const accentExtreme=A.qualityRefineGenerated(['#808080','#777777','#FFFFFF'],1);
+const accentO=A.toOKLCH(accentExtreme[2]);
+check('accent lightness bounded',accentO.l>=.12&&accentO.l<=.92,JSON.stringify(accentExtreme)+' L='+accentO.l);
+
+const vivid=A.qualityRefineGenerated(['#68705E','#2B3028','#E93362'],1);
+check('vivid accent retains chroma',A.toOKLCH(vivid[2]).c>=.05,JSON.stringify(vivid)+' C='+A.toOKLCH(vivid[2]).c);
+
+for(const trio of [
+  ['#000000','#FFFFFF','#FF0000'],
+  ['#FFFFFF','#000000','#00FF00'],
+  ['#808080','#888888','#909090'],
+  ['#FF00FF','#00FFFF','#FFFF00'],
+  ['#111827','#F9FAFB','#F59E0B']
+]){
+  const m=A.qualityMetrics(trio);
+  check('quality metrics finite '+trio.join(','),Number.isFinite(m.separation)&&Number.isFinite(m.contrast)&&typeof m.gamut==='boolean',JSON.stringify(m));
+  const v=A.relationVector(trio);
+  check('relation vector finite '+trio.join(','),v&&finiteObject(v),JSON.stringify(v));
+  check('relation identity zero '+trio.join(','),approx(A.relationVectorDistance(v,v),0,1e-12),A.relationVectorDistance(v,v));
+}
+
+const greyClusters=[
+  {hex:'#777777',proportion:.4,l:.57,c:.002,h:0},
+  {hex:'#AAAAAA',proportion:.3,l:.72,c:.003,h:0},
+  {hex:'#444444',proportion:.2,l:.38,c:.002,h:0},
+  {hex:'#E0E0E0',proportion:.1,l:.89,c:.002,h:0}
+];
+const greyRoles=A.semanticRolesFromClusters(greyClusters);
+check('grey photo does not invent vivid role',!greyRoles.some(x=>x.label==='鮮明'),JSON.stringify(greyRoles));
+
+const lightClusters=[
+  {hex:'#F5F0E8',proportion:.45,l:.96,c:.015,h:80},
+  {hex:'#E8DED3',proportion:.35,l:.90,c:.025,h:60},
+  {hex:'#D9CEC3',proportion:.20,l:.84,c:.03,h:55}
+];
+const lightRoles=A.semanticRolesFromClusters(lightClusters);
+check('light photo does not invent dark role',!lightRoles.some(x=>x.label==='深色'),JSON.stringify(lightRoles));
+
+const darkClusters=[
+  {hex:'#171717',proportion:.5,l:.22,c:.005,h:0},
+  {hex:'#292929',proportion:.3,l:.31,c:.004,h:0},
+  {hex:'#403A38',proportion:.2,l:.39,c:.018,h:40}
+];
+const darkRoles=A.semanticRolesFromClusters(darkClusters);
+check('dark photo does not invent light role',!darkRoles.some(x=>x.label==='淺色'),JSON.stringify(darkRoles));
+
+const vividClusters=[
+  {hex:'#F8F8F8',proportion:.60,l:.98,c:.004,h:0},
+  {hex:'#D43C5A',proportion:.40,l:.57,c:.19,h:18}
+];
+const vividRoles=A.semanticRolesFromClusters(vividClusters);
+check('white background can yield to meaningful subject',vividRoles[0]?.hex==='#D43C5A',JSON.stringify(vividRoles));
+check('vivid subject classified vivid',vividRoles.some(x=>x.label==='鮮明'&&x.hex==='#D43C5A'),JSON.stringify(vividRoles));
+
+for(const roles of [greyRoles,lightRoles,darkRoles,vividRoles]){
+  check('semantic roles unique',new Set(roles.map(x=>x.hex)).size===roles.length,JSON.stringify(roles));
+  check('semantic roles max five',roles.length<=5,roles.length);
+}
+
+console.log('Color Lab torture tests:',passed,'passed,',failed,'failed');
+if(failed)process.exit(1);
