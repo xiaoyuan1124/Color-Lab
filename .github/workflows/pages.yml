@@ -34,7 +34,7 @@ jobs:
       - name: Property test color engine
         run: npm run test:property
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: .
       - id: deployment
