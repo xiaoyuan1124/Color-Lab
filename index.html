@@ -565,7 +565,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.3 EXPERIENCE PASS */
+/* V1.4 EXPERIENCE PASS */
 .screen-tools{
   display:flex;
   gap:var(--space-2);
@@ -688,7 +688,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.3 POWER TOOLS */
+/* V1.4 POWER TOOLS */
 .lock-toggle{
   min-height:34px;
   margin-top:var(--space-2);
@@ -791,7 +791,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.3 STUDIO */
+/* V1.4 STUDIO */
 .seed-inline-actions{display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap}
 .picker-open{color:var(--olive-11)}
 .vision-lab{
@@ -906,13 +906,13 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 .saved-tag-btn{border:0;background:transparent;color:var(--olive-11);padding:0;font-size:var(--text-sm);font-weight:600}
 
 
-/* V1.3.1 STABILIZATION */
+/* V1.4.1 STABILIZATION */
 .tab-view.active{animation:tab-in .18s ease-out both}
 @keyframes tab-in{from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.tab-view.active{animation:none}}
 
 
-/* V1.3 COMPLETE WORKFLOW */
+/* V1.4 COMPLETE WORKFLOW */
 .drag-note{
   margin:-14px 0 var(--space-5);
   color:var(--text-3);
@@ -1072,7 +1072,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.3 VISUAL POLISH — presentation only */
+/* V1.4 VISUAL POLISH — presentation only */
 :root{
   --glass:rgba(250,248,244,.82);
   --glass-strong:rgba(255,253,249,.92);
@@ -1576,7 +1576,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V1.3</div>
+    <div class="version">V1.4</div>
   </div>
 
   <main class="app-main">
@@ -1812,7 +1812,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V1.3</div>
+  <div class="footer app-footer">Color Lab V1.4</div>
 </div>
 
 <nav class="bottom-nav" aria-label="主要功能" role="tablist">
@@ -1902,6 +1902,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
 <script src="./vendor/iro.min.js"></script>
 <script src="./vendor/Sortable.min.js"></script>
 <script src="./data/fashion-palettes.js"></script>
+<script src="./data/ig-style-patterns.js"></script>
 <script>
 const MODES={
   quiet:{label:'安靜',baseL:.93,structureL:.27,accentShift:22,sat:.26},
@@ -2579,8 +2580,93 @@ function fashionReferenceCombos(inputs){
     .sort((a,b)=>b.score-a.score)
     .slice(0,14);
 }
+
+function applyStyleDelta(seedHex,delta){
+  const seed=toOKLCH(seedHex);
+  return fromOKLCH(
+    clamp(seed.l+(delta?.dl||0),.06,.97),
+    clamp(seed.c+(delta?.dc||0),.01,.34),
+    seed.h+(delta?.dh||0)
+  );
+}
+function igPatternExpected(pattern,seedHex){
+  return [
+    seedHex,
+    applyStyleDelta(seedHex,pattern.structure),
+    applyStyleDelta(seedHex,pattern.accent)
+  ];
+}
+function igPatternAffinity(colors){
+  const patterns=window.IG_STYLE_PATTERNS||[];
+  if(!patterns.length||!colors||colors.length<3)return 0;
+  const target=relationVector(colors);
+  if(!target)return 0;
+  let best=0;
+  for(const pattern of patterns){
+    const sample=Array.isArray(pattern.sample)&&pattern.sample.length===3?pattern.sample:null;
+    const pv=sample?relationVector(sample):relationVector(igPatternExpected(pattern,colors[0]));
+    const d=relationVectorDistance(target,pv);
+    const confidence=Number.isFinite(pattern.confidence)?pattern.confidence:.75;
+    const score=Math.exp(-d*1.6)*confidence;
+    if(score>best)best=score;
+  }
+  return best;
+}
+function igPatternSupportDistance(inputPrimary,inputSupport,pattern){
+  const expected=igPatternExpected(pattern,inputPrimary)[1];
+  return perceptualDistance(inputSupport,expected);
+}
+function igStyleTransferPool(inputs){
+  const patterns=window.IG_STYLE_PATTERNS||[];
+  if(!patterns.length||!inputs.length)return[];
+  const out=[];
+  if(inputs.length===1){
+    for(const pattern of patterns){
+      const trio=igPatternExpected(pattern,inputs[0]);
+      out.push(trio[1],trio[2]);
+    }
+  }else{
+    const ranked=[...patterns]
+      .map(pattern=>({pattern,d:igPatternSupportDistance(inputs[0],inputs[1],pattern)}))
+      .sort((a,b)=>a.d-b.d)
+      .slice(0,12);
+    for(const {pattern} of ranked){
+      out.push(igPatternExpected(pattern,inputs[0])[2]);
+    }
+  }
+  return [...new Set(out.map(x=>x.toUpperCase()))];
+}
+function igStyleCombos(inputs){
+  const patterns=window.IG_STYLE_PATTERNS||[];
+  if(!patterns.length||!inputs.length||inputs.length>=3)return[];
+  const rows=[];
+  if(inputs.length===1){
+    for(const pattern of patterns){
+      const colors=igPatternExpected(pattern,inputs[0]);
+      rows.push({
+        colors,
+        pattern,
+        compatibility:1,
+        score:orderedPaletteScore(colors)+(pattern.confidence||.75)*.8+igPatternAffinity(colors)*.7
+      });
+    }
+  }else{
+    for(const pattern of patterns){
+      const d=igPatternSupportDistance(inputs[0],inputs[1],pattern);
+      const compatibility=Math.max(0,1-Math.min(1,d/.34));
+      const colors=[inputs[0],inputs[1],igPatternExpected(pattern,inputs[0])[2]];
+      rows.push({
+        colors,
+        pattern,
+        compatibility,
+        score:orderedPaletteScore(colors)+(pattern.confidence||.75)*compatibility*.9+igPatternAffinity(colors)*.7
+      });
+    }
+  }
+  return rows.sort((a,b)=>b.score-a.score).slice(0,10);
+}
 function intelligentPool(inputs,style=mode){
-  const out=[...candidateColors(inputs,style),...polineJourney(inputs),...fashionTransferPool(inputs)];
+  const out=[...candidateColors(inputs,style),...polineJourney(inputs),...fashionTransferPool(inputs),...igStyleTransferPool(inputs)];
   for(const hex of inputs){
     const o=toOKLCH(hex);
     [
@@ -2615,12 +2701,20 @@ function recommendationCombos(){
   const inputs=chosenColors();
   if(inputs.length>=3)return[];
   const pool=intelligentPool(inputs,mode);
-  const candidates=fashionReferenceCombos(inputs).map(x=>({
-    added:inputs.length===1?[x.colors[1],x.colors[2]]:[x.colors[2]],
-    palette:orderedPalette(x.colors),
-    score:x.score,
-    meta:{label:'時裝關係',sub:'近期時裝穿搭色彩關係'}
-  }));
+  const candidates=[
+    ...fashionReferenceCombos(inputs).map(x=>({
+      added:inputs.length===1?[x.colors[1],x.colors[2]]:[x.colors[2]],
+      palette:orderedPalette(x.colors),
+      score:x.score,
+      meta:{label:'時裝關係',sub:'近期品牌系列色彩關係'}
+    })),
+    ...igStyleCombos(inputs).map(x=>({
+      added:inputs.length===1?[x.colors[1],x.colors[2]]:[x.colors[2]],
+      palette:orderedPalette(x.colors),
+      score:x.score,
+      meta:{label:x.pattern.label,sub:'IG 實穿配色關係'}
+    }))
+  ];
   if(inputs.length===2){
     for(const x of pool){
       const trio=[inputs[0],inputs[1],x];
@@ -2664,7 +2758,7 @@ function renderRecommendations(){
     return;
   }
   $('#intelHeading').textContent=inputs.length===2?'推薦第三色':'推薦完整三色';
-  $('#intelDescription').textContent='OKLCH × 色彩路徑 × Fashion Reference Library';
+  $('#intelDescription').textContent='OKLCH × Fashion Library × IG 穿搭關係';
   const recs=recommendationCombos();
   box.innerHTML='';
   recs.forEach((r,i)=>{
@@ -2734,7 +2828,8 @@ function orderedPaletteScore(colors){
     Math.min(.45,accentBase)*2.2+
     Math.min(.45,accentStructure)*1.2+
     Math.min(.24,accent.c)*.9+
-    fashionAffinity(colors)*1.05-
+    fashionAffinity(colors)*1.05+
+    igPatternAffinity(colors)*.9-
     duplicatePenalty;
 }
 function completeCombo(inputs,style=mode){
