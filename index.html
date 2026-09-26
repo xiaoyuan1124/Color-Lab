@@ -565,7 +565,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V0.9 EXPERIENCE PASS */
+/* V1.0 EXPERIENCE PASS */
 .screen-tools{
   display:flex;
   gap:var(--space-2);
@@ -688,7 +688,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V0.9 POWER TOOLS */
+/* V1.0 POWER TOOLS */
 .lock-toggle{
   min-height:34px;
   margin-top:var(--space-2);
@@ -790,13 +790,128 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
   #exportPaletteImage{grid-column:1/-1}
 }
 
+
+/* V1.0 STUDIO */
+.seed-inline-actions{display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap}
+.picker-open{color:var(--olive-11)}
+.vision-lab{
+  margin-bottom:var(--space-5);
+  padding-bottom:var(--space-5);
+  border-bottom:1px solid var(--border-subtle);
+}
+.segmented{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:4px;
+  padding:4px;
+  border-radius:var(--radius-lg);
+  background:var(--olive-2);
+  margin-bottom:var(--space-3);
+}
+.seg{
+  min-height:38px;
+  border:0;
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-2);
+  font-size:11px;
+  font-weight:650;
+  padding:0 4px;
+}
+.seg.active{background:var(--surface-2);color:var(--olive-12);box-shadow:0 2px 10px rgba(36,38,36,.06)}
+.vision-preview{
+  display:grid;
+  grid-template-columns:75fr 18fr 7fr;
+  height:92px;
+  overflow:hidden;
+  border-radius:var(--radius-lg);
+}
+.context-tabs{
+  display:flex;
+  gap:var(--space-2);
+  overflow-x:auto;
+  scrollbar-width:none;
+  margin-bottom:var(--space-3);
+}
+.context-tabs::-webkit-scrollbar{display:none}
+.context-tab{
+  flex:0 0 auto;
+  min-height:38px;
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-pill);
+  background:transparent;
+  color:var(--text-2);
+  padding:0 var(--space-3);
+  font-size:var(--text-xs);
+  font-weight:650;
+}
+.context-tab.active{background:var(--olive-12);border-color:var(--olive-12);color:var(--surface-2)}
+.preview-brand-logo{font-size:11px;letter-spacing:.22em;font-weight:800}
+.preview-brand-name{font-size:34px;line-height:1;letter-spacing:-.05em;font-weight:750;max-width:7ch;margin-top:12px}
+.preview-room{position:relative;min-height:230px;overflow:hidden}
+.room-wall{position:absolute;inset:0 0 38% 0}
+.room-floor{position:absolute;inset:62% 0 0}
+.room-sofa{position:absolute;left:12%;right:18%;bottom:19%;height:28%;border-radius:22px 22px 12px 12px}
+.room-art{position:absolute;right:12%;top:16%;width:20%;aspect-ratio:1;border-radius:50%}
+.preview-outfit{display:flex;justify-content:center;align-items:center;gap:18px;min-height:230px}
+.outfit-body{position:relative;width:120px;height:190px}
+.outfit-top{position:absolute;left:15px;right:15px;top:8px;height:88px;border-radius:34px 34px 18px 18px}
+.outfit-bottom{position:absolute;left:25px;right:25px;top:91px;height:92px;border-radius:10px 10px 24px 24px}
+.outfit-accent{width:52px;height:52px;border-radius:50%}
+.preview-slide{border-radius:var(--radius-lg);padding:22px;min-height:190px;display:flex;flex-direction:column;justify-content:space-between}
+.slide-title{font-size:28px;line-height:1.05;font-weight:750;max-width:9ch}
+.slide-line{height:8px;border-radius:99px;opacity:.26;margin-top:8px}
+.slide-line.short{width:58%}
+.sheet-backdrop{
+  position:fixed;inset:0;z-index:300;
+  background:rgba(20,22,20,.28);
+  display:flex;align-items:flex-end;justify-content:center;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+}
+.sheet-backdrop[hidden]{display:none!important}
+.picker-sheet{
+  width:min(100%,540px);
+  max-height:88dvh;
+  overflow:auto;
+  border-radius:28px 28px 0 0;
+  background:var(--surface-1);
+  padding:10px clamp(20px,5.8vw,28px) calc(env(safe-area-inset-bottom) + 28px);
+  box-shadow:0 -18px 48px rgba(20,22,20,.16);
+}
+.sheet-handle{width:42px;height:5px;border-radius:99px;background:var(--border-strong);margin:0 auto 22px}
+.picker-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px}
+.picker-head h2{margin:0;font-size:var(--text-xl);letter-spacing:-.03em}
+.sheet-close{
+  width:44px;height:44px;border:0;border-radius:22px;background:var(--olive-2);color:var(--text-1);font-size:26px;font-weight:300
+}
+.iro-host{display:flex;justify-content:center;min-height:300px}
+.picker-value{text-align:center;font-size:22px;font-weight:700;letter-spacing:.04em;margin:10px 0 18px}
+.tag-filters{
+  display:flex;gap:var(--space-2);overflow-x:auto;scrollbar-width:none;margin:-4px 0 var(--space-4)
+}
+.tag-filters::-webkit-scrollbar{display:none}
+.tag-filter,.saved-tag{
+  border:1px solid var(--border-subtle);
+  background:transparent;
+  color:var(--text-2);
+  border-radius:var(--radius-pill);
+  font-size:11px;
+  font-weight:600;
+}
+.tag-filter{min-height:34px;padding:0 12px;white-space:nowrap}
+.tag-filter.active{background:var(--olive-12);border-color:var(--olive-12);color:var(--surface-2)}
+.saved-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.saved-tag{min-height:24px;padding:0 8px}
+.saved-tag-btn,.saved-rename,.saved-copy,.saved-delete{min-height:40px}
+.saved-tag-btn{border:0;background:transparent;color:var(--olive-11);padding:0;font-size:var(--text-sm);font-weight:600}
+
 </style>
 </head>
 <body>
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V0.9</div>
+    <div class="version">V1.0</div>
   </div>
 
   <main class="app-main">
@@ -819,7 +934,10 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
             <div class="seed-kicker">目前編輯</div>
             <input id="hex" class="hex" value="#68705E" maxlength="7" aria-label="HEX 顏色">
             <div class="seed-note">選色槽後可用色盤或 HEX</div>
-            <button type="button" class="lock-toggle" id="slotLockToggle" aria-pressed="false">鎖定此色</button>
+            <div class="seed-inline-actions">
+              <button type="button" class="lock-toggle" id="slotLockToggle" aria-pressed="false">鎖定此色</button>
+              <button type="button" class="lock-toggle picker-open" id="openStudioPicker">Color Lab 色盤</button>
+            </div>
           </div>
         </div>
 
@@ -852,10 +970,28 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 
         <div class="health-strip" id="paletteHealth"></div>
 
+        <div class="vision-lab">
+          <div class="micro-head"><span>視覺模擬</span><span>近似模擬</span></div>
+          <div class="segmented" id="visionModes">
+            <button type="button" class="seg active" data-vision="normal">一般</button>
+            <button type="button" class="seg" data-vision="protan">紅色弱</button>
+            <button type="button" class="seg" data-vision="deutan">綠色弱</button>
+            <button type="button" class="seg" data-vision="tritan">藍色弱</button>
+          </div>
+          <div class="vision-preview" id="visionPreview"></div>
+        </div>
+
         <div class="relation-list" id="palette"></div>
 
         <div class="real-preview-wrap">
-          <div class="micro-head"><span>實際介面預覽</span><span>Base / Structure / Accent</span></div>
+          <div class="micro-head"><span>情境預覽</span><span>75 / 18 / 7</span></div>
+          <div class="context-tabs" id="contextTabs">
+            <button type="button" class="context-tab active" data-context="app">App</button>
+            <button type="button" class="context-tab" data-context="brand">品牌</button>
+            <button type="button" class="context-tab" data-context="room">室內</button>
+            <button type="button" class="context-tab" data-context="outfit">穿搭</button>
+            <button type="button" class="context-tab" data-context="slides">簡報</button>
+          </div>
           <div class="real-preview" id="uiPreview"></div>
         </div>
 
@@ -968,8 +1104,9 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 
       <section class="app-section first">
         <div class="library-search-wrap">
-          <input id="librarySearch" class="library-search" type="search" placeholder="搜尋名稱或 HEX" autocomplete="off" aria-label="搜尋收藏配色">
+          <input id="librarySearch" class="library-search" type="search" placeholder="搜尋名稱 HEX 或標籤" autocomplete="off" aria-label="搜尋收藏配色">
         </div>
+        <div class="tag-filters" id="libraryFilters"></div>
         <div class="library-tools">
           <button type="button" class="utility-btn" id="exportBackup">匯出備份</button>
           <button type="button" class="utility-btn" id="importBackup">匯入備份</button>
@@ -980,7 +1117,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V0.9</div>
+  <div class="footer app-footer">Color Lab V1.0</div>
 </div>
 
 <nav class="bottom-nav" aria-label="主要功能" role="tablist">
@@ -1009,9 +1146,26 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
     <span>收藏</span>
   </button>
 </nav>
+<div class="sheet-backdrop" id="pickerBackdrop" hidden>
+  <section class="picker-sheet" id="pickerSheet" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+    <div class="sheet-handle"></div>
+    <div class="picker-head">
+      <div>
+        <div class="eyebrow">COLOR PICKER</div>
+        <h2 id="pickerTitle">選顏色</h2>
+      </div>
+      <button type="button" class="sheet-close" id="closeStudioPicker" aria-label="關閉">×</button>
+    </div>
+    <div class="iro-host" id="iroPicker"></div>
+    <div class="picker-value" id="pickerHex">#68705E</div>
+    <button type="button" class="primary" id="applyStudioPicker">套用到目前色槽</button>
+  </section>
+</div>
+
 <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true">已複製</div>
 
 <script src="./vendor/poline.umd.js"></script>
+<script src="./vendor/iro.min.js"></script>
 <script>
 const MODES={
   quiet:{label:'安靜',baseL:.93,structureL:.27,accentShift:22,sat:.26},
@@ -1026,6 +1180,8 @@ let selectedColors=['#68705E',null,null],activeSlot=0,currentComboName='';
 let lockedSlots=[false,false,false];
 let compareA=JSON.parse(localStorage.getItem('colorlab.compareA')||'null');
 let compareB=JSON.parse(localStorage.getItem('colorlab.compareB')||'null');
+let visionMode='normal',previewContext='app',libraryTagFilter='';
+let iroPicker=null,pickerDraft='#68705E',iroSyncing=false;
 let historyStack=[],historyIndex=-1,isHistoryRestore=false;
 let recentColors=JSON.parse(localStorage.getItem('colorlab.recent')||'[]');
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -1128,11 +1284,7 @@ function renderPaletteHealth(){
     '<div class="health-item '+(bs>=4.5?'good':'warn')+'"><strong>'+(bs>=4.5?'文字對比清楚':'文字對比偏低')+'</strong><span>Base / Structure '+bs.toFixed(1)+':1</span></div>'+
     '<div class="health-item '+(ba>=3?'good':'warn')+'"><strong>'+(ba>=3?'點綴辨識清楚':'點綴較接近背景')+'</strong><span>Base / Accent '+ba.toFixed(1)+':1</span></div>';
 }
-function renderUIPreview(){
-  const host=$('#uiPreview');if(!host)return;
-  host.style.background=palette.base;host.style.color=palette.structure;
-  host.innerHTML='<div><div class="mock-kicker">COLOR LAB</div><div class="mock-title">讓顏色有關係</div><div class="mock-copy">用真實介面感受比例，而不只看三條色塊。</div></div><div class="mock-row"><div class="mock-dot" style="background:'+palette.structure+'"></div><button class="mock-cta" type="button" style="background:'+palette.accent+';color:'+textFor(palette.accent)+'">主要動作</button></div>';
-}
+function renderUIPreview(){renderContextPreview()}
 function paletteText(){
   const name=($('#comboName')?.value||currentComboName||'Color Lab 配色').trim()||'Color Lab 配色';
   return name+'\nBase '+palette.base+'\nStructure '+palette.structure+'\nAccent '+palette.accent;
@@ -1269,6 +1421,79 @@ function importBackupFile(file){
     }catch(_){toast('不是有效的 Color Lab 備份')}
   };
   reader.readAsText(file);
+}
+
+function transformVision(hex,mode){
+  if(mode==='normal')return hex;
+  const matrices={
+    protan:[[.152286,1.052583,-.204868],[.114503,.786281,.099216],[-.003882,-.048116,1.051998]],
+    deutan:[[.367322,.860646,-.227968],[.280085,.672501,.047413],[-.01182,.04294,.968881]],
+    tritan:[[1.255528,-.076749,-.178779],[-.078411,.930809,.147602],[.004733,.691367,.3039]]
+  };
+  const M=matrices[mode];if(!M)return hex;
+  const rgb=hexToRgb(hex).map(srgbToLinear);
+  const out=M.map(row=>row[0]*rgb[0]+row[1]*rgb[1]+row[2]*rgb[2]).map(linearToSrgb);
+  return rgbToHex(...out);
+}
+function renderVision(){
+  const host=$('#visionPreview');if(!host)return;
+  host.innerHTML='';
+  [palette.base,palette.structure,palette.accent].forEach(hex=>{const d=document.createElement('div');d.style.background=transformVision(hex,visionMode);host.appendChild(d)});
+  $('#visionModes [data-vision]').forEach(b=>b.classList.toggle('active',b.dataset.vision===visionMode));
+}
+function renderContextPreview(){
+  const host=$('#uiPreview');if(!host)return;
+  $('#contextTabs [data-context]').forEach(b=>b.classList.toggle('active',b.dataset.context===previewContext));
+  host.className='real-preview';
+  if(previewContext==='app'){
+    host.style.background=palette.base;host.style.color=palette.structure;
+    host.innerHTML='<div><div class="mock-kicker">COLOR LAB</div><div class="mock-title">讓顏色有關係</div><div class="mock-copy">用真實介面感受比例，而不只看三條色塊。</div></div><div class="mock-row"><div class="mock-dot" style="background:'+palette.structure+'"></div><button class="mock-cta" type="button" style="background:'+palette.accent+';color:'+textFor(palette.accent)+'">主要動作</button></div>';
+  }else if(previewContext==='brand'){
+    host.style.background=palette.base;host.style.color=palette.structure;
+    host.innerHTML='<div><div class="preview-brand-logo">STUDIO / 01</div><div class="preview-brand-name">Quiet Objects</div></div><div class="mock-row"><div class="mock-copy">Brand system</div><div class="mock-dot" style="background:'+palette.accent+'"></div></div>';
+  }else if(previewContext==='room'){
+    host.style.background='transparent';host.style.padding='0';
+    host.innerHTML='<div class="preview-room"><div class="room-wall" style="background:'+palette.base+'"></div><div class="room-floor" style="background:'+palette.structure+'"></div><div class="room-sofa" style="background:'+palette.structure+'"></div><div class="room-art" style="background:'+palette.accent+'"></div></div>';
+  }else if(previewContext==='outfit'){
+    host.style.background=palette.base;host.style.color=palette.structure;
+    host.innerHTML='<div class="preview-outfit"><div class="outfit-body"><div class="outfit-top" style="background:'+palette.base+';box-shadow:0 0 0 1px '+palette.structure+'33"></div><div class="outfit-bottom" style="background:'+palette.structure+'"></div></div><div class="outfit-accent" style="background:'+palette.accent+'"></div></div>';
+  }else{
+    host.style.background=palette.structure;host.style.color=textFor(palette.structure);
+    host.innerHTML='<div class="preview-slide" style="background:'+palette.base+';color:'+palette.structure+'"><div><div class="slide-title">色彩讓重點被看見</div><div class="slide-line" style="background:'+palette.structure+'"></div><div class="slide-line short" style="background:'+palette.structure+'"></div></div><div class="mock-row"><span class="mock-kicker">PRESENTATION</span><div class="mock-dot" style="background:'+palette.accent+'"></div></div></div>';
+  }
+}
+function openStudioPicker(){
+  if(lockedSlots[activeSlot]){toast('先解除鎖定');return}
+  const current=selectedColors[activeSlot]||seed;
+  pickerDraft=current;$('#pickerHex').textContent=current;
+  $('#pickerBackdrop').hidden=false;
+  document.body.style.overflow='hidden';
+  requestAnimationFrame(()=>{
+    if(!iroPicker&&window.iro){
+      iroPicker=new iro.ColorPicker('#iroPicker',{width:Math.min(300,window.innerWidth-64),color:current,borderWidth:1,borderColor:'#D8D1C8'});
+      iroPicker.on('color:change',color=>{if(iroSyncing)return;pickerDraft=color.hexString.toUpperCase();$('#pickerHex').textContent=pickerDraft});
+    }else if(iroPicker){
+      iroSyncing=true;iroPicker.color.hexString=current;iroSyncing=false;
+    }
+  });
+}
+function closeStudioPicker(){
+  $('#pickerBackdrop').hidden=true;document.body.style.overflow='';
+}
+function applyStudioPicker(){setColorAtActive(pickerDraft);closeStudioPicker()}
+function normalizeTags(v){
+  return [...new Set(String(v||'').split(/[,，]/).map(x=>x.trim()).filter(Boolean).map(x=>x.slice(0,12)))].slice(0,8);
+}
+function editSavedTags(index){
+  const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),item=data[index];if(!item)return;
+  const next=prompt('標籤 用逗號分隔',(item.tags||[]).join(', '));if(next===null)return;
+  item.tags=normalizeTags(next);localStorage.setItem('colorlab.saved',JSON.stringify(data));renderSaved();toast('標籤已更新');
+}
+function renderLibraryFilters(data){
+  const host=$('#libraryFilters');if(!host)return;
+  const tags=[...new Set(data.flatMap(x=>Array.isArray(x.tags)?x.tags:[]))].sort((a,b)=>a.localeCompare(b,'zh-Hant'));
+  if(!tags.length){host.innerHTML='';return}
+  host.innerHTML='<button class="tag-filter '+(!libraryTagFilter?'active':'')+'" data-tag-filter="">全部</button>'+tags.map(t=>'<button class="tag-filter '+(libraryTagFilter===t?'active':'')+'" data-tag-filter="'+escapeHtml(t)+'">'+escapeHtml(t)+'</button>').join('');
 }
 function chosenColors(){return selectedColors.filter(Boolean)}
 function hueDistance(a,b){let d=Math.abs(a-b)%360;return Math.min(d,360-d)}
@@ -1577,7 +1802,7 @@ function render(){
   });
   const pv=$('#preview');pv.innerHTML='';
   [['base','75'],['structure','18'],['accent','7']].forEach(([k,t])=>{const d=document.createElement('div');d.style.background=palette[k];d.style.color=textFor(palette[k]);d.innerHTML=`<span>${t}</span>`;pv.appendChild(d)});
-  renderPaletteHealth();renderUIPreview();renderIdeas();renderRecommendations();renderSaved();
+  renderPaletteHealth();renderVision();renderContextPreview();renderIdeas();renderRecommendations();renderSaved();
 }
 function renderIdeas(){
   const box=$('#ideas');box.innerHTML='';
@@ -1605,7 +1830,7 @@ function save(){
   const inputName=($('#comboName')?.value||'').trim();
   currentComboName=inputName||'未命名配色';
   const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
-  data.unshift({name:currentComboName,seed,selectedColors:[...selectedColors],lockedSlots:[...lockedSlots],mode,palette:{...palette},date:Date.now()});
+  data.unshift({name:currentComboName,tags:[],seed,selectedColors:[...selectedColors],lockedSlots:[...lockedSlots],mode,palette:{...palette},date:Date.now()});
   localStorage.setItem('colorlab.saved',JSON.stringify(data.slice(0,30)));
   renderSaved();
   persistDraft();
@@ -1613,12 +1838,15 @@ function save(){
 }
 function renderSaved(){
   const el=$('#saved'),data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
+  renderLibraryFilters(data);
   const q=($('#librarySearch')?.value||'').trim().toLowerCase();
   const rows=data.map((x,i)=>({x,i})).filter(({x})=>{
+    const tags=Array.isArray(x.tags)?x.tags:[];
+    if(libraryTagFilter&&!tags.includes(libraryTagFilter))return false;
     if(!q)return true;
     const title=((x.name&&x.name.trim())||'未命名配色').toLowerCase();
     const colors=[x.seed,x.palette?.base,x.palette?.structure,x.palette?.accent,...(x.selectedColors||[])].filter(Boolean).join(' ').toLowerCase();
-    return title.includes(q)||colors.includes(q);
+    return title.includes(q)||colors.includes(q)||tags.join(' ').toLowerCase().includes(q);
   });
   if(!data.length){el.innerHTML='<div class="saved-empty">還沒有收藏。先在配色頁存下第一組。</div>';return}
   if(!rows.length){el.innerHTML='<div class="saved-empty">找不到符合的收藏。</div>';return}
@@ -1627,7 +1855,8 @@ function renderSaved(){
   rows.forEach(({x,i})=>{
     const d=document.createElement('div');d.className='saved-item';
     const title=(x.name&&x.name.trim())||'未命名配色';
-    d.innerHTML=`<div class="mini3"><i style="background:${x.palette.base}"></i><i style="background:${x.palette.structure}"></i><i style="background:${x.palette.accent}"></i></div><div class="saved-info"><b>${title}</b><div class="idea-meta">${x.seed}</div></div><div class="saved-actions"><button class="saved-rename" data-rename="${i}">改名</button><button class="saved-copy" data-load="${i}">套用</button><button class="saved-delete" data-delete="${i}">刪除</button></div>`;
+    const tags=Array.isArray(x.tags)?x.tags:[];
+    d.innerHTML=`<div class="mini3"><i style="background:${x.palette.base}"></i><i style="background:${x.palette.structure}"></i><i style="background:${x.palette.accent}"></i></div><div class="saved-info"><b>${escapeHtml(title)}</b><div class="idea-meta">${x.seed}</div>${tags.length?'<div class="saved-tags">'+tags.map(t=>'<button type="button" class="saved-tag" data-tag-filter="'+escapeHtml(t)+'">'+escapeHtml(t)+'</button>').join('')+'</div>':''}</div><div class="saved-actions"><button class="saved-tag-btn" data-edit-tags="${i}">標籤</button><button class="saved-rename" data-rename="${i}">改名</button><button class="saved-copy" data-load="${i}">套用</button><button class="saved-delete" data-delete="${i}">刪除</button></div>`;
     list.appendChild(d);
   })
 }
@@ -1661,15 +1890,43 @@ function renderPhotoPalette(hexes){
 }
 function fallbackPhotoPalette(){
   const w=photoCanvas.width,h=photoCanvas.height;if(!w||!h)return[];
-  const size=80,cv=document.createElement('canvas');cv.width=size;cv.height=size;
-  const cx=cv.getContext('2d',{willReadFrequently:true});cx.drawImage(photoCanvas,0,0,size,size);
-  const d=cx.getImageData(0,0,size,size).data,buckets=new Map();
-  for(let i=0;i<d.length;i+=16){
-    const r=Math.round(d[i]/32)*32,g=Math.round(d[i+1]/32)*32,b=Math.round(d[i+2]/32)*32;
-    const key=[Math.min(255,r),Math.min(255,g),Math.min(255,b)].join(',');
-    buckets.set(key,(buckets.get(key)||0)+1);
+  const size=72,cv=document.createElement('canvas');cv.width=size;cv.height=size;
+  const cx=cv.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'});cx.drawImage(photoCanvas,0,0,size,size);
+  const d=cx.getImageData(0,0,size,size).data,pts=[];
+  for(let i=0;i<d.length;i+=4){
+    if(d[i+3]<220)continue;
+    const hex=rgbToHex(d[i]/255,d[i+1]/255,d[i+2]/255),o=toOKLCH(hex);
+    if((o.l>.985||o.l<.025)&&pts.length>200)continue;
+    pts.push([d[i],d[i+1],d[i+2]]);
   }
-  return [...buckets.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k])=>rgbToHex(...k.split(',').map(Number).map(v=>v/255)));
+  if(!pts.length)return[];
+  const k=Math.min(8,pts.length),centers=[pts[Math.floor(pts.length/2)].slice()];
+  while(centers.length<k){
+    let best=pts[0],bestD=-1;
+    for(let n=0;n<pts.length;n+=3){
+      const p=pts[n],dist=Math.min(...centers.map(c=>(p[0]-c[0])**2+(p[1]-c[1])**2+(p[2]-c[2])**2));
+      if(dist>bestD){bestD=dist;best=p}
+    }
+    centers.push(best.slice());
+  }
+  let counts=new Array(k).fill(0);
+  for(let iter=0;iter<7;iter++){
+    const sums=Array.from({length:k},()=>[0,0,0]),nextCounts=new Array(k).fill(0);
+    for(const p of pts){
+      let bi=0,bd=Infinity;
+      centers.forEach((cc,i)=>{const dd=(p[0]-cc[0])**2+(p[1]-cc[1])**2+(p[2]-cc[2])**2;if(dd<bd){bd=dd;bi=i}});
+      sums[bi][0]+=p[0];sums[bi][1]+=p[1];sums[bi][2]+=p[2];nextCounts[bi]++;
+    }
+    centers.forEach((cc,i)=>{if(nextCounts[i])centers[i]=sums[i].map(v=>v/nextCounts[i])});
+    counts=nextCounts;
+  }
+  const ranked=centers.map((p,i)=>({hex:rgbToHex(p[0]/255,p[1]/255,p[2]/255),count:counts[i]})).sort((a,b)=>b.count-a.count);
+  const out=[];
+  for(const item of ranked){
+    if(out.every(x=>perceptualDistance(x,item.hex)>.055))out.push(item.hex);
+    if(out.length>=8)break;
+  }
+  return out;
 }
 function extractPhotoPalette(){
   renderPhotoPalette(fallbackPhotoPalette());
@@ -1782,6 +2039,10 @@ $('#hex').addEventListener('change',e=>{const h=normHex(e.target.value);if(h)set
 $('#generate').onclick=()=>generate(true);
 $('#save').onclick=save;
 document.addEventListener('click',e=>{
+  const vf=e.target.closest('[data-vision]');if(vf){visionMode=vf.dataset.vision;renderVision();return}
+  const ctx=e.target.closest('[data-context]');if(ctx){previewContext=ctx.dataset.context;renderContextPreview();return}
+  const tf=e.target.closest('[data-tag-filter]');if(tf){libraryTagFilter=tf.dataset.tagFilter||'';renderSaved();return}
+  const et=e.target.closest('[data-edit-tags]');if(et){editSavedTags(+et.dataset.editTags);return}
   const cmp=e.target.closest('[data-use-compare]');if(cmp){useCompare(cmp.dataset.useCompare);return}
   const recent=e.target.closest('[data-recent-color]');if(recent){setColorAtActive(recent.dataset.recentColor);return}
   const del=e.target.closest('[data-delete]');if(del){deleteSaved(+del.dataset.delete);return}
@@ -1830,6 +2091,10 @@ $('#undoBtn').onclick=undoState;
 $('#redoBtn').onclick=redoState;
 $('#newComboBtn').onclick=resetCombo;
 $('#slotLockToggle').onclick=toggleActiveLock;
+$('#openStudioPicker').onclick=openStudioPicker;
+$('#closeStudioPicker').onclick=closeStudioPicker;
+$('#applyStudioPicker').onclick=applyStudioPicker;
+$('#pickerBackdrop').addEventListener('click',e=>{if(e.target===$('#pickerBackdrop'))closeStudioPicker()});
 $('#setCompareA').onclick=()=>saveCompare('A');
 $('#setCompareB').onclick=()=>saveCompare('B');
 $('#exportPaletteImage').onclick=exportPaletteImage;
