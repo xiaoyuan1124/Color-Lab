@@ -565,7 +565,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.2.1 EXPERIENCE PASS */
+/* V1.3 EXPERIENCE PASS */
 .screen-tools{
   display:flex;
   gap:var(--space-2);
@@ -688,7 +688,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.2.1 POWER TOOLS */
+/* V1.3 POWER TOOLS */
 .lock-toggle{
   min-height:34px;
   margin-top:var(--space-2);
@@ -791,7 +791,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.2.1 STUDIO */
+/* V1.3 STUDIO */
 .seed-inline-actions{display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap}
 .picker-open{color:var(--olive-11)}
 .vision-lab{
@@ -906,13 +906,13 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 .saved-tag-btn{border:0;background:transparent;color:var(--olive-11);padding:0;font-size:var(--text-sm);font-weight:600}
 
 
-/* V1.2.1.1 STABILIZATION */
+/* V1.3.1 STABILIZATION */
 .tab-view.active{animation:tab-in .18s ease-out both}
 @keyframes tab-in{from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.tab-view.active{animation:none}}
 
 
-/* V1.2.1 COMPLETE WORKFLOW */
+/* V1.3 COMPLETE WORKFLOW */
 .drag-note{
   margin:-14px 0 var(--space-5);
   color:var(--text-3);
@@ -1072,7 +1072,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.2.1 VISUAL POLISH — presentation only */
+/* V1.3 VISUAL POLISH — presentation only */
 :root{
   --glass:rgba(250,248,244,.82);
   --glass-strong:rgba(255,253,249,.92);
@@ -1576,7 +1576,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V1.2.1</div>
+    <div class="version">V1.3</div>
   </div>
 
   <main class="app-main">
@@ -1812,7 +1812,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V1.2.1</div>
+  <div class="footer app-footer">Color Lab V1.3</div>
 </div>
 
 <nav class="bottom-nav" aria-label="主要功能" role="tablist">
@@ -1901,6 +1901,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
 <script src="./vendor/poline.umd.js"></script>
 <script src="./vendor/iro.min.js"></script>
 <script src="./vendor/Sortable.min.js"></script>
+<script src="./data/fashion-palettes.js"></script>
 <script>
 const MODES={
   quiet:{label:'安靜',baseL:.93,structureL:.27,accentShift:22,sat:.26},
@@ -2450,8 +2451,125 @@ function polineJourney(inputs){
     }).filter(Boolean);
   }catch(_){return[]}
 }
+
+function signedHueDelta(from,to){
+  return ((to-from+540)%360)-180;
+}
+function relationVector(colors){
+  if(!colors||colors.length<3||colors.some(x=>!x))return null;
+  const p=colors.map(toOKLCH),base=p[0];
+  return {
+    sL:p[1].l-base.l,
+    sC:p[1].c-base.c,
+    sH:signedHueDelta(base.h,p[1].h),
+    aL:p[2].l-base.l,
+    aC:p[2].c-base.c,
+    aH:signedHueDelta(base.h,p[2].h)
+  };
+}
+function relationVectorDistance(a,b){
+  if(!a||!b)return 9;
+  const hueDiff=(x,y)=>Math.abs(((x-y+540)%360)-180)/180;
+  return Math.abs(a.sL-b.sL)*2.4+
+    Math.abs(a.sC-b.sC)*2+
+    hueDiff(a.sH,b.sH)*1.15+
+    Math.abs(a.aL-b.aL)*2+
+    Math.abs(a.aC-b.aC)*1.7+
+    hueDiff(a.aH,b.aH)*1.35;
+}
+function fashionAffinity(colors){
+  const v=relationVector(colors),refs=window.FASHION_PALETTES||[];
+  if(!v||!refs.length)return 0;
+  let best=0;
+  for(const ref of refs){
+    const rv=relationVector(ref.colors);
+    const d=relationVectorDistance(v,rv);
+    const confidence=Number.isFinite(ref.confidence)?ref.confidence:.75;
+    const score=Math.exp(-d*1.55)*confidence;
+    if(score>best)best=score;
+  }
+  return best;
+}
+function transferFashionColor(seedHex,refPrimaryHex,refTargetHex){
+  const seed=toOKLCH(seedHex),rp=toOKLCH(refPrimaryHex),rt=toOKLCH(refTargetHex);
+  const dL=rt.l-rp.l,dC=rt.c-rp.c,dH=signedHueDelta(rp.h,rt.h);
+  return fromOKLCH(
+    clamp(seed.l+dL*.9,.07,.97),
+    clamp(seed.c+dC*.85,.012,.34),
+    seed.h+dH
+  );
+}
+function fashionSupportDistance(inputPrimary,inputSupport,ref){
+  const actual=[inputPrimary,inputSupport,inputSupport],rv=relationVector(ref.colors);
+  const a0=toOKLCH(actual[0]),a1=toOKLCH(actual[1]);
+  const av={sL:a1.l-a0.l,sC:a1.c-a0.c,sH:signedHueDelta(a0.h,a1.h),aL:0,aC:0,aH:0};
+  if(!rv)return 9;
+  const hue=Math.abs(((av.sH-rv.sH+540)%360)-180)/180;
+  return Math.abs(av.sL-rv.sL)*2.8+Math.abs(av.sC-rv.sC)*2.2+hue*1.5;
+}
+function fashionTransferPool(inputs){
+  const refs=window.FASHION_PALETTES||[];
+  if(!refs.length||!inputs.length)return[];
+  const out=[];
+  if(inputs.length===1){
+    const ranked=[...refs].sort((a,b)=>(b.confidence||.7)-(a.confidence||.7));
+    for(const ref of ranked){
+      out.push(transferFashionColor(inputs[0],ref.colors[0],ref.colors[1]));
+      out.push(transferFashionColor(inputs[0],ref.colors[0],ref.colors[2]));
+    }
+  }else{
+    const ranked=[...refs]
+      .map(ref=>({ref,d:fashionSupportDistance(inputs[0],inputs[1],ref)}))
+      .sort((a,b)=>a.d-b.d)
+      .slice(0,24);
+    for(const {ref} of ranked){
+      out.push(transferFashionColor(inputs[0],ref.colors[0],ref.colors[2]));
+    }
+  }
+  return [...new Set(out.map(x=>x.toUpperCase()))];
+}
+function fashionReferenceCombos(inputs){
+  const refs=window.FASHION_PALETTES||[];
+  if(!refs.length||!inputs.length||inputs.length>=3)return[];
+  const rows=[];
+  if(inputs.length===1){
+    for(const ref of refs){
+      const colors=[
+        inputs[0],
+        transferFashionColor(inputs[0],ref.colors[0],ref.colors[1]),
+        transferFashionColor(inputs[0],ref.colors[0],ref.colors[2])
+      ];
+      rows.push({
+        colors,
+        confidence:ref.confidence||.7,
+        relation:fashionAffinity(colors)
+      });
+    }
+  }else{
+    const ranked=[...refs]
+      .map(ref=>({ref,d:fashionSupportDistance(inputs[0],inputs[1],ref)}))
+      .sort((a,b)=>a.d-b.d)
+      .slice(0,24);
+    for(const {ref,d} of ranked){
+      const colors=[
+        inputs[0],
+        inputs[1],
+        transferFashionColor(inputs[0],ref.colors[0],ref.colors[2])
+      ];
+      rows.push({
+        colors,
+        confidence:(ref.confidence||.7)*Math.max(.2,1-Math.min(1,d/2.4)),
+        relation:fashionAffinity(colors)
+      });
+    }
+  }
+  return rows
+    .map(x=>({...x,score:orderedPaletteScore(x.colors)+x.confidence*.9+x.relation*.75}))
+    .sort((a,b)=>b.score-a.score)
+    .slice(0,14);
+}
 function intelligentPool(inputs,style=mode){
-  const out=[...candidateColors(inputs,style),...polineJourney(inputs)];
+  const out=[...candidateColors(inputs,style),...polineJourney(inputs),...fashionTransferPool(inputs)];
   for(const hex of inputs){
     const o=toOKLCH(hex);
     [
@@ -2486,7 +2604,12 @@ function recommendationCombos(){
   const inputs=chosenColors();
   if(inputs.length>=3)return[];
   const pool=intelligentPool(inputs,mode);
-  const candidates=[];
+  const candidates=fashionReferenceCombos(inputs).map(x=>({
+    added:inputs.length===1?[x.colors[1],x.colors[2]]:[x.colors[2]],
+    palette:orderedPalette(x.colors),
+    score:x.score,
+    meta:{label:'時裝關係',sub:'近期時裝穿搭色彩關係'}
+  }));
   if(inputs.length===2){
     for(const x of pool){
       const trio=[inputs[0],inputs[1],x];
@@ -2530,7 +2653,7 @@ function renderRecommendations(){
     return;
   }
   $('#intelHeading').textContent=inputs.length===2?'推薦第三色':'推薦完整三色';
-  $('#intelDescription').textContent='OKLCH 感知距離 × Poline 色彩路徑';
+  $('#intelDescription').textContent='OKLCH × 色彩路徑 × Fashion Reference Library';
   const recs=recommendationCombos();
   box.innerHTML='';
   recs.forEach((r,i)=>{
@@ -2599,7 +2722,8 @@ function orderedPaletteScore(colors){
   return structureContrast*3.2+
     Math.min(.45,accentBase)*2.2+
     Math.min(.45,accentStructure)*1.2+
-    Math.min(.24,accent.c)*.9-
+    Math.min(.24,accent.c)*.9+
+    fashionAffinity(colors)*1.05-
     duplicatePenalty;
 }
 function completeCombo(inputs,style=mode){
