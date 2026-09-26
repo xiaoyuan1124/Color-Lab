@@ -55,7 +55,7 @@ button{cursor:pointer}
 .photo-panel{display:none;margin:0 0 28px}
 .photo-panel.show{display:block}
 .photo-frame{position:relative;border-radius:20px;overflow:hidden;background:#DED9D1;line-height:0;touch-action:none}
-.photo-frame canvas{display:block;width:100%;height:auto;background:#DED9D1}
+.photo-frame canvas{display:block;width:100%;height:auto;background:#DED9D1;touch-action:none}
 .pick-marker{position:absolute;width:28px;height:28px;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 4px 14px rgba(0,0,0,.22);transform:translate(-50%,-50%);pointer-events:none;display:none}
 .pick-marker::after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--picked,#68705E)}
 .magnifier{position:absolute;width:112px;height:112px;border-radius:56px;border:4px solid #fff;box-shadow:0 12px 30px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.28);overflow:hidden;pointer-events:none;display:none;background:#111;z-index:4}
@@ -565,7 +565,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.1 EXPERIENCE PASS */
+/* V1.1.1 EXPERIENCE PASS */
 .screen-tools{
   display:flex;
   gap:var(--space-2);
@@ -688,7 +688,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.1 POWER TOOLS */
+/* V1.1.1 POWER TOOLS */
 .lock-toggle{
   min-height:34px;
   margin-top:var(--space-2);
@@ -791,7 +791,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.1 STUDIO */
+/* V1.1.1 STUDIO */
 .seed-inline-actions{display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap}
 .picker-open{color:var(--olive-11)}
 .vision-lab{
@@ -906,13 +906,13 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 .saved-tag-btn{border:0;background:transparent;color:var(--olive-11);padding:0;font-size:var(--text-sm);font-weight:600}
 
 
-/* V1.1.1 STABILIZATION */
+/* V1.1.1.1 STABILIZATION */
 .tab-view.active{animation:tab-in .18s ease-out both}
 @keyframes tab-in{from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.tab-view.active{animation:none}}
 
 
-/* V1.1 COMPLETE WORKFLOW */
+/* V1.1.1 COMPLETE WORKFLOW */
 .drag-note{
   margin:-14px 0 var(--space-5);
   color:var(--text-3);
@@ -1077,7 +1077,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V1.1</div>
+    <div class="version">V1.1.1</div>
   </div>
 
   <main class="app-main">
@@ -1315,7 +1315,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V1.1</div>
+  <div class="footer app-footer">Color Lab V1.1.1</div>
 </div>
 
 <nav class="bottom-nav" aria-label="主要功能" role="tablist">
@@ -1748,6 +1748,44 @@ async function exportBackup(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200);toast('已匯出備份');
 }
+
+function sanitizeBackupHex(v){return typeof v==='string'?normHex(v):null}
+function sanitizeSavedRecord(x){
+  if(!x||typeof x!=='object')return null;
+  const base=sanitizeBackupHex(x.palette?.base),structure=sanitizeBackupHex(x.palette?.structure),accent=sanitizeBackupHex(x.palette?.accent);
+  if(!base||!structure||!accent)return null;
+  const selected=Array.isArray(x.selectedColors)?x.selectedColors.slice(0,3).map(v=>v==null?null:sanitizeBackupHex(v)):[sanitizeBackupHex(x.seed)||accent,null,null];
+  if(selected.some(v=>v!==null&&!v))return null;
+  while(selected.length<3)selected.push(null);
+  if(!selected.some(Boolean))selected[0]=accent;
+  const locked=Array.isArray(x.lockedSlots)?x.lockedSlots.slice(0,3).map(Boolean):[false,false,false];while(locked.length<3)locked.push(false);
+  const tags=Array.isArray(x.tags)?[...new Set(x.tags.filter(v=>typeof v==='string').map(v=>v.trim().slice(0,12)).filter(Boolean))].slice(0,8):[];
+  return {
+    name:typeof x.name==='string'?(x.name.trim().slice(0,24)||'未命名配色'):'未命名配色',
+    tags,
+    folder:typeof x.folder==='string'?x.folder.trim().slice(0,20):'',
+    pinned:!!x.pinned,
+    seed:sanitizeBackupHex(x.seed)||selected.find(Boolean)||accent,
+    selectedColors:selected,
+    lockedSlots:locked,
+    mode:MODES[x.mode]?x.mode:'quiet',
+    palette:{base,structure,accent},
+    date:Number.isFinite(Number(x.date))?Number(x.date):Date.now()
+  };
+}
+function sanitizeCompareRecord(x){
+  if(!x||typeof x!=='object')return null;
+  const record=sanitizeSavedRecord({
+    name:x.name,
+    seed:x.colors?.[0]||x.palette?.accent,
+    selectedColors:Array.isArray(x.colors)?x.colors:[x.palette?.base,x.palette?.structure,x.palette?.accent],
+    mode:x.mode,
+    palette:x.palette,
+    date:x.date
+  });
+  if(!record)return null;
+  return {name:record.name,palette:record.palette,colors:record.selectedColors,mode:record.mode,date:record.date};
+}
 function importBackupFile(file){
   if(!file)return;
   const reader=new FileReader();
@@ -1755,16 +1793,30 @@ function importBackupFile(file){
     try{
       const data=JSON.parse(String(reader.result||''));
       if(data.schema!=='color-lab-backup-v1'||!Array.isArray(data.saved))throw new Error('invalid');
-      const current=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
-      const sig=x=>[x.name,x.palette?.base,x.palette?.structure,x.palette?.accent].join('|');
+      const currentRaw=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
+      const current=currentRaw.map(sanitizeSavedRecord).filter(Boolean);
+      const importedSaved=data.saved.map(sanitizeSavedRecord).filter(Boolean);
+      const sig=x=>[x.name,x.palette.base,x.palette.structure,x.palette.accent].join('|');
       const seen=new Set(current.map(sig)),merged=[...current];
-      data.saved.forEach(x=>{if(x&&x.palette?.base&&x.palette?.structure&&x.palette?.accent&&!seen.has(sig(x))){merged.push(x);seen.add(sig(x))}});
+      importedSaved.forEach(x=>{if(!seen.has(sig(x))){merged.push(x);seen.add(sig(x))}});
       localStorage.setItem('colorlab.saved',JSON.stringify(merged.slice(0,300)));
       if(Array.isArray(data.recent)){const imported=data.recent.filter(x=>typeof x==='string'&&normHex(x)).map(x=>normHex(x));recentColors=[...new Set([...recentColors,...imported])].slice(0,20);localStorage.setItem('colorlab.recent',JSON.stringify(recentColors))}
-      if(data.compareA){compareA=data.compareA;localStorage.setItem('colorlab.compareA',JSON.stringify(compareA))}
-      if(data.compareB){compareB=data.compareB;localStorage.setItem('colorlab.compareB',JSON.stringify(compareB))}
+      if(data.compareA){const safeA=sanitizeCompareRecord(data.compareA);if(safeA){compareA=safeA;localStorage.setItem('colorlab.compareA',JSON.stringify(compareA))}}
+      if(data.compareB){const safeB=sanitizeCompareRecord(data.compareB);if(safeB){compareB=safeB;localStorage.setItem('colorlab.compareB',JSON.stringify(compareB))}}
       if(data.draft&&Array.isArray(data.draft.selectedColors)){
-        localStorage.setItem('colorlab.draft',JSON.stringify(data.draft));
+        const cleanColors=data.draft.selectedColors.slice(0,3).map(v=>v==null?null:sanitizeBackupHex(v));
+        if(cleanColors.every(v=>v===null||!!v)&&cleanColors.some(Boolean)){
+          while(cleanColors.length<3)cleanColors.push(null);
+          const cleanDraft={
+            selectedColors:cleanColors,
+            lockedSlots:Array.isArray(data.draft.lockedSlots)?data.draft.lockedSlots.slice(0,3).map(Boolean):[false,false,false],
+            activeSlot:Math.max(0,Math.min(2,Number(data.draft.activeSlot)||0)),
+            mode:MODES[data.draft.mode]?data.draft.mode:'quiet',
+            comboName:typeof data.draft.comboName==='string'?data.draft.comboName.slice(0,24):''
+          };
+          while(cleanDraft.lockedSlots.length<3)cleanDraft.lockedSlots.push(false);
+          localStorage.setItem('colorlab.draft',JSON.stringify(cleanDraft));
+        }
       }
       scheduleResilienceBackup();renderSaved();renderRecentColors();renderCompare();toast('備份已匯入');
     }catch(_){toast('不是有效的 Color Lab 備份')}
@@ -2185,7 +2237,7 @@ function render(){
   });
   const pv=$('#preview');pv.innerHTML='';
   [['base','75'],['structure','18'],['accent','7']].forEach(([k,t])=>{const d=document.createElement('div');d.style.background=palette[k];d.style.color=textFor(palette[k]);d.innerHTML=`<span>${t}</span>`;pv.appendChild(d)});
-  renderPaletteHealth();renderRelationshipExplanation();renderVision();renderContextPreview();renderIdeas();renderRecommendations();renderSaved();
+  renderPaletteHealth();renderRelationshipExplanation();renderVision();renderContextPreview();renderIdeas();renderRecommendations();
 }
 function renderIdeas(){
   const box=$('#ideas');box.innerHTML='';
@@ -2399,6 +2451,7 @@ function loadPhoto(file){
     pickMarker.style.display='none';
     magnifier.style.display='none';
     $('#regionBox').style.display='none';regionStart=null;
+    $('#regionBox').style.display='none';regionStart=null;
     URL.revokeObjectURL(photoObjectURL);photoObjectURL=null;
     toast(photoMode==='region'?'拖曳框選區域':'按住照片拖動取色');
   };
@@ -2577,6 +2630,7 @@ function switchTab(name,scrollTop=true){
   });
   localStorage.setItem('colorlab.tab',name);
   updatePhotoTarget();
+  if(name==='library')renderSaved();
   if(scrollTop){
     const targetY=tabScroll[name]??0;
     requestAnimationFrame(()=>window.scrollTo({top:targetY,left:0,behavior:'auto'}));
