@@ -1,4 +1,4 @@
-const CACHE='color-lab-v15-quality';
+const CACHE='color-lab-v16-hardened';
 const ASSETS=['./','./index.html','./manifest.json','./apple-touch-icon.png','./icon-192.png','./icon-512.png','./vendor/poline.umd.js','./vendor/iro.min.js','./vendor/Sortable.min.js','./data/fashion-palettes.js','./data/ig-style-patterns.js'];
 
 self.addEventListener('install',event=>{
@@ -21,22 +21,39 @@ self.addEventListener('fetch',event=>{
   const request=event.request;
   if(request.method!=='GET')return;
 
-  event.respondWith(
-    fetch(request)
-      .then(response=>{
-        if(response&&response.ok){
-          const copy=response.clone();
-          caches.open(CACHE).then(cache=>cache.put(request,copy)).catch(()=>{});
-        }
-        return response;
-      })
-      .catch(async()=>{
-        const cached=await caches.match(request);
+  const url=new URL(request.url);
+  const sameOrigin=url.origin===self.location.origin;
+
+  if(request.mode==='navigate'){
+    event.respondWith(
+      fetch(request)
+        .then(response=>{
+          if(response&&response.ok){
+            const copy=response.clone();
+            caches.open(CACHE).then(cache=>cache.put('./index.html',copy)).catch(()=>{});
+          }
+          return response;
+        })
+        .catch(async()=>(await caches.match('./index.html'))||(await caches.match('./')))
+    );
+    return;
+  }
+
+  if(sameOrigin){
+    event.respondWith(
+      caches.match(request).then(cached=>{
         if(cached)return cached;
-        if(request.mode==='navigate'){
-          return (await caches.match('./index.html'))||(await caches.match('./'));
-        }
-        return Response.error();
+        return fetch(request).then(response=>{
+          if(response&&response.ok){
+            const copy=response.clone();
+            caches.open(CACHE).then(cache=>cache.put(request,copy)).catch(()=>{});
+          }
+          return response;
+        });
       })
-  );
+    );
+    return;
+  }
+
+  event.respondWith(fetch(request).catch(()=>caches.match(request)));
 });
