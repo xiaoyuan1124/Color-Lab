@@ -42,7 +42,8 @@ const functionNames=[
   'toOKLCH','fromOKLCH','perceptualDistance','oklchLinearRgb',
   'isLinearSrgbInGamut','gamutMapOKLCH','hueDistance','signedHueDelta',
   'hueToward','contrastRatio','ensureStructureContrast','cohesionPass',
-  'qualityRefineGenerated','qualityMetrics','relationVector','relationVectorDistance'
+  'qualityRefineGenerated','qualityMetrics','relationVector','relationVectorDistance',
+  'photoDominanceScore','semanticRolesFromClusters','photoCompositionProfile'
 ];
 
 const sandbox={console};
@@ -133,5 +134,36 @@ property('relation distance to self is zero',[hexArb,hexArb,hexArb],(a,b,c)=>{
   const d=A.relationVectorDistance(v,v);
   return Number.isFinite(d)&&Math.abs(d)<1e-12;
 });
+
+
+property('photo composition profile stays finite and bounded',
+  [hexArb,hexArb,hexArb,fc.integer({min:1,max:100}),fc.integer({min:1,max:100}),fc.integer({min:1,max:100})],
+  (a,b,c,wa,wb,wc)=>{
+    const total=wa+wb+wc;
+    const colors=[a,b,c],weights=[wa,wb,wc];
+    const clusters=colors.map((hex,i)=>{
+      const o=A.toOKLCH(hex);
+      return{hex,proportion:weights[i]/total,l:o.l,c:o.c,h:o.h,edgeShare:i===0?.8:.1};
+    });
+    const roles=A.semanticRolesFromClusters(clusters);
+    const profile=A.photoCompositionProfile(clusters,roles);
+    return !!profile &&
+      Number.isFinite(profile.avgL) &&
+      Number.isFinite(profile.avgC) &&
+      Number.isFinite(profile.lightnessSpan) &&
+      profile.primaryShare>=0 && profile.primaryShare<=1 &&
+      profile.lightnessSpan>=0 && profile.lightnessSpan<=1.01;
+  },
+  {numRuns:300}
+);
+
+property('photo dominance score is finite',
+  [hexArb,fc.integer({min:1,max:100}),fc.integer({min:0,max:100})],
+  (hex,w,edge)=>{
+    const o=A.toOKLCH(hex);
+    const score=A.photoDominanceScore({hex,proportion:w/100,l:o.l,c:o.c,h:o.h,edgeShare:edge/100});
+    return Number.isFinite(score);
+  }
+);
 
 console.log('Color Lab property tests:',assertions,'generated cases passed');
