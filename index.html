@@ -565,7 +565,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.6 EXPERIENCE PASS */
+/* V1.7 EXPERIENCE PASS */
 .screen-tools{
   display:flex;
   gap:var(--space-2);
@@ -688,7 +688,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.6 POWER TOOLS */
+/* V1.7 POWER TOOLS */
 .lock-toggle{
   min-height:34px;
   margin-top:var(--space-2);
@@ -791,7 +791,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.6 STUDIO */
+/* V1.7 STUDIO */
 .seed-inline-actions{display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap}
 .picker-open{color:var(--olive-11)}
 .vision-lab{
@@ -906,13 +906,13 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 .saved-tag-btn{border:0;background:transparent;color:var(--olive-11);padding:0;font-size:var(--text-sm);font-weight:600}
 
 
-/* V1.6.1 STABILIZATION */
+/* V1.7.1 STABILIZATION */
 .tab-view.active{animation:tab-in .18s ease-out both}
 @keyframes tab-in{from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.tab-view.active{animation:none}}
 
 
-/* V1.6 COMPLETE WORKFLOW */
+/* V1.7 COMPLETE WORKFLOW */
 .drag-note{
   margin:-14px 0 var(--space-5);
   color:var(--text-3);
@@ -1072,7 +1072,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.6 VISUAL POLISH — presentation only */
+/* V1.7 VISUAL POLISH — presentation only */
 :root{
   --glass:rgba(250,248,244,.82);
   --glass-strong:rgba(255,253,249,.92);
@@ -1571,7 +1571,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.6 COLOR QUALITY ENGINE */
+/* V1.7 COLOR QUALITY ENGINE */
 .photo-swatches{align-items:flex-start;padding-bottom:6px}
 .photo-swatch-card{
   flex:0 0 76px;
@@ -1607,13 +1607,23 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
   color:var(--text-3);
 }
 
+
+/* V1.7 PERFORMANCE */
+#result .section,
+#inspire .section,
+#library .section{
+  content-visibility:auto;
+  contain-intrinsic-size:auto 360px;
+}
+.tab-view[hidden]{display:none!important}
+
 </style>
 </head>
 <body>
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V1.6</div>
+    <div class="version">V1.7</div>
   </div>
 
   <main class="app-main">
@@ -1849,7 +1859,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V1.6</div>
+  <div class="footer app-footer">Color Lab V1.7</div>
 </div>
 
 <nav class="bottom-nav" aria-label="主要功能" role="tablist">
@@ -1936,8 +1946,6 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
 <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true">已複製</div>
 
 <script src="./vendor/poline.umd.js"></script>
-<script src="./vendor/iro.min.js"></script>
-<script src="./vendor/Sortable.min.js"></script>
 <script src="./data/fashion-palettes.js"></script>
 <script src="./data/ig-style-patterns.js"></script>
 <script>
@@ -1974,14 +1982,42 @@ let historyStack=[],historyIndex=-1,isHistoryRestore=false;
 let recentColors=readRecentColors();
 let recommendationCacheKey='',recommendationCacheValue=[];
 let igRelationCache=null;
-const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const lazyScriptPromises=new Map();
+const oklchCache=new Map();
+const luminanceCache=new Map();
+let secondaryRenderToken=0;
+let sortableLoadToken=0;
+const $=s=>document.querySelector(s),$=s=>[...document.querySelectorAll(s)];
+function loadScriptOnce(src,globalName=''){
+  if(globalName&&window[globalName])return Promise.resolve(window[globalName]);
+  if(lazyScriptPromises.has(src))return lazyScriptPromises.get(src);
+  const promise=new Promise((resolve,reject)=>{
+    const script=document.createElement('script');
+    script.src=src;script.async=true;script.dataset.lazyRuntime=src;
+    script.onload=()=>resolve(globalName?window[globalName]:true);
+    script.onerror=()=>{lazyScriptPromises.delete(src);script.remove();reject(new Error('load-failed '+src))};
+    document.head.appendChild(script);
+  });
+  lazyScriptPromises.set(src,promise);
+  return promise;
+}
+function boundedCacheSet(map,key,value,max=512){
+  if(map.size>=max&&!map.has(key))map.delete(map.keys().next().value);
+  map.set(key,value);return value;
+}
+
 function clamp(v,a=0,b=1){return Math.min(b,Math.max(a,v))}
 function hexToRgb(hex){hex=hex.replace('#','');if(hex.length===3)hex=hex.split('').map(x=>x+x).join('');return[0,2,4].map(i=>parseInt(hex.slice(i,i+2),16)/255)}
 function rgbToHex(r,g,b){return'#'+[r,g,b].map(v=>Math.round(clamp(v)*255).toString(16).padStart(2,'0')).join('').toUpperCase()}
 function rgbToHsl(r,g,b){let mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn,h=0,s=0,l=(mx+mn)/2;if(d){s=d/(1-Math.abs(2*l-1));if(mx===r)h=60*(((g-b)/d)%6);else if(mx===g)h=60*((b-r)/d+2);else h=60*((r-g)/d+4)}if(h<0)h+=360;return[h,s,l]}
 function hslToRgb(h,s,l){h=((h%360)+360)%360;let c=(1-Math.abs(2*l-1))*s,x=c*(1-Math.abs((h/60)%2-1)),m=l-c/2,r=0,g=0,b=0;if(h<60)[r,g,b]=[c,x,0];else if(h<120)[r,g,b]=[x,c,0];else if(h<180)[r,g,b]=[0,c,x];else if(h<240)[r,g,b]=[0,x,c];else if(h<300)[r,g,b]=[x,0,c];else[r,g,b]=[c,0,x];return[r+m,g+m,b+m]}
 function hslHex(h,s,l){return rgbToHex(...hslToRgb(h,clamp(s),clamp(l)))}
-function lum(hex){const c=hexToRgb(hex).map(v=>v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4));return.2126*c[0]+.7152*c[1]+.0722*c[2]}
+function lum(hex){
+  const key=String(hex).toUpperCase(),cached=luminanceCache.get(key);
+  if(cached!==undefined)return cached;
+  const rgb=hexToRgb(key).map(v=>v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4));
+  return boundedCacheSet(luminanceCache,key,.2126*rgb[0]+.7152*rgb[1]+.0722*rgb[2]);
+}
 function textFor(bg){return lum(bg)>.48?'#242624':'#FFFDF9'}
 function normHex(v){v=v.trim();if(!v.startsWith('#'))v='#'+v;return/^#[0-9a-fA-F]{6}$/.test(v)?v.toUpperCase():null}
 function readSavedData(){
@@ -2429,13 +2465,18 @@ function renderContextPreview(){
     host.innerHTML='<div class="preview-slide" style="background:'+palette.base+';color:'+palette.structure+'"><div><div class="slide-title">色彩讓重點被看見</div><div class="slide-line" style="background:'+palette.structure+'"></div><div class="slide-line short" style="background:'+palette.structure+'"></div></div><div class="mock-row"><span class="mock-kicker">PRESENTATION</span><div class="mock-dot" style="background:'+palette.accent+'"></div></div></div>';
   }
 }
-function openStudioPicker(){
+async function openStudioPicker(){
   if(lockedSlots[activeSlot]){toast('先解除鎖定');return}
   pickerReturnFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;
   const current=selectedColors[activeSlot]||seed;
   pickerDraft=current;$('#pickerHex').textContent=current;
   $('#pickerBackdrop').hidden=false;
   document.body.style.overflow='hidden';
+
+  if(!window.iro){
+    try{await loadScriptOnce('./vendor/iro.min.js','iro')}
+    catch(_){closeStudioPicker();toast('色票載入失敗');return}
+  }
   requestAnimationFrame(()=>{
     if(!iroPicker&&window.iro){
       iroPicker=new iro.ColorPicker('#iroPicker',{width:Math.min(300,window.innerWidth-64),color:current,borderWidth:1,borderColor:'#D8D1C8'});
@@ -2471,7 +2512,9 @@ function stats(hex){const [h,s,l]=rgbToHsl(...hexToRgb(hex));return{hex,h,s,l,y:
 function srgbToLinear(v){return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)}
 function linearToSrgb(v){return v<=.0031308?12.92*v:1.055*Math.pow(Math.max(0,v),1/2.4)-.055}
 function toOKLCH(hex){
-  const [r0,g0,b0]=hexToRgb(hex),r=srgbToLinear(r0),g=srgbToLinear(g0),b=srgbToLinear(b0);
+  const key=String(hex).toUpperCase(),cached=oklchCache.get(key);
+  if(cached)return cached;
+  const [r0,g0,b0]=hexToRgb(key),r=srgbToLinear(r0),g=srgbToLinear(g0),b=srgbToLinear(b0);
   const l=Math.cbrt(.4122214708*r+.5363325363*g+.0514459929*b);
   const m=Math.cbrt(.2119034982*r+.6806995451*g+.1073969566*b);
   const s=Math.cbrt(.0883024619*r+.2817188376*g+.6299787005*b);
@@ -2480,7 +2523,7 @@ function toOKLCH(hex){
   const bb=.0259040371*l+.7827717662*m-.808675766*s;
   const C=Math.sqrt(a*a+bb*bb);
   let h=Math.atan2(bb,a)*180/Math.PI;if(h<0)h+=360;
-  return {l:L,c:C,h:C<.00001?0:h};
+  return boundedCacheSet(oklchCache,key,Object.freeze({l:L,c:C,h:C<.00001?0:h}));
 }
 function fromOKLCH(L,C,h){
   const rad=((h%360)+360)%360*Math.PI/180,a=C*Math.cos(rad),bb=C*Math.sin(rad);
@@ -3090,10 +3133,17 @@ function reorderSlots(oldIndex,newIndex){
   seed=selectedColors[activeSlot]||selectedColors.find(Boolean)||'#68705E';
   syncEditor();generate(false);pushHistory();updatePhotoTarget();toast('已調整顏色順序');
 }
-function ensureComboSortable(){
+async function ensureComboSortable(){
+  const token=++sortableLoadToken;
   if(comboSortable){try{comboSortable.destroy()}catch(_){}comboSortable=null}
-  if(!window.Sortable)return;
-  const el=$('#comboSlots');if(!el)return;
+  if(chosenColors().length<2)return;
+  if(!window.Sortable){
+    try{await loadScriptOnce('./vendor/Sortable.min.js','Sortable')}
+    catch(_){return}
+  }
+  if(token!==sortableLoadToken||chosenColors().length<2)return;
+  if(comboSortable){try{comboSortable.destroy()}catch(_){}comboSortable=null}
+  const el=$('#comboSlots');if(!el||!window.Sortable)return;
   comboSortable=window.Sortable.create(el,{
     animation:160,
     handle:'.drag-handle',
@@ -3196,8 +3246,18 @@ function render(){
   });
   const pv=$('#preview');pv.innerHTML='';
   [['base','75'],['structure','18'],['accent','7']].forEach(([k,t])=>{const d=document.createElement('div');d.style.background=palette[k];d.style.color=textFor(palette[k]);d.innerHTML=`<span>${t}</span>`;pv.appendChild(d)});
-  renderPaletteHealth();renderRelationshipExplanation();renderVision();renderContextPreview();renderIdeas();renderRecommendations();
+  renderPaletteHealth();renderRelationshipExplanation();scheduleSecondaryRender();
 }
+function scheduleSecondaryRender(){
+  const token=++secondaryRenderToken;
+  const run=()=>{
+    if(token!==secondaryRenderToken)return;
+    renderVision();renderContextPreview();renderIdeas();renderRecommendations();
+  };
+  if('requestIdleCallback'in window)requestIdleCallback(run,{timeout:180});
+  else setTimeout(run,24);
+}
+
 function renderIdeas(){
   const box=$('#ideas');box.innerHTML='';
   if(chosenColors().length===3){
