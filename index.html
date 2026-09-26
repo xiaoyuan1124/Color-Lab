@@ -565,7 +565,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.4 EXPERIENCE PASS */
+/* V1.5 EXPERIENCE PASS */
 .screen-tools{
   display:flex;
   gap:var(--space-2);
@@ -688,7 +688,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.4 POWER TOOLS */
+/* V1.5 POWER TOOLS */
 .lock-toggle{
   min-height:34px;
   margin-top:var(--space-2);
@@ -791,7 +791,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.4 STUDIO */
+/* V1.5 STUDIO */
 .seed-inline-actions{display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap}
 .picker-open{color:var(--olive-11)}
 .vision-lab{
@@ -906,13 +906,13 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 .saved-tag-btn{border:0;background:transparent;color:var(--olive-11);padding:0;font-size:var(--text-sm);font-weight:600}
 
 
-/* V1.4.1 STABILIZATION */
+/* V1.5.1 STABILIZATION */
 .tab-view.active{animation:tab-in .18s ease-out both}
 @keyframes tab-in{from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.tab-view.active{animation:none}}
 
 
-/* V1.4 COMPLETE WORKFLOW */
+/* V1.5 COMPLETE WORKFLOW */
 .drag-note{
   margin:-14px 0 var(--space-5);
   color:var(--text-3);
@@ -1072,7 +1072,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.4 VISUAL POLISH — presentation only */
+/* V1.5 VISUAL POLISH — presentation only */
 :root{
   --glass:rgba(250,248,244,.82);
   --glass-strong:rgba(255,253,249,.92);
@@ -1570,13 +1570,50 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
   }
 }
 
+
+/* V1.5 COLOR QUALITY ENGINE */
+.photo-swatches{align-items:flex-start;padding-bottom:6px}
+.photo-swatch-card{
+  flex:0 0 76px;
+  min-height:92px;
+  border:0;
+  background:transparent;
+  padding:0;
+  text-align:center;
+  color:var(--text-2);
+}
+.photo-swatch-card:active{transform:scale(.98)}
+.photo-swatch-chip{
+  display:block;
+  width:58px;
+  height:58px;
+  margin:0 auto 7px;
+  border-radius:18px;
+  box-shadow:0 5px 14px rgba(36,38,36,.08),inset 0 0 0 1px rgba(36,38,36,.06);
+}
+.photo-swatch-name{
+  display:block;
+  font-size:10px;
+  line-height:1.2;
+  font-weight:700;
+  color:var(--text-1);
+  white-space:nowrap;
+}
+.photo-swatch-share{
+  display:block;
+  margin-top:3px;
+  font-size:9px;
+  line-height:1.2;
+  color:var(--text-3);
+}
+
 </style>
 </head>
 <body>
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V1.4</div>
+    <div class="version">V1.5</div>
   </div>
 
   <main class="app-main">
@@ -1755,8 +1792,8 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
           </div>
           <div class="photo-auto" id="photoAuto" hidden>
             <div class="photo-auto-head">
-              <div class="photo-auto-title">照片主要色</div>
-              <div class="photo-auto-note">點一下加入目前色槽</div>
+              <div class="photo-auto-title">照片色彩角色</div>
+              <div class="photo-auto-note">主體／鮮明／柔和／深色／淺色</div>
             </div>
             <div class="photo-swatches" id="photoSwatches"></div>
           </div>
@@ -1812,7 +1849,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V1.4</div>
+  <div class="footer app-footer">Color Lab V1.5</div>
 </div>
 
 <nav class="bottom-nav" aria-label="主要功能" role="tablist">
@@ -2433,6 +2470,85 @@ function perceptualDistance(a,b){
   const br=B.c*Math.cos(B.h*Math.PI/180),bi=B.c*Math.sin(B.h*Math.PI/180);
   return Math.sqrt(Math.pow((A.l-B.l)*1.25,2)+Math.pow(ar-br,2)+Math.pow(ai-bi,2));
 }
+
+function oklchLinearRgb(L,C,h){
+  const rad=((h%360)+360)%360*Math.PI/180,a=C*Math.cos(rad),bb=C*Math.sin(rad);
+  const l_=L+.3963377774*a+.2158037573*bb;
+  const m_=L-.1055613458*a-.0638541728*bb;
+  const s_=L-.0894841775*a-1.291485548*bb;
+  const l=l_*l_*l_,m=m_*m_*m_,s=s_*s_*s_;
+  return [
+    4.0767416621*l-3.3077115913*m+.2309699292*s,
+    -1.2684380046*l+2.6097574011*m-.3413193965*s,
+    -.0041960863*l-.7034186147*m+1.707614701*s
+  ];
+}
+function isLinearSrgbInGamut(rgb){
+  return rgb.every(v=>Number.isFinite(v)&&v>=-1e-7&&v<=1.0000001);
+}
+function gamutMapOKLCH(L,C,h){
+  const l=clamp(L,0,1),c=Math.max(0,C),hh=((h%360)+360)%360;
+  if(isLinearSrgbInGamut(oklchLinearRgb(l,c,hh)))return fromOKLCH(l,c,hh);
+  let lo=0,hi=c;
+  for(let i=0;i<16;i++){
+    const mid=(lo+hi)/2;
+    if(isLinearSrgbInGamut(oklchLinearRgb(l,mid,hh)))lo=mid;
+    else hi=mid;
+  }
+  return fromOKLCH(l,lo,hh);
+}
+function hueToward(from,to,amount){
+  return from+signedHueDelta(from,to)*clamp(amount,0,1);
+}
+function cohesionPass(colors,preserveCount=1){
+  if(!Array.isArray(colors)||colors.length<3)return colors;
+  const original=colors.map(x=>x.toUpperCase()),out=[...original];
+  const key=toOKLCH(original[0]);
+
+  for(let i=Math.max(1,preserveCount);i<3;i++){
+    const o=toOKLCH(original[i]);
+    const pull=i===1?.085:.055;
+    const blendedC=o.c*(i===1?.96:.98)+key.c*(i===1?.04:.02);
+    out[i]=gamutMapOKLCH(o.l,blendedC,hueToward(o.h,key.h,pull));
+  }
+
+  // Contrast guard only touches generated Structure.
+  if(preserveCount<=1&&contrastRatio(out[0],out[1])<2.35){
+    const b=toOKLCH(out[0]),s=toOKLCH(out[1]);
+    const direction=s.l<b.l?-1:1;
+    let target=clamp(b.l+direction*Math.max(.24,Math.abs(s.l-b.l)),.08,.94);
+    if(Math.abs(target-b.l)<.22)target=clamp(b.l+(b.l>.55?-.24:.24),.08,.94);
+    out[1]=gamutMapOKLCH(target,s.c,s.h);
+  }
+
+  // Vibrancy guard: prevent cohesion from washing generated Accent out.
+  if(preserveCount<=2){
+    const before=toOKLCH(original[2]),after=toOKLCH(out[2]);
+    if(after.c<before.c*.88){
+      out[2]=gamutMapOKLCH(after.l,before.c*.88,after.h);
+    }
+  }
+  return out;
+}
+function qualityRefineGenerated(colors,preserveCount){
+  const refined=cohesionPass(colors,preserveCount);
+  return refined.map((hex,i)=>i<preserveCount?colors[i].toUpperCase():hex.toUpperCase());
+}
+function qualityMetrics(colors){
+  if(!colors||colors.length<3)return{separation:0,contrast:0,gamut:true};
+  const separation=(
+    perceptualDistance(colors[0],colors[1])+
+    perceptualDistance(colors[0],colors[2])+
+    perceptualDistance(colors[1],colors[2])
+  )/3;
+  return {
+    separation,
+    contrast:contrastRatio(colors[0],colors[1]),
+    gamut:colors.every(hex=>{
+      const o=toOKLCH(hex);return isLinearSrgbInGamut(oklchLinearRgb(o.l,o.c,o.h));
+    })
+  };
+}
 function polineJourney(inputs){
   try{
     if(!window.poline?.Poline)return[];
@@ -2704,27 +2820,27 @@ function recommendationCombos(){
   const candidates=[
     ...fashionReferenceCombos(inputs).map(x=>({
       added:inputs.length===1?[x.colors[1],x.colors[2]]:[x.colors[2]],
-      palette:orderedPalette(x.colors),
-      score:x.score,
-      meta:{label:'時裝關係',sub:'近期品牌系列色彩關係'}
+      palette:orderedPalette(qualityRefineGenerated(x.colors,inputs.length)),
+      score:orderedPaletteScore(qualityRefineGenerated(x.colors,inputs.length))+x.score*.22,
+      meta:{label:'時裝關係',sub:'品牌關係 · Cohesion 修正'}
     })),
     ...igStyleCombos(inputs).map(x=>({
       added:inputs.length===1?[x.colors[1],x.colors[2]]:[x.colors[2]],
-      palette:orderedPalette(x.colors),
-      score:x.score,
-      meta:{label:x.pattern.label,sub:'IG 實穿配色關係'}
+      palette:orderedPalette(qualityRefineGenerated(x.colors,inputs.length)),
+      score:orderedPaletteScore(qualityRefineGenerated(x.colors,inputs.length))+x.score*.22,
+      meta:{label:x.pattern.label,sub:'IG 實穿 · Cohesion 修正'}
     }))
   ];
   if(inputs.length===2){
     for(const x of pool){
-      const trio=[inputs[0],inputs[1],x];
-      candidates.push({added:[x],palette:orderedPalette(trio),score:trioScore(trio),meta:classifyCandidate(x,inputs)});
+      const trio=qualityRefineGenerated([inputs[0],inputs[1],x],2);
+      candidates.push({added:[trio[2]],palette:orderedPalette(trio),score:trioScore(trio),meta:classifyCandidate(trio[2],inputs)});
     }
   }else{
     for(let i=0;i<pool.length;i++){
       for(let j=i+1;j<Math.min(pool.length,i+16);j++){
-        const trio=[inputs[0],pool[i],pool[j]];
-        candidates.push({added:[pool[i],pool[j]],palette:orderedPalette(trio),score:trioScore(trio),meta:{label:'完整組合',sub:'從單色延伸'}});
+        const trio=qualityRefineGenerated([inputs[0],pool[i],pool[j]],1);
+        candidates.push({added:[trio[1],trio[2]],palette:orderedPalette(trio),score:trioScore(trio),meta:{label:'完整組合',sub:'從單色延伸 · Cohesion 修正'}});
       }
     }
   }
@@ -2758,7 +2874,7 @@ function renderRecommendations(){
     return;
   }
   $('#intelHeading').textContent=inputs.length===2?'推薦第三色':'推薦完整三色';
-  $('#intelDescription').textContent='OKLCH × Fashion Library × IG 穿搭關係';
+  $('#intelDescription').textContent='Fashion × IG × Cohesion × 色域保護';
   const recs=recommendationCombos();
   box.innerHTML='';
   recs.forEach((r,i)=>{
@@ -2841,7 +2957,7 @@ function completeCombo(inputs,style=mode){
 
   if(chosen.length===2){
     for(const x of pool){
-      const trio=[chosen[0],chosen[1],x];
+      const trio=qualityRefineGenerated([chosen[0],chosen[1],x],2);
       const sc=orderedPaletteScore(trio);
       if(sc>bestScore){bestScore=sc;best=orderedPalette(trio)}
     }
@@ -2849,7 +2965,7 @@ function completeCombo(inputs,style=mode){
     for(let i=0;i<pool.length;i++){
       for(let j=0;j<pool.length;j++){
         if(i===j)continue;
-        const trio=[chosen[0],pool[i],pool[j]];
+        const trio=qualityRefineGenerated([chosen[0],pool[i],pool[j]],1);
         const sc=orderedPaletteScore(trio);
         if(sc>bestScore){bestScore=sc;best=orderedPalette(trio)}
       }
@@ -2858,7 +2974,8 @@ function completeCombo(inputs,style=mode){
 
   if(best)return best;
   const fallback=derive(chosen[0],style);
-  return {base:chosen[0],structure:fallback.structure,accent:fallback.accent};
+  const refined=qualityRefineGenerated([chosen[0],fallback.structure,fallback.accent],1);
+  return orderedPalette(refined);
 }
 function syncEditor(){
   const current=selectedColors[activeSlot]||seed;
@@ -3094,43 +3211,53 @@ const photoCtx=photoCanvas.getContext('2d',{willReadFrequently:true,colorSpace:'
 const magnifier=$('#magnifier'),magnifierCanvas=$('#magnifierCanvas'),magnifierCtx=magnifierCanvas.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'}),pickReadout=$('#pickReadout');
 let photoObjectURL=null,photoPicking=false,lastPicked=null;
 
-function renderPhotoPalette(hexes){
+function renderPhotoPalette(items){
   const host=$('#photoAuto'),box=$('#photoSwatches');if(!host||!box)return;
-  const unique=[...new Set((hexes||[]).map(x=>x.toUpperCase()))].slice(0,8);
+  const rows=(items||[]).map(x=>typeof x==='string'?{hex:x,label:'主要色',proportion:null}:x).filter(x=>x&&normHex(x.hex));
+  const unique=[],seen=new Set();
+  for(const row of rows){
+    const hex=row.hex.toUpperCase();if(seen.has(hex))continue;
+    seen.add(hex);unique.push({...row,hex});
+    if(unique.length>=6)break;
+  }
   if(!unique.length){host.hidden=true;return}
   host.hidden=false;box.innerHTML='';
-  unique.forEach(hex=>{
-    const b=document.createElement('button');b.className='photo-swatch';b.type='button';b.dataset.photoColor=hex;b.style.background=hex;b.style.setProperty('--swatch-text',textFor(hex));b.title=hex;b.setAttribute('aria-label','加入照片顏色 '+hex);box.appendChild(b);
+  unique.forEach(row=>{
+    const b=document.createElement('button');b.className='photo-swatch-card';b.type='button';b.dataset.photoColor=row.hex;
+    const pct=Number.isFinite(row.proportion)?Math.round(row.proportion*100)+'%':'';
+    b.title=row.hex;b.setAttribute('aria-label','加入照片'+row.label+' '+row.hex);
+    b.innerHTML='<span class="photo-swatch-chip" style="background:'+row.hex+'"></span><span class="photo-swatch-name">'+escapeHtml(row.label)+'</span><span class="photo-swatch-share">'+escapeHtml(pct||row.hex)+'</span>';
+    box.appendChild(b);
   });
 }
-function fallbackPhotoPalette(region=null){
+function fallbackPhotoClusters(region=null){
   const w=photoCanvas.width,h=photoCanvas.height;if(!w||!h)return[];
-  const size=72,cv=document.createElement('canvas');cv.width=size;cv.height=size;
+  const size=80,cv=document.createElement('canvas');cv.width=size;cv.height=size;
   const cx=cv.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'});
-  if(region){
-    cx.drawImage(photoCanvas,region.x,region.y,region.w,region.h,0,0,size,size);
-  }else{
-    cx.drawImage(photoCanvas,0,0,size,size);
-  }
+  if(region)cx.drawImage(photoCanvas,region.x,region.y,region.w,region.h,0,0,size,size);
+  else cx.drawImage(photoCanvas,0,0,size,size);
+
   const d=cx.getImageData(0,0,size,size).data,pts=[];
   for(let i=0;i<d.length;i+=4){
     if(d[i+3]<220)continue;
     const hex=rgbToHex(d[i]/255,d[i+1]/255,d[i+2]/255),o=toOKLCH(hex);
-    if((o.l>.985||o.l<.025)&&pts.length>200)continue;
+    if((o.l>.99||o.l<.018)&&pts.length>260)continue;
     pts.push([d[i],d[i+1],d[i+2]]);
   }
   if(!pts.length)return[];
-  const k=Math.min(8,pts.length),centers=[pts[Math.floor(pts.length/2)].slice()];
+
+  const k=Math.min(10,pts.length),centers=[pts[Math.floor(pts.length/2)].slice()];
   while(centers.length<k){
     let best=pts[0],bestD=-1;
     for(let n=0;n<pts.length;n+=3){
-      const p=pts[n],dist=Math.min(...centers.map(c=>(p[0]-c[0])**2+(p[1]-c[1])**2+(p[2]-c[2])**2));
+      const p=pts[n],dist=Math.min(...centers.map(cc=>(p[0]-cc[0])**2+(p[1]-cc[1])**2+(p[2]-cc[2])**2));
       if(dist>bestD){bestD=dist;best=p}
     }
     centers.push(best.slice());
   }
+
   let counts=new Array(k).fill(0);
-  for(let iter=0;iter<7;iter++){
+  for(let iter=0;iter<8;iter++){
     const sums=Array.from({length:k},()=>[0,0,0]),nextCounts=new Array(k).fill(0);
     for(const p of pts){
       let bi=0,bd=Infinity;
@@ -3140,16 +3267,54 @@ function fallbackPhotoPalette(region=null){
     centers.forEach((cc,i)=>{if(nextCounts[i])centers[i]=sums[i].map(v=>v/nextCounts[i])});
     counts=nextCounts;
   }
-  const ranked=centers.map((p,i)=>({hex:rgbToHex(p[0]/255,p[1]/255,p[2]/255),count:counts[i]})).sort((a,b)=>b.count-a.count);
+
+  const total=counts.reduce((a,b)=>a+b,0)||1;
+  const raw=centers.map((p,i)=>{
+    const hex=rgbToHex(p[0]/255,p[1]/255,p[2]/255),o=toOKLCH(hex);
+    return{hex,count:counts[i],proportion:counts[i]/total,l:o.l,c:o.c,h:o.h};
+  }).filter(x=>x.count>0).sort((a,b)=>b.count-a.count);
+
   const out=[];
-  for(const item of ranked){
-    if(out.every(x=>perceptualDistance(x,item.hex)>.055))out.push(item.hex);
-    if(out.length>=8)break;
+  for(const item of raw){
+    if(out.every(x=>perceptualDistance(x.hex,item.hex)>.045))out.push(item);
+    if(out.length>=9)break;
   }
   return out;
 }
+function semanticPhotoSwatches(region=null){
+  const clusters=fallbackPhotoClusters(region);
+  if(!clusters.length)return[];
+  const used=new Set(),rows=[];
+  const take=(label,score)=>{
+    let best=null,bestScore=-Infinity;
+    clusters.forEach((x,i)=>{
+      if(used.has(i))return;
+      const s=score(x);
+      if(s>bestScore){bestScore=s;best={...x,index:i}}
+    });
+    if(best){used.add(best.index);rows.push({hex:best.hex,label,proportion:best.proportion})}
+  };
+
+  take('主體',x=>x.proportion*5);
+  take('鮮明',x=>x.c*5-Math.abs(x.l-.58)*.8+x.proportion);
+  take('柔和',x=>(.16-Math.min(.16,x.c))*4-Math.abs(x.l-.62)*.45+x.proportion*.5);
+  take('深色',x=>(1-x.l)*3+x.proportion*.4);
+  take('淺色',x=>x.l*3+x.proportion*.4);
+
+  if(rows.length<5){
+    clusters.forEach(x=>{
+      if(rows.length>=5)return;
+      if(rows.some(r=>r.hex===x.hex))return;
+      rows.push({hex:x.hex,label:'補充',proportion:x.proportion});
+    });
+  }
+  return rows;
+}
+function fallbackPhotoPalette(region=null){
+  return fallbackPhotoClusters(region).map(x=>x.hex);
+}
 function extractPhotoPalette(region=null){
-  renderPhotoPalette(fallbackPhotoPalette(region));
+  renderPhotoPalette(semanticPhotoSwatches(region));
 }
 function setPhotoMode(next){
   photoMode=next==='region'?'region':'point';
