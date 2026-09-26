@@ -2531,6 +2531,22 @@ function gamutMapOKLCH(L,C,h){
 function hueToward(from,to,amount){
   return from+signedHueDelta(from,to)*clamp(amount,0,1);
 }
+function ensureStructureContrast(baseHex,structureHex,minRatio=2.55){
+  if(contrastRatio(baseHex,structureHex)>=minRatio)return structureHex;
+  const b=toOKLCH(baseHex),s=toOKLCH(structureHex);
+  const direction=b.l<=.42?1:(b.l>=.62?-1:(s.l<b.l?-1:1));
+  let l=s.l,best=structureHex,bestRatio=contrastRatio(baseHex,structureHex);
+
+  for(let i=0;i<28;i++){
+    l=clamp(l+direction*.025,.04,.96);
+    const candidate=gamutMapOKLCH(l,s.c,s.h);
+    const ratio=contrastRatio(baseHex,candidate);
+    if(ratio>bestRatio){best=candidate;bestRatio=ratio}
+    if(ratio>=minRatio)return candidate;
+    if((direction>0&&l>=.96)||(direction<0&&l<=.04))break;
+  }
+  return best;
+}
 function cohesionPass(colors,preserveCount=1){
   if(!Array.isArray(colors)||colors.length<3)return colors;
   const original=colors.map(x=>x.toUpperCase()),out=[...original];
@@ -2546,14 +2562,9 @@ function cohesionPass(colors,preserveCount=1){
     out[i]=gamutMapOKLCH(o.l,blendedC,hueToward(o.h,key.h,pull));
   }
 
-  // Contrast guard only touches generated Structure. Dark primary -> lighter support;
-  // light primary -> darker support; mid tones follow the candidate's original direction.
-  if(preserveCount<=1&&contrastRatio(out[0],out[1])<2.55){
-    const b=toOKLCH(out[0]),s=toOKLCH(out[1]);
-    let direction=b.l<=.42?1:(b.l>=.62?-1:(s.l<b.l?-1:1));
-    let target=clamp(b.l+direction*Math.max(.25,Math.abs(s.l-b.l)),.08,.94);
-    if(Math.abs(target-b.l)<.23)target=clamp(b.l+direction*.23,.08,.94);
-    out[1]=gamutMapOKLCH(target,s.c,s.h);
+  // Contrast guard only touches generated Structure and now verifies the actual ratio.
+  if(preserveCount<=1){
+    out[1]=ensureStructureContrast(out[0],out[1],2.55);
   }
 
   // Generated Accent: preserve vibrancy, avoid unusable extremes, but keep tonal palettes tonal.
@@ -2607,7 +2618,9 @@ function polineJourney(inputs){
 }
 
 function signedHueDelta(from,to){
-  return ((to-from+540)%360)-180;
+  const a=Number.isFinite(from)?from:0,b=Number.isFinite(to)?to:0;
+  const d=b-a;
+  return (((d+180)%360)+360)%360-180;
 }
 function relationVector(colors){
   if(!colors||colors.length<3||colors.some(x=>!x))return null;
