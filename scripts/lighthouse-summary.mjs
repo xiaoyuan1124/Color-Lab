@@ -1,0 +1,33 @@
+import fs from 'node:fs';
+
+const dir='.lighthouseci-reports';
+if(!fs.existsSync(dir)){
+  console.log('No Lighthouse report directory found');
+  process.exit(0);
+}
+const files=fs.readdirSync(dir).filter(x=>x.endsWith('.json'));
+if(!files.length){
+  console.log('No Lighthouse JSON report found');
+  process.exit(0);
+}
+const report=JSON.parse(fs.readFileSync(dir+'/'+files[0],'utf8'));
+const c=report.categories||{};
+console.log('Lighthouse scores',{
+  performance:Math.round((c.performance?.score||0)*100),
+  accessibility:Math.round((c.accessibility?.score||0)*100),
+  bestPractices:Math.round((c['best-practices']?.score||0)*100)
+});
+
+const audits=Object.values(report.audits||{})
+  .filter(a=>a&&a.details&&Number.isFinite(a.numericValue)&&a.score!==1)
+  .sort((a,b)=>(b.numericValue||0)-(a.numericValue||0))
+  .slice(0,12)
+  .map(a=>({
+    id:a.id,
+    title:a.title,
+    score:a.score,
+    numericValue:Math.round(a.numericValue||0),
+    displayValue:a.displayValue||''
+  }));
+console.log('Lighthouse top audits');
+for(const a of audits)console.log(JSON.stringify(a));
