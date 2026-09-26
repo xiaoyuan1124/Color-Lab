@@ -71,7 +71,7 @@ for(const src of localScripts){
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v15")) fail('service worker cache version is not V1.5');
+if(!sw.includes("color-lab-v16")) fail('service worker cache version is not V1.6');
 else pass('service worker cache version');
 
 if(manifest.display!=='standalone') fail('manifest display must be standalone');
@@ -187,5 +187,51 @@ if(!html.includes("added:inputs.length===1?[refined[1],refined[2]]:[refined[2]]"
   fail('refined recommendation colors are not applied');
 }else pass('recommendation preview and applied colors aligned');
 
+
+for(const fn of ['getIGPatternRows','paletteSignature','librarySearchText','handleSlotKeyboard']){
+  if(!html.includes('function '+fn+'(')) fail('V1.6 hardening function missing: '+fn);
+}
+pass('V1.6 hardening functions present');
+
+if(!html.includes("recommendationCacheKey")||!html.includes("recommendationCacheValue")){
+  fail('recommendation cache missing');
+}else pass('recommendation cache present');
+
+if(!html.includes("contrastRatio(out[0],out[1])<2.55")){
+  fail('adaptive structure contrast guard missing');
+}else pass('adaptive structure contrast guard');
+
+if(!html.includes("dh>38&&before.c>.035")){
+  fail('generated accent chroma guard missing');
+}else pass('generated accent chroma guard');
+
+if(!html.includes("data.saved.length>1000")||!html.includes("color-lab-backup-v2")){
+  fail('backup v2 validation missing');
+}else pass('backup v2 validation');
+
+if(!html.includes("這組配色已收藏 已移到最上方")){
+  fail('duplicate save guard missing');
+}else pass('duplicate save guard');
+
+if(!html.includes("aria-keyshortcuts")){
+  fail('keyboard slot reorder accessibility missing');
+}else pass('keyboard slot reorder accessibility');
+
+if(!html.includes("extremeNeutral")||!html.includes("dominantWeight")){
+  fail('photo extreme-neutral suppression missing');
+}else pass('photo extreme-neutral suppression');
+
+if(manifest.lang!=='zh-Hant'||manifest.theme_color!=='#F3EFE8'||manifest.background_color!=='#F3EFE8'){
+  fail('manifest language/theme mismatch');
+}else pass('manifest language and theme');
+
+if(!Array.isArray(manifest.categories)||!manifest.categories.includes('design')){
+  fail('manifest categories missing');
+}else pass('manifest categories');
+
+if(!sw.includes("request.mode==='navigate'")||!sw.includes("if(sameOrigin)")){
+  fail('V1.6 service worker routing strategy missing');
+}else pass('V1.6 service worker routing strategy');
+
 if(process.exitCode) process.exit(process.exitCode);
-console.log('Color Lab V1.5 verification complete.');
+console.log('Color Lab V1.6 verification complete.');
