@@ -565,7 +565,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.0 EXPERIENCE PASS */
+/* V1.0.1 EXPERIENCE PASS */
 .screen-tools{
   display:flex;
   gap:var(--space-2);
@@ -688,7 +688,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.0 POWER TOOLS */
+/* V1.0.1 POWER TOOLS */
 .lock-toggle{
   min-height:34px;
   margin-top:var(--space-2);
@@ -791,7 +791,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V1.0 STUDIO */
+/* V1.0.1 STUDIO */
 .seed-inline-actions{display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap}
 .picker-open{color:var(--olive-11)}
 .vision-lab{
@@ -905,13 +905,19 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 .saved-tag-btn,.saved-rename,.saved-copy,.saved-delete{min-height:40px}
 .saved-tag-btn{border:0;background:transparent;color:var(--olive-11);padding:0;font-size:var(--text-sm);font-weight:600}
 
+
+/* V1.0.1.1 STABILIZATION */
+.tab-view.active{animation:tab-in .18s ease-out both}
+@keyframes tab-in{from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.tab-view.active{animation:none}}
+
 </style>
 </head>
 <body>
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V1.0</div>
+    <div class="version">V1.0.1</div>
   </div>
 
   <main class="app-main">
@@ -1117,7 +1123,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V1.0</div>
+  <div class="footer app-footer">Color Lab V1.0.1</div>
 </div>
 
 <nav class="bottom-nav" aria-label="主要功能" role="tablist">
@@ -1181,7 +1187,7 @@ let lockedSlots=[false,false,false];
 let compareA=JSON.parse(localStorage.getItem('colorlab.compareA')||'null');
 let compareB=JSON.parse(localStorage.getItem('colorlab.compareB')||'null');
 let visionMode='normal',previewContext='app',libraryTagFilter='';
-let iroPicker=null,pickerDraft='#68705E',iroSyncing=false;
+let iroPicker=null,pickerDraft='#68705E',iroSyncing=false,pickerReturnFocus=null;
 let historyStack=[],historyIndex=-1,isHistoryRestore=false;
 let recentColors=JSON.parse(localStorage.getItem('colorlab.recent')||'[]');
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -1370,15 +1376,27 @@ function drawPaletteCard(){
   const title=(($('#comboName')?.value||currentComboName||'Color Lab').trim()||'Color Lab');
   x.fillStyle='#F3EFE8';x.fillRect(0,0,1080,1350);
   x.fillStyle='#242624';x.font='700 42px -apple-system, BlinkMacSystemFont, sans-serif';x.fillText('COLOR LAB',72,92);
-  x.font='700 72px -apple-system, BlinkMacSystemFont, sans-serif';x.fillText(title.slice(0,22),72,190);
-  const y=280,h=720,w=936,parts=[['BASE',palette.base,.75],['STRUCTURE',palette.structure,.18],['ACCENT',palette.accent,.07]];
+  x.font='700 70px -apple-system, BlinkMacSystemFont, sans-serif';x.fillText(title.slice(0,20),72,190);
+
+  const y=270,h=650,w=936,parts=[['BASE',palette.base,.75,'75%'],['STRUCTURE',palette.structure,.18,'18%'],['ACCENT',palette.accent,.07,'7%']];
   let xx=72;
-  parts.forEach(([label,hex,ratio])=>{
-    const ww=w*ratio;x.fillStyle=hex;x.fillRect(xx,y,ww,h);x.fillStyle=textFor(hex);x.font='700 25px -apple-system, BlinkMacSystemFont, sans-serif';x.fillText(label,xx+18,y+h-68);x.font='600 24px -apple-system, BlinkMacSystemFont, sans-serif';x.fillText(hex,xx+18,y+h-32);xx+=ww;
+  parts.forEach(([label,hex,ratio,pct])=>{
+    const ww=w*ratio;
+    x.fillStyle=hex;x.fillRect(xx,y,ww,h);
+    x.fillStyle=textFor(hex);x.font='700 25px -apple-system, BlinkMacSystemFont, sans-serif';
+    x.fillText(pct,xx+Math.min(18,Math.max(6,ww*.12)),y+42);
+    xx+=ww;
   });
-  x.fillStyle='#77736D';x.font='500 28px -apple-system, BlinkMacSystemFont, sans-serif';x.fillText('75 / 18 / 7',72,1090);
-  x.font='500 24px -apple-system, BlinkMacSystemFont, sans-serif';x.fillText('Base '+palette.base+'   Structure '+palette.structure+'   Accent '+palette.accent,72,1150);
-  x.fillStyle='#242624';x.font='600 25px -apple-system, BlinkMacSystemFont, sans-serif';x.fillText('美 是讓顏色之間的關係成立',72,1260);
+
+  const rowsY=1010,rowGap=78;
+  parts.forEach(([label,hex],i)=>{
+    const yy=rowsY+i*rowGap;
+    x.fillStyle=hex;x.beginPath();x.roundRect(72,yy-30,48,48,12);x.fill();
+    x.fillStyle='#242624';x.font='700 23px -apple-system, BlinkMacSystemFont, sans-serif';x.fillText(label,144,yy);
+    x.fillStyle='#77736D';x.font='600 23px -apple-system, BlinkMacSystemFont, sans-serif';x.fillText(hex,350,yy);
+  });
+
+  x.fillStyle='#242624';x.font='600 25px -apple-system, BlinkMacSystemFont, sans-serif';x.fillText('美 是讓顏色之間的關係成立',72,1280);
   return canvas;
 }
 async function exportPaletteImage(){
@@ -1445,6 +1463,7 @@ function renderContextPreview(){
   const host=$('#uiPreview');if(!host)return;
   $('#contextTabs [data-context]').forEach(b=>b.classList.toggle('active',b.dataset.context===previewContext));
   host.className='real-preview';
+  host.removeAttribute('style');
   if(previewContext==='app'){
     host.style.background=palette.base;host.style.color=palette.structure;
     host.innerHTML='<div><div class="mock-kicker">COLOR LAB</div><div class="mock-title">讓顏色有關係</div><div class="mock-copy">用真實介面感受比例，而不只看三條色塊。</div></div><div class="mock-row"><div class="mock-dot" style="background:'+palette.structure+'"></div><button class="mock-cta" type="button" style="background:'+palette.accent+';color:'+textFor(palette.accent)+'">主要動作</button></div>';
@@ -1464,6 +1483,7 @@ function renderContextPreview(){
 }
 function openStudioPicker(){
   if(lockedSlots[activeSlot]){toast('先解除鎖定');return}
+  pickerReturnFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;
   const current=selectedColors[activeSlot]||seed;
   pickerDraft=current;$('#pickerHex').textContent=current;
   $('#pickerBackdrop').hidden=false;
@@ -1479,6 +1499,7 @@ function openStudioPicker(){
 }
 function closeStudioPicker(){
   $('#pickerBackdrop').hidden=true;document.body.style.overflow='';
+  if(pickerReturnFocus){try{pickerReturnFocus.focus({preventScroll:true})}catch(_){pickerReturnFocus.focus()}pickerReturnFocus=null}
 }
 function applyStudioPicker(){setColorAtActive(pickerDraft);closeStudioPicker()}
 function normalizeTags(v){
@@ -1746,7 +1767,7 @@ function setActiveSlot(i,openPicker=false){
     $('#hex').value=seed;
   }
   renderComboSlots();updateLockToggle();
-  if(openPicker&&!selectedColors[i])setTimeout(()=>$('#color').click(),0);
+  if(openPicker&&!selectedColors[i])setTimeout(openStudioPicker,0);
 }
 function removeSlot(i){
   if(lockedSlots[i]){toast('先解除鎖定');return}
@@ -1831,7 +1852,7 @@ function save(){
   currentComboName=inputName||'未命名配色';
   const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
   data.unshift({name:currentComboName,tags:[],seed,selectedColors:[...selectedColors],lockedSlots:[...lockedSlots],mode,palette:{...palette},date:Date.now()});
-  localStorage.setItem('colorlab.saved',JSON.stringify(data.slice(0,30)));
+  localStorage.setItem('colorlab.saved',JSON.stringify(data.slice(0,300)));
   renderSaved();
   persistDraft();
   toast('已收藏 '+currentComboName);
@@ -2056,8 +2077,11 @@ document.addEventListener('click',e=>{
   const l=e.target.closest('[data-load]');if(l){const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),x=data[+l.dataset.load];if(x){seed=x.seed;mode=x.mode;palette={...x.palette};selectedColors=x.selectedColors?[...x.selectedColors]:[x.seed,null,null];while(selectedColors.length<3)selectedColors.push(null);lockedSlots=Array.isArray(x.lockedSlots)?[...x.lockedSlots]:[false,false,false];while(lockedSlots.length<3)lockedSlots.push(false);activeSlot=Math.max(0,selectedColors.findIndex(Boolean));currentComboName=(x.name&&x.name.trim())||'未命名配色';$('#comboName').value=currentComboName==='未命名配色'?'':currentComboName;syncEditor();renderModes();render();pushHistory();switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'})}}
 });
 
+const tabScroll={};
 function switchTab(name,scrollTop=true){
   const valid=['compose','inspire','photo','library'];
+  const current=document.querySelector('.tab-view.active')?.dataset.view;
+  if(current)tabScroll[current]=window.scrollY;
   if(!valid.includes(name))name='compose';
   document.querySelectorAll('.tab-view').forEach(v=>{
     const on=v.dataset.view===name;
@@ -2071,7 +2095,8 @@ function switchTab(name,scrollTop=true){
   });
   localStorage.setItem('colorlab.tab',name);
   updatePhotoTarget();
-  if(scrollTop)window.scrollTo({top:0,left:0,behavior:'auto'});
+  const targetY=scrollTop?(tabScroll[name]??0):window.scrollY;
+  requestAnimationFrame(()=>window.scrollTo({top:targetY,left:0,behavior:'auto'}));
 }
 function updatePhotoTarget(){
   const el=$('#photoTarget');
@@ -2095,6 +2120,8 @@ $('#openStudioPicker').onclick=openStudioPicker;
 $('#closeStudioPicker').onclick=closeStudioPicker;
 $('#applyStudioPicker').onclick=applyStudioPicker;
 $('#pickerBackdrop').addEventListener('click',e=>{if(e.target===$('#pickerBackdrop'))closeStudioPicker()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#pickerBackdrop').hidden)closeStudioPicker()});
+window.addEventListener('pagehide',persistDraft);
 $('#setCompareA').onclick=()=>saveCompare('A');
 $('#setCompareB').onclick=()=>saveCompare('B');
 $('#exportPaletteImage').onclick=exportPaletteImage;
