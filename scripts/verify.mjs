@@ -76,7 +76,7 @@ for(const src of lazyScripts){
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v17")) fail('service worker cache version is not V1.7');
+if(!sw.includes("color-lab-v18")) fail('service worker cache version is not V1.8');
 else pass('service worker cache version');
 
 if(manifest.display!=='standalone') fail('manifest display must be standalone');
@@ -267,17 +267,17 @@ if(html.includes("sanitizeDraftRecord(JSON.parse(localStorage.getItem('colorlab.
 
 
 if(!html.includes('function loadScriptOnce(')||!html.includes('const oklchCache=new Map()')||!html.includes('const luminanceCache=new Map()')){
-  fail('V1.7 lazy runtime or color caches missing');
-}else pass('V1.7 lazy runtime and color caches');
+  fail('V1.8 lazy runtime or color caches missing');
+}else pass('V1.8 lazy runtime and color caches');
 
 if(!html.includes("requestIdleCallback(run,{timeout:180})")||!html.includes('content-visibility:auto')){
-  fail('V1.7 deferred rendering optimization missing');
-}else pass('V1.7 deferred rendering optimization');
+  fail('V1.8 deferred rendering optimization missing');
+}else pass('V1.8 deferred rendering optimization');
 
 
 if(!html.includes('function fastSingleColorTrios(')){
-  fail('V1.7 compact single-color search missing');
-}else pass('V1.7 compact single-color search');
+  fail('V1.8 compact single-color search missing');
+}else pass('V1.8 compact single-color search');
 
 const perfCompleteStart=html.indexOf('function completeCombo(inputs,style=mode){');
 const perfCompleteEnd=html.indexOf('function syncEditor()',perfCompleteStart);
@@ -286,5 +286,20 @@ if(completeBody.includes('for(let i=0;i<pool.length;i++){')&&completeBody.includ
   fail('quadratic single-color search returned');
 }else pass('single-color startup avoids quadratic pool search');
 
+
+for(const fn of ['paletteQualityProfile','recommendationDistance','selectDiverseRecommendations']){
+  if(!html.includes('function '+fn+'(')) fail('V1.8 quality function missing: '+fn);
+}
+pass('V1.8 quality ranking functions present');
+
+for(const key of ['hierarchy','distinctiveness','cohesion','focus','practicality','reference','accessibility','gamut']){
+  if(!html.includes(key)) fail('V1.8 quality dimension missing: '+key);
+}
+pass('V1.8 quality dimensions present');
+
+if(!html.includes('const out=selectDiverseRecommendations(candidates,5)')){
+  fail('recommendation diversity selector not active');
+}else pass('recommendation diversity selector active');
+
 if(process.exitCode) process.exit(process.exitCode);
-console.log('Color Lab V1.7 verification complete.');
+console.log('Color Lab V1.8 verification complete.');
