@@ -142,7 +142,7 @@ for(const fn of ['fashionAffinity','fashionTransferPool','fashionReferenceCombos
 }
 pass('fashion recommendation functions present');
 
-if(!html.includes("Fashion Library")) fail('fashion recommendation description missing');
+if(!html.includes("Fashion × IG × Cohesion × 色域保護")) fail('fashion recommendation description missing');
 else pass('fashion recommendation UI description');
 
 
@@ -158,7 +158,7 @@ for(const fn of ['igPatternAffinity','igStyleTransferPool','igStyleCombos','appl
 }
 pass('IG style recommendation functions present');
 
-if(!html.includes("IG 穿搭關係")) fail('IG styling recommendation description missing');
+if(!html.includes("Fashion × IG × Cohesion × 色域保護")) fail('IG styling recommendation description missing');
 else pass('IG styling recommendation UI description');
 
 
