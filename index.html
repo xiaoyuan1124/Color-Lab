@@ -2477,15 +2477,26 @@ function relationVectorDistance(a,b){
     Math.abs(a.aC-b.aC)*1.7+
     hueDiff(a.aH,b.aH)*1.35;
 }
+
+let fashionRelationCache=null;
+function getFashionReferenceRows(){
+  const refs=window.FASHION_PALETTES||[];
+  if(!fashionRelationCache||fashionRelationCache.length!==refs.length){
+    fashionRelationCache=refs.map(ref=>({
+      ref,
+      vector:relationVector(ref.colors),
+      confidence:Number.isFinite(ref.confidence)?ref.confidence:.75
+    }));
+  }
+  return fashionRelationCache;
+}
 function fashionAffinity(colors){
-  const v=relationVector(colors),refs=window.FASHION_PALETTES||[];
+  const v=relationVector(colors),refs=getFashionReferenceRows();
   if(!v||!refs.length)return 0;
   let best=0;
-  for(const ref of refs){
-    const rv=relationVector(ref.colors);
-    const d=relationVectorDistance(v,rv);
-    const confidence=Number.isFinite(ref.confidence)?ref.confidence:.75;
-    const score=Math.exp(-d*1.55)*confidence;
+  for(const row of refs){
+    const d=relationVectorDistance(v,row.vector);
+    const score=Math.exp(-d*1.55)*row.confidence;
     if(score>best)best=score;
   }
   return best;
@@ -2512,7 +2523,7 @@ function fashionTransferPool(inputs){
   if(!refs.length||!inputs.length)return[];
   const out=[];
   if(inputs.length===1){
-    const ranked=[...refs].sort((a,b)=>(b.confidence||.7)-(a.confidence||.7));
+    const ranked=[...refs].sort((a,b)=>(b.confidence||.7)-(a.confidence||.7)).slice(0,40);
     for(const ref of ranked){
       out.push(transferFashionColor(inputs[0],ref.colors[0],ref.colors[1]));
       out.push(transferFashionColor(inputs[0],ref.colors[0],ref.colors[2]));
