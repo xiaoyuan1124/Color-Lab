@@ -2818,18 +2818,24 @@ function recommendationCombos(){
   if(inputs.length>=3)return[];
   const pool=intelligentPool(inputs,mode);
   const candidates=[
-    ...fashionReferenceCombos(inputs).map(x=>({
-      added:inputs.length===1?[x.colors[1],x.colors[2]]:[x.colors[2]],
-      palette:orderedPalette(qualityRefineGenerated(x.colors,inputs.length)),
-      score:orderedPaletteScore(qualityRefineGenerated(x.colors,inputs.length))+x.score*.22,
-      meta:{label:'時裝關係',sub:'品牌關係 · Cohesion 修正'}
-    })),
-    ...igStyleCombos(inputs).map(x=>({
-      added:inputs.length===1?[x.colors[1],x.colors[2]]:[x.colors[2]],
-      palette:orderedPalette(qualityRefineGenerated(x.colors,inputs.length)),
-      score:orderedPaletteScore(qualityRefineGenerated(x.colors,inputs.length))+x.score*.22,
-      meta:{label:x.pattern.label,sub:'IG 實穿 · Cohesion 修正'}
-    }))
+    ...fashionReferenceCombos(inputs).map(x=>{
+      const refined=qualityRefineGenerated(x.colors,inputs.length);
+      return{
+        added:inputs.length===1?[refined[1],refined[2]]:[refined[2]],
+        palette:orderedPalette(refined),
+        score:orderedPaletteScore(refined)+x.score*.22,
+        meta:{label:'時裝關係',sub:'品牌關係 · Cohesion 修正'}
+      };
+    }),
+    ...igStyleCombos(inputs).map(x=>{
+      const refined=qualityRefineGenerated(x.colors,inputs.length);
+      return{
+        added:inputs.length===1?[refined[1],refined[2]]:[refined[2]],
+        palette:orderedPalette(refined),
+        score:orderedPaletteScore(refined)+x.score*.22,
+        meta:{label:x.pattern.label,sub:'IG 實穿 · Cohesion 修正'}
+      };
+    })
   ];
   if(inputs.length===2){
     for(const x of pool){
@@ -3352,7 +3358,6 @@ function loadPhoto(file){
     extractPhotoPalette();
     pickMarker.style.display='none';
     magnifier.style.display='none';
-    $('#regionBox').style.display='none';regionStart=null;
     $('#regionBox').style.display='none';regionStart=null;
     URL.revokeObjectURL(photoObjectURL);photoObjectURL=null;
     toast(photoMode==='region'?'拖曳框選區域':'按住照片拖動取色');
