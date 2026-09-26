@@ -1973,6 +1973,17 @@ function hslHex(h,s,l){return rgbToHex(...hslToRgb(h,clamp(s),clamp(l)))}
 function lum(hex){const c=hexToRgb(hex).map(v=>v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4));return.2126*c[0]+.7152*c[1]+.0722*c[2]}
 function textFor(bg){return lum(bg)>.48?'#242624':'#FFFDF9'}
 function normHex(v){v=v.trim();if(!v.startsWith('#'))v='#'+v;return/^#[0-9a-fA-F]{6}$/.test(v)?v.toUpperCase():null}
+function readSavedData(){
+  try{
+    const raw=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
+    if(!Array.isArray(raw))return[];
+    const clean=raw.map(sanitizeSavedRecord).filter(Boolean).slice(0,300);
+    if(clean.length!==raw.length)localStorage.setItem('colorlab.saved',JSON.stringify(clean));
+    return clean;
+  }catch(_){
+    return[];
+  }
+}
 let resilienceTimer=null,resilienceReady=false;
 function openResilienceDB(){
   return new Promise((resolve,reject)=>{
@@ -1987,7 +1998,7 @@ async function writeResilienceSnapshot(){
     const db=await openResilienceDB();
     const payload={
       schema:'color-lab-shadow-v1',updatedAt:Date.now(),
-      saved:JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),
+      saved:readSavedData(),
       recent:JSON.parse(localStorage.getItem('colorlab.recent')||'[]'),
       draft:JSON.parse(localStorage.getItem('colorlab.draft')||'null'),
       compareA:JSON.parse(localStorage.getItem('colorlab.compareA')||'null'),
@@ -2011,7 +2022,7 @@ function scheduleResilienceBackup(){
 }
 async function restoreResilienceIfNeeded(){
   try{
-    const current=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
+    const current=readSavedData();
     if(current.length){resilienceReady=true;scheduleResilienceBackup();return}
     const db=await openResilienceDB();
     const snap=await new Promise((resolve,reject)=>{
@@ -2029,16 +2040,16 @@ async function restoreResilienceIfNeeded(){
     }
     if(snap.compareA){const safeA=sanitizeCompareRecord(snap.compareA);if(safeA){compareA=safeA;localStorage.setItem('colorlab.compareA',JSON.stringify(compareA))}}
     if(snap.compareB){const safeB=sanitizeCompareRecord(snap.compareB);if(safeB){compareB=safeB;localStorage.setItem('colorlab.compareB',JSON.stringify(compareB))}}
-    if(snap.draft&&Array.isArray(snap.draft.selectedColors)){
-      localStorage.setItem('colorlab.draft',JSON.stringify(snap.draft));
-      const d=snap.draft;
-      selectedColors=d.selectedColors.slice(0,3);while(selectedColors.length<3)selectedColors.push(null);
-      lockedSlots=Array.isArray(d.lockedSlots)?d.lockedSlots.slice(0,3).map(Boolean):[false,false,false];while(lockedSlots.length<3)lockedSlots.push(false);
-      activeSlot=Math.max(0,Math.min(2,Number.isInteger(d.activeSlot)?d.activeSlot:0));
-      if(MODES[d.mode])mode=d.mode;
-      currentComboName=d.comboName||'';
-      seed=selectedColors[activeSlot]||selectedColors.find(Boolean)||'#68705E';
-      $('#comboName').value=currentComboName;syncEditor();renderModes();generate(false);updateLockToggle();updatePhotoTarget();
+    if(snap.draft){
+      const d=sanitizeDraftRecord(snap.draft);
+      if(d){
+        localStorage.setItem('colorlab.draft',JSON.stringify(d));
+        selectedColors=[...d.selectedColors];
+        lockedSlots=[...d.lockedSlots];
+        activeSlot=d.activeSlot;mode=d.mode;currentComboName=d.comboName;
+        seed=selectedColors[activeSlot]||selectedColors.find(Boolean)||'#68705E';
+        $('#comboName').value=currentComboName;syncEditor();renderModes();generate(false);updateLockToggle();updatePhotoTarget();
+      }
     }
     renderSaved();renderRecentColors();renderCompare();
     resilienceReady=true;scheduleResilienceBackup();
@@ -2062,16 +2073,13 @@ function persistDraft(){
 }
 function restoreDraft(){
   try{
-    const d=JSON.parse(localStorage.getItem('colorlab.draft')||'null');
-    if(!d||!Array.isArray(d.selectedColors))return;
-    selectedColors=d.selectedColors.slice(0,3);
-    while(selectedColors.length<3)selectedColors.push(null);
-    lockedSlots=Array.isArray(d.lockedSlots)?d.lockedSlots.slice(0,3).map(Boolean):[false,false,false];
-    while(lockedSlots.length<3)lockedSlots.push(false);
-    if(!selectedColors.some(Boolean))selectedColors[0]='#68705E';
-    activeSlot=Math.max(0,Math.min(2,Number.isInteger(d.activeSlot)?d.activeSlot:0));
-    if(MODES[d.mode])mode=d.mode;
-    currentComboName=d.comboName||'';
+    const d=sanitizeDraftRecord(JSON.parse(localStorage.getItem('colorlab.draft')||'null'));
+    if(!d)return;
+    selectedColors=[...d.selectedColors];
+    lockedSlots=[...d.lockedSlots];
+    activeSlot=d.activeSlot;
+    mode=d.mode;
+    currentComboName=d.comboName;
     seed=selectedColors[activeSlot]||selectedColors.find(Boolean)||'#68705E';
   }catch(_){}
 }
@@ -2185,7 +2193,7 @@ function trioVariation(colors,key){
   });
 }
 function deleteSaved(index){
-  const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');if(!data[index])return;
+  const data=readSavedData();if(!data[index])return;
   const name=(data[index].name&&data[index].name.trim())||'未命名配色';
   if(!confirm('刪除「'+name+'」？'))return;
   data.splice(index,1);localStorage.setItem('colorlab.saved',JSON.stringify(data));scheduleResilienceBackup();renderSaved();toast('已刪除');
@@ -2278,7 +2286,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v2',appVersion:'1.6',exportedAt:new Date().toISOString(),saved:JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),recent:recentColors,draft:snapshotState(),compareA,compareB};
+  const payload={schema:'color-lab-backup-v2',appVersion:'1.6',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -2290,6 +2298,21 @@ async function exportBackup(){
 }
 
 function sanitizeBackupHex(v){return typeof v==='string'?normHex(v):null}
+function sanitizeDraftRecord(d){
+  if(!d||typeof d!=='object'||!Array.isArray(d.selectedColors))return null;
+  const cleanColors=d.selectedColors.slice(0,3).map(v=>v==null?null:sanitizeBackupHex(v));
+  if(cleanColors.some(v=>v!==null&&!v)||!cleanColors.some(Boolean))return null;
+  while(cleanColors.length<3)cleanColors.push(null);
+  const locks=Array.isArray(d.lockedSlots)?d.lockedSlots.slice(0,3).map(Boolean):[false,false,false];
+  while(locks.length<3)locks.push(false);
+  return{
+    selectedColors:cleanColors,
+    lockedSlots:locks,
+    activeSlot:Math.max(0,Math.min(2,Number.isInteger(d.activeSlot)?d.activeSlot:0)),
+    mode:MODES[d.mode]?d.mode:'quiet',
+    comboName:typeof d.comboName==='string'?d.comboName.trim().slice(0,24):''
+  };
+}
 function sanitizeSavedRecord(x){
   if(!x||typeof x!=='object')return null;
   const base=sanitizeBackupHex(x.palette?.base),structure=sanitizeBackupHex(x.palette?.structure),accent=sanitizeBackupHex(x.palette?.accent);
@@ -2328,12 +2351,13 @@ function sanitizeCompareRecord(x){
 }
 function importBackupFile(file){
   if(!file)return;
+  if(file.size>5*1024*1024){toast('備份檔過大');return}
   const reader=new FileReader();
   reader.onload=()=>{
     try{
       const data=JSON.parse(String(reader.result||''));
       if(!['color-lab-backup-v1','color-lab-backup-v2'].includes(data.schema)||!Array.isArray(data.saved)||data.saved.length>1000)throw new Error('invalid');
-      const currentRaw=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
+      const currentRaw=readSavedData();
       const current=currentRaw.map(sanitizeSavedRecord).filter(Boolean);
       const importedSaved=data.saved.map(sanitizeSavedRecord).filter(Boolean);
       const sig=x=>[x.name,x.palette.base,x.palette.structure,x.palette.accent].join('|');
@@ -2343,20 +2367,9 @@ function importBackupFile(file){
       if(Array.isArray(data.recent)){const imported=data.recent.filter(x=>typeof x==='string'&&normHex(x)).map(x=>normHex(x));recentColors=[...new Set([...recentColors,...imported])].slice(0,20);localStorage.setItem('colorlab.recent',JSON.stringify(recentColors))}
       if(data.compareA){const safeA=sanitizeCompareRecord(data.compareA);if(safeA){compareA=safeA;localStorage.setItem('colorlab.compareA',JSON.stringify(compareA))}}
       if(data.compareB){const safeB=sanitizeCompareRecord(data.compareB);if(safeB){compareB=safeB;localStorage.setItem('colorlab.compareB',JSON.stringify(compareB))}}
-      if(data.draft&&Array.isArray(data.draft.selectedColors)){
-        const cleanColors=data.draft.selectedColors.slice(0,3).map(v=>v==null?null:sanitizeBackupHex(v));
-        if(cleanColors.every(v=>v===null||!!v)&&cleanColors.some(Boolean)){
-          while(cleanColors.length<3)cleanColors.push(null);
-          const cleanDraft={
-            selectedColors:cleanColors,
-            lockedSlots:Array.isArray(data.draft.lockedSlots)?data.draft.lockedSlots.slice(0,3).map(Boolean):[false,false,false],
-            activeSlot:Math.max(0,Math.min(2,Number(data.draft.activeSlot)||0)),
-            mode:MODES[data.draft.mode]?data.draft.mode:'quiet',
-            comboName:typeof data.draft.comboName==='string'?data.draft.comboName.slice(0,24):''
-          };
-          while(cleanDraft.lockedSlots.length<3)cleanDraft.lockedSlots.push(false);
-          localStorage.setItem('colorlab.draft',JSON.stringify(cleanDraft));
-        }
+      if(data.draft){
+        const cleanDraft=sanitizeDraftRecord(data.draft);
+        if(cleanDraft)localStorage.setItem('colorlab.draft',JSON.stringify(cleanDraft));
       }
       scheduleResilienceBackup();renderSaved();renderRecentColors();renderCompare();toast('備份已匯入');
     }catch(_){toast('不是有效的 Color Lab 備份')}
@@ -2429,7 +2442,7 @@ function normalizeTags(v){
   return [...new Set(String(v||'').split(/[,，]/).map(x=>x.trim()).filter(Boolean).map(x=>x.slice(0,12)))].slice(0,8);
 }
 function editSavedTags(index){
-  const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),item=data[index];if(!item)return;
+  const data=readSavedData(),item=data[index];if(!item)return;
   const next=prompt('標籤 用逗號分隔',(item.tags||[]).join(', '));if(next===null)return;
   item.tags=normalizeTags(next);localStorage.setItem('colorlab.saved',JSON.stringify(data));scheduleResilienceBackup();renderSaved();toast('標籤已更新');
 }
@@ -3178,7 +3191,7 @@ function paletteSignature(x){
 function save(){
   const inputName=($('#comboName')?.value||'').trim();
   currentComboName=inputName||'未命名配色';
-  const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
+  const data=readSavedData();
   const sig=paletteSignature(palette),existing=data.findIndex(x=>paletteSignature(x)===sig);
   const record={name:currentComboName,tags:[],folder:'',pinned:false,seed,selectedColors:[...selectedColors],lockedSlots:[...lockedSlots],mode,palette:{...palette},date:Date.now()};
   if(existing>=0){
@@ -3203,17 +3216,17 @@ function renderFolderFilter(data){
   if(folders.includes(current))select.value=current;else{libraryFolderFilter='';select.value=''}
 }
 function toggleSavedPin(index){
-  const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),item=data[index];if(!item)return;
+  const data=readSavedData(),item=data[index];if(!item)return;
   item.pinned=!item.pinned;localStorage.setItem('colorlab.saved',JSON.stringify(data));scheduleResilienceBackup();renderSaved();
   toast(item.pinned?'已置頂':'已取消置頂');
 }
 function editSavedFolder(index){
-  const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),item=data[index];if(!item)return;
+  const data=readSavedData(),item=data[index];if(!item)return;
   const next=prompt('分類名稱 留空代表未分類',item.folder||'');if(next===null)return;
   item.folder=next.trim().slice(0,20);localStorage.setItem('colorlab.saved',JSON.stringify(data));scheduleResilienceBackup();renderSaved();toast(item.folder?'已移到 '+item.folder:'已移出分類');
 }
 function openSavedActions(index){
-  const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),item=data[index];if(!item)return;
+  const data=readSavedData(),item=data[index];if(!item)return;
   savedActionIndex=index;
   $('#savedActionTitle').textContent=(item.name&&item.name.trim())||'未命名配色';
   $('#savedPinActionLabel').textContent=item.pinned?'取消置頂':'置頂';
@@ -3221,7 +3234,7 @@ function openSavedActions(index){
 }
 function closeSavedActions(){savedActionIndex=null;$('#savedActionBackdrop').hidden=true;document.body.style.overflow=''}
 function loadSaved(index){
-  const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),x=data[index];if(!x)return;
+  const data=readSavedData(),x=data[index];if(!x)return;
   seed=x.seed;mode=MODES[x.mode]?x.mode:'quiet';
   selectedColors=x.selectedColors?[...x.selectedColors]:[x.seed,null,null];while(selectedColors.length<3)selectedColors.push(null);
   lockedSlots=Array.isArray(x.lockedSlots)?[...x.lockedSlots]:[false,false,false];while(lockedSlots.length<3)lockedSlots.push(false);
@@ -3238,7 +3251,7 @@ function librarySearchText(x){
   ].filter(Boolean).join(' ').toLowerCase();
 }
 function renderSaved(){
-  const el=$('#saved'),data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
+  const el=$('#saved'),data=readSavedData();
   renderLibraryFilters(data);renderFolderFilter(data);
   const q=($('#librarySearch')?.value||'').trim().toLowerCase();
   let rows=data.map((x,i)=>({x,i})).filter(({x})=>{
@@ -3267,7 +3280,7 @@ function renderSaved(){
   })
 }
 function renameSaved(index){
-  const data=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
+  const data=readSavedData();
   const item=data[index]; if(!item)return;
   const oldName=(item.name&&item.name.trim())||'未命名配色';
   const next=prompt('配色名稱',oldName);
@@ -3278,7 +3291,18 @@ function renameSaved(index){
   toast('已改名');
 }
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.remove('show'),1200)}
-function copy(v){navigator.clipboard?.writeText(v).then(()=>toast('已複製 '+v)).catch(()=>{})}
+async function copy(v){
+  const value=String(v??'');
+  try{
+    if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(value);toast('已複製 '+value);return}
+  }catch(_){}
+  try{
+    const ta=document.createElement('textarea');ta.value=value;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,value.length);
+    const ok=document.execCommand('copy');ta.remove();
+    toast(ok?'已複製 '+value:'無法複製');
+  }catch(_){toast('無法複製')}
+}
 
 const photoInput=$('#photoInput'),photoCanvas=$('#photoCanvas'),photoPanel=$('#photoPanel'),pickMarker=$('#pickMarker');
 const photoCtx=photoCanvas.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'});
@@ -3436,7 +3460,7 @@ function loadPhoto(file){
     URL.revokeObjectURL(photoObjectURL);photoObjectURL=null;
     toast(photoMode==='region'?'拖曳框選區域':'按住照片拖動取色');
   };
-  img.onerror=()=>toast('照片讀取失敗');
+  img.onerror=()=>{if(photoObjectURL){URL.revokeObjectURL(photoObjectURL);photoObjectURL=null}toast('照片讀取失敗')};
   img.src=photoObjectURL;
 }
 function mapPhotoPoint(clientX,clientY){
