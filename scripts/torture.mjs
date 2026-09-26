@@ -49,7 +49,7 @@ const functionNames=[
   'isLinearSrgbInGamut','gamutMapOKLCH','hueDistance','signedHueDelta',
   'hueToward','contrastRatio','ensureStructureContrast','cohesionPass','qualityRefineGenerated',
   'qualityMetrics','relationVector','relationVectorDistance',
-  'semanticRolesFromClusters','photoCompositionProfile'
+  'photoDominanceScore','semanticRolesFromClusters','photoCompositionProfile','photoCompositionProfile'
 ];
 
 const sandbox={console};
@@ -211,7 +211,28 @@ const mixedClusters=[
 const mixedRoles=A.semanticRolesFromClusters(mixedClusters);
 check('distinct vivid secondary gets vivid role',mixedRoles.some(x=>x.label==='鮮明'&&x.hex==='#D43C5A'),JSON.stringify(mixedRoles));
 
-for(const roles of [greyRoles,lightRoles,darkRoles,vividRoles,mixedRoles]){
+
+const edgeBackgroundClusters=[
+  {hex:'#EEEAE4',proportion:.58,l:.94,c:.018,h:78,edgeShare:.92},
+  {hex:'#8A8178',proportion:.27,l:.62,c:.025,h:55,edgeShare:.10},
+  {hex:'#D43C5A',proportion:.15,l:.57,c:.19,h:18,edgeShare:.08}
+];
+const edgeRoles=A.semanticRolesFromClusters(edgeBackgroundClusters);
+check('edge-heavy neutral does not steal primary role',edgeRoles[0]?.hex!=='#EEEAE4',JSON.stringify(edgeRoles));
+const edgeProfile=A.photoCompositionProfile(edgeBackgroundClusters,edgeRoles);
+check('edge background candidate identified',edgeProfile?.edgeHex==='#EEEAE4',JSON.stringify(edgeProfile));
+check('photo dominance band present',typeof edgeProfile?.dominanceBand==='string'&&edgeProfile.dominanceBand.length>0,JSON.stringify(edgeProfile));
+
+const balancedClusters=[
+  {hex:'#6D7FA4',proportion:.34,l:.60,c:.08,h:245,edgeShare:.15},
+  {hex:'#C88069',proportion:.33,l:.67,c:.10,h:35,edgeShare:.12},
+  {hex:'#D7C8AD',proportion:.33,l:.84,c:.04,h:80,edgeShare:.18}
+];
+const balancedRoles=A.semanticRolesFromClusters(balancedClusters);
+const balancedProfile=A.photoCompositionProfile(balancedClusters,balancedRoles);
+check('balanced photo classified as distributed',balancedProfile?.dominanceBand==='多色分布較平均',JSON.stringify(balancedProfile));
+
+for(const roles of [greyRoles,lightRoles,darkRoles,vividRoles,mixedRoles,edgeRoles,balancedRoles]){
   check('semantic roles unique',new Set(roles.map(x=>x.hex)).size===roles.length,JSON.stringify(roles));
   check('semantic roles max five',roles.length<=5,roles.length);
 }
