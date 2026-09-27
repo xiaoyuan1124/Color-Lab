@@ -51,7 +51,7 @@ const functionNames=[
   'qualityMetrics','relationVector','relationVectorDistance',
   'photoDominanceScore','semanticRolesFromClusters','photoCompositionProfile',
   'emptyPreferenceRole','emptyPreferenceModel','sanitizePreferenceRole','sanitizePreferenceModel',
-  'preferenceRoleAffinity','preferenceAffinityFromModel','preferenceModelWithPalette'
+  'preferenceRoleAffinity','preferenceRoleDescriptor','preferenceSummaryFromModel','preferenceAffinityFromModel','preferenceAffinityForSetting','preferenceModelWithPalette','preferenceHueFamily'
 ];
 
 const sandbox={console};
@@ -286,6 +286,25 @@ const sourceSnapshot=JSON.stringify(sourceModel);
 A.preferenceModelWithPalette(sourceModel,['#F0E6D2','#304050','#DA8C35'],1);
 check('preference update does not mutate source model',JSON.stringify(sourceModel)===sourceSnapshot,JSON.stringify(sourceModel));
 
+
+
+const explainModel=A.preferenceModelWithPalette(
+  A.preferenceModelWithPalette(A.emptyPreferenceModel(),['#F3EFE8','#2A2A28','#C8433D'],2),
+  ['#DDD2C4','#252525','#A33E55'],2
+);
+check('disabled preference affinity is exactly zero',
+  A.preferenceAffinityForSetting(false,explainModel,['#F3EFE8','#2A2A28','#C8433D'])===0,
+  A.preferenceAffinityForSetting(false,explainModel,['#F3EFE8','#2A2A28','#C8433D'])
+);
+check('enabled preference affinity remains bounded',
+  A.preferenceAffinityForSetting(true,explainModel,['#F3EFE8','#2A2A28','#C8433D'])>=0&&
+  A.preferenceAffinityForSetting(true,explainModel,['#F3EFE8','#2A2A28','#C8433D'])<=1
+);
+const explainSummary=A.preferenceSummaryFromModel(explainModel);
+check('mature preference summary is concise and role based',
+  typeof explainSummary==='string'&&explainSummary.includes('主體')&&explainSummary.includes('結構')&&explainSummary.includes('點綴')&&explainSummary.length<90,
+  explainSummary
+);
 
 console.log('Color Lab torture tests:',passed,'passed,',failed,'failed');
 if(failed)process.exit(1);
