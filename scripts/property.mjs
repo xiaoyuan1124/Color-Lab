@@ -45,7 +45,7 @@ const functionNames=[
   'qualityRefineGenerated','qualityMetrics','relationVector','relationVectorDistance',
   'photoDominanceScore','semanticRolesFromClusters','photoCompositionProfile',
   'emptyPreferenceRole','emptyPreferenceModel','sanitizePreferenceRole','sanitizePreferenceModel',
-  'preferenceRoleAffinity','preferenceAffinityFromModel','preferenceModelWithPalette'
+  'preferenceRoleAffinity','preferenceRoleDescriptor','preferenceSummaryFromModel','preferenceAffinityFromModel','preferenceAffinityForSetting','preferenceModelWithPalette','preferenceHueFamily'
 ];
 
 const sandbox={console};
@@ -214,5 +214,23 @@ property('sanitized preference affinity is always bounded',
   }
 );
 
+
+
+property('disabled personalization always contributes zero',
+  [hexArb,hexArb,hexArb],
+  (a,b,c)=>{
+    const model=A.preferenceModelWithPalette(A.emptyPreferenceModel(),[a,b,c],3);
+    return A.preferenceAffinityForSetting(false,model,[a,b,c])===0;
+  }
+);
+
+property('preference summaries stay bounded strings',
+  [hexArb,hexArb,hexArb],
+  (a,b,c)=>{
+    const model=A.preferenceModelWithPalette(A.emptyPreferenceModel(),[a,b,c],3);
+    const summary=A.preferenceSummaryFromModel(model);
+    return typeof summary==='string'&&summary.length>0&&summary.length<100;
+  }
+);
 
 console.log('Color Lab property tests:',assertions,'generated cases passed');
