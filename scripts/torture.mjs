@@ -263,5 +263,29 @@ const malformedPref=A.sanitizePreferenceModel({
 });
 check('malformed preference model resets safely',malformedPref.totalWeight===0,JSON.stringify(malformedPref));
 
+const oversizedPref=A.sanitizePreferenceModel({
+  version:1,totalWeight:500,
+  roles:{
+    base:{w:500,sumL:250,sumC:20,sumX:0,sumY:0},
+    structure:{w:500,sumL:200,sumC:15,sumX:0,sumY:0},
+    accent:{w:500,sumL:280,sumC:30,sumX:0,sumY:0}
+  }
+});
+check('oversized preference model resets safely',oversizedPref.totalWeight===0,JSON.stringify(oversizedPref));
+
+let longPreference=A.emptyPreferenceModel();
+for(let i=0;i<300;i++)longPreference=A.preferenceModelWithPalette(longPreference,prefPalette,3);
+check('long-running preference remains bounded',longPreference.totalWeight<=80.0001,JSON.stringify(longPreference));
+check('long-running role weights stay aligned',
+  ['base','structure','accent'].every(k=>Math.abs(longPreference.roles[k].w-longPreference.totalWeight)<1e-6),
+  JSON.stringify(longPreference)
+);
+
+const sourceModel=A.preferenceModelWithPalette(A.emptyPreferenceModel(),prefPalette,3);
+const sourceSnapshot=JSON.stringify(sourceModel);
+A.preferenceModelWithPalette(sourceModel,['#F0E6D2','#304050','#DA8C35'],1);
+check('preference update does not mutate source model',JSON.stringify(sourceModel)===sourceSnapshot,JSON.stringify(sourceModel));
+
+
 console.log('Color Lab torture tests:',passed,'passed,',failed,'failed');
 if(failed)process.exit(1);
