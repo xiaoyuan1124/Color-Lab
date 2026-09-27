@@ -38,12 +38,14 @@ function extractFunction(name){
 }
 
 const functionNames=[
-  'clamp','hexToRgb','rgbToHex','boundedCacheSet','lum','srgbToLinear','linearToSrgb',
+  'clamp','normHex','hexToRgb','rgbToHex','boundedCacheSet','lum','srgbToLinear','linearToSrgb',
   'toOKLCH','fromOKLCH','perceptualDistance','oklchLinearRgb',
   'isLinearSrgbInGamut','gamutMapOKLCH','hueDistance','signedHueDelta',
   'hueToward','contrastRatio','ensureStructureContrast','cohesionPass',
   'qualityRefineGenerated','qualityMetrics','relationVector','relationVectorDistance',
-  'photoDominanceScore','semanticRolesFromClusters','photoCompositionProfile'
+  'photoDominanceScore','semanticRolesFromClusters','photoCompositionProfile',
+  'emptyPreferenceRole','emptyPreferenceModel','sanitizePreferenceRole','sanitizePreferenceModel',
+  'preferenceRoleAffinity','preferenceAffinityFromModel','preferenceModelWithPalette'
 ];
 
 const sandbox={console};
@@ -165,5 +167,18 @@ property('photo dominance score is finite',
     return Number.isFinite(score);
   }
 );
+
+
+property('preference affinity stays bounded after learning',[hexArb,hexArb,hexArb],(a,b,c)=>{
+  const model=A.preferenceModelWithPalette(A.emptyPreferenceModel(),[a,b,c],3);
+  const affinity=A.preferenceAffinityFromModel(model,[a,b,c]);
+  return Number.isFinite(affinity)&&affinity>=0&&affinity<=1;
+});
+
+property('preference model keeps role weights aligned',[hexArb,hexArb,hexArb],(a,b,c)=>{
+  const model=A.preferenceModelWithPalette(A.emptyPreferenceModel(),[a,b,c],3);
+  return model.totalWeight===3&&
+    model.roles.base.w===3&&model.roles.structure.w===3&&model.roles.accent.w===3;
+});
 
 console.log('Color Lab property tests:',assertions,'generated cases passed');
