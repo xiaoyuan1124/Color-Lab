@@ -82,7 +82,7 @@ else pass('service worker cache version');
 
 if(pkg.version!=='2.3.0') fail('package version must be 2.3.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.3')||!html.includes("appVersion:'2.3'")) fail('V2.3 UI or backup version metadata missing');
+if(!html.includes('Color Lab V2.3')||!html.includes('<div class="version">V2.3</div>')||!html.includes("appVersion:'2.3'")) fail('V2.3 UI or backup version metadata missing');
 else pass('V2.3 version metadata');
 
 if(manifest.display!=='standalone') fail('manifest display must be standalone');
