@@ -76,7 +76,7 @@ for(const src of lazyScripts){
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v19")) fail('service worker cache version is not V1.9');
+if(!sw.includes("color-lab-v20")) fail('service worker cache version is not V2.0');
 else pass('service worker cache version');
 
 if(manifest.display!=='standalone') fail('manifest display must be standalone');
@@ -334,5 +334,52 @@ if(!html.includes("P3 顯示可用 · 分析統一為 sRGB")){
   fail('photo color-space disclosure missing');
 }else pass('photo color-space disclosure');
 
+
+for(const fn of [
+  'emptyPreferenceModel','sanitizePreferenceModel','preferenceRoleAffinity',
+  'preferenceAffinityFromModel','preferenceModelWithPalette','learnPalettePreference',
+  'resetPreferenceModel'
+]){
+  if(!html.includes('function '+fn+'(')) fail('V2.0 preference function missing: '+fn);
+}
+pass('V2.0 local preference functions present');
+
+if(!html.includes("colorlab.preferenceV1")||!html.includes('id="resetPreference"')){
+  fail('V2.0 local preference storage or reset control missing');
+}else pass('V2.0 preference storage and reset control');
+
+if(!html.includes("learnPalettePreference(palette,1)")||!html.includes("learnPalettePreference(r.palette,.25)")){
+  fail('V2.0 explicit preference learning signals missing');
+}else pass('V2.0 explicit preference learning signals');
+
+if(!html.includes("if(m.totalWeight<3")){
+  fail('V2.0 preference maturity gate missing');
+}else pass('V2.0 preference maturity gate');
+
+if(!html.includes("personal*.45")||!html.includes("reference,accessibility,personal,gamut")){
+  fail('V2.0 personal recommendation dimension missing');
+}else pass('V2.0 personal recommendation dimension');
+
+if(!html.includes("color-lab-backup-v3")||!html.includes("appVersion:'2.0'")||
+   !html.includes("preference:sanitizePreferenceModel(preferenceState)")){
+  fail('V2.0 backup v3 preference payload missing');
+}else pass('V2.0 backup v3 preference payload');
+
+for(const schema of ['color-lab-backup-v1','color-lab-backup-v2','color-lab-backup-v3']){
+  if(!html.includes(schema)) fail('backup compatibility missing: '+schema);
+}
+pass('backup v1/v2/v3 compatibility');
+
+if(!html.includes("偏好只存在此裝置")){
+  fail('local preference privacy copy missing');
+}else pass('local preference privacy copy');
+
+const resetStart=html.indexOf('function resetPreferenceModel(){');
+const resetEnd=html.indexOf('function ',resetStart+10);
+const resetBlock=resetStart>=0?html.slice(resetStart,resetEnd>resetStart?resetEnd:resetStart+1200):'';
+if(resetBlock.includes("colorlab.saved")){
+  fail('reset preference must not delete saved palettes');
+}else pass('reset preference preserves saved palettes');
+
 if(process.exitCode) process.exit(process.exitCode);
-console.log('Color Lab V1.9 verification complete.');
+console.log('Color Lab V2.0 verification complete.');
