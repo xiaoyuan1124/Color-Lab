@@ -1,4 +1,4 @@
-# Color Lab V0.6 Design System
+# Color Lab Design System
 
 Color Lab 的視覺原則不是「套一套 UI library」，而是把一致性變成可維護的規則。
 
