@@ -348,7 +348,10 @@ if(!html.includes("colorlab.preferenceV1")||!html.includes('id="resetPreference"
   fail('V2.0 local preference storage or reset control missing');
 }else pass('V2.0 preference storage and reset control');
 
-if(!html.includes("learnPalettePreference(palette,1)")||!html.includes("learnPalettePreference(r.palette,.25)")){
+if(!html.includes("learnPalettePreference(palette,1)")||
+   !html.includes("learnPalettePreference(palette,.35)")||
+   !html.includes("learnPalettePreference(r.palette,.25)")||
+   !html.includes("learnPalettePreference(x.palette,.35)")){
   fail('V2.0 explicit preference learning signals missing');
 }else pass('V2.0 explicit preference learning signals');
 
@@ -380,6 +383,35 @@ const resetBlock=resetStart>=0?html.slice(resetStart,resetEnd>resetStart?resetEn
 if(resetBlock.includes("colorlab.saved")){
   fail('reset preference must not delete saved palettes');
 }else pass('reset preference preserves saved palettes');
+
+
+if(!html.includes("w>100")||!html.includes("totalWeight>100")){
+  fail('V2.0 preference corruption bounds missing');
+}else pass('V2.0 preference corruption bounds');
+
+if(!html.includes("localStorage.setItem('colorlab.preferenceV1',JSON.stringify(preferenceState))")||
+   resetBlock.includes("removeItem('colorlab.preferenceV1')")){
+  fail('V2.0 intentional preference reset marker missing');
+}else pass('V2.0 reset cannot be resurrected by stale shadow');
+
+if(!html.includes("const needsPreference=rawPreference===null;")||
+   !html.includes("if(needsPreference&&snap.preference)")){
+  fail('V2.0 independent preference shadow restore missing');
+}else pass('V2.0 independent preference shadow restore');
+
+const generateStart=html.indexOf('function generate(');
+const generateEnd=html.indexOf('function shuffle(',generateStart);
+const generateBlock=generateStart>=0&&generateEnd>generateStart?html.slice(generateStart,generateEnd):'';
+const renderStart=html.indexOf('function render(){');
+const renderEnd=html.indexOf('function renderIdeas()',renderStart);
+const renderBlock=renderStart>=0&&renderEnd>renderStart?html.slice(renderStart,renderEnd):'';
+if(generateBlock.includes('learnPalettePreference(')||renderBlock.includes('learnPalettePreference(')){
+  fail('passive rendering must not train local preference');
+}else pass('preference learns only from explicit actions');
+
+if(!html.includes("尚未建立本機偏好")||!html.includes("本機偏好學習中")||!html.includes("本機偏好已開始微調推薦")){
+  fail('V2.0 preference maturity status missing');
+}else pass('V2.0 preference maturity status');
 
 if(process.exitCode) process.exit(process.exitCode);
 console.log('Color Lab V2.0 verification complete.');
