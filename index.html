@@ -2689,7 +2689,7 @@ function updatePreferenceStatus(backedUp=false){
   const s=$('#dataStatus'),reset=$('#resetPreference');
   const weight=Number(preferenceState?.totalWeight)||0;
   const state=weight<=0?'尚未建立本機偏好':weight<3?'本機偏好學習中':'本機偏好已開始微調推薦';
-  if(s)s.textContent=(backedUp?'本機雙重備份已啟用':'資料保存在此裝置')+' · '+state;
+  if(s)s.textContent=(backedUp?'本機雙重備份已啟用':'資料保存在此裝置')+' · 偏好只存在此裝置 · '+state;
   if(reset)reset.disabled=weight<=0;
 }
 function resetPreferenceModel(){
