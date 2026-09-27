@@ -2100,44 +2100,72 @@ function scheduleResilienceBackup(){
 }
 async function restoreResilienceIfNeeded(){
   try{
-    const current=readSavedData();
-    if(current.length){resilienceReady=true;scheduleResilienceBackup();return}
+    const currentSaved=readSavedData();
+    const rawPreference=safeJsonRead('colorlab.preferenceV1',null);
+    const needsSaved=currentSaved.length===0;
+    const needsPreference=rawPreference===null;
+
+    if(!needsSaved&&!needsPreference){
+      resilienceReady=true;scheduleResilienceBackup();updatePreferenceStatus(false);return;
+    }
+
     const db=await openResilienceDB();
     const snap=await new Promise((resolve,reject)=>{
       const tx=db.transaction('snapshots','readonly'),req=tx.objectStore('snapshots').get('latest');
       req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error);
     });
     db.close();
-    if(!snap||!Array.isArray(snap.saved)||!snap.saved.length){resilienceReady=true;scheduleResilienceBackup();return}
-    const restoredSaved=snap.saved.map(sanitizeSavedRecord).filter(Boolean).slice(0,300);
-    if(!restoredSaved.length){resilienceReady=true;scheduleResilienceBackup();return}
-    localStorage.setItem('colorlab.saved',JSON.stringify(restoredSaved));
-    if(snap.preference){
+
+    if(!snap){
+      resilienceReady=true;scheduleResilienceBackup();updatePreferenceStatus(false);return;
+    }
+
+    let restoredSaved=false,restoredPreference=false;
+
+    if(needsPreference&&snap.preference){
       preferenceState=sanitizePreferenceModel(snap.preference);
       localStorage.setItem('colorlab.preferenceV1',JSON.stringify(preferenceState));
       invalidatePreferenceScoring();
+      restoredPreference=true;
     }
-    if(Array.isArray(snap.recent)){
-      recentColors=snap.recent.filter(x=>typeof x==='string'&&normHex(x)).map(x=>normHex(x));
-      localStorage.setItem('colorlab.recent',JSON.stringify(recentColors));
-    }
-    if(snap.compareA){const safeA=sanitizeCompareRecord(snap.compareA);if(safeA){compareA=safeA;localStorage.setItem('colorlab.compareA',JSON.stringify(compareA))}}
-    if(snap.compareB){const safeB=sanitizeCompareRecord(snap.compareB);if(safeB){compareB=safeB;localStorage.setItem('colorlab.compareB',JSON.stringify(compareB))}}
-    if(snap.draft){
-      const d=sanitizeDraftRecord(snap.draft);
-      if(d){
-        localStorage.setItem('colorlab.draft',JSON.stringify(d));
-        selectedColors=[...d.selectedColors];
-        lockedSlots=[...d.lockedSlots];
-        activeSlot=d.activeSlot;mode=d.mode;currentComboName=d.comboName;
-        seed=selectedColors[activeSlot]||selectedColors.find(Boolean)||'#68705E';
-        $('#comboName').value=currentComboName;syncEditor();renderModes();generate(false);updateLockToggle();updatePhotoTarget();
+
+    if(needsSaved&&Array.isArray(snap.saved)&&snap.saved.length){
+      const restored=snap.saved.map(sanitizeSavedRecord).filter(Boolean).slice(0,300);
+      if(restored.length){
+        localStorage.setItem('colorlab.saved',JSON.stringify(restored));
+        restoredSaved=true;
+
+        if(Array.isArray(snap.recent)&&safeJsonRead('colorlab.recent',null)===null){
+          recentColors=snap.recent.filter(x=>typeof x==='string'&&normHex(x)).map(x=>normHex(x)).slice(0,20);
+          localStorage.setItem('colorlab.recent',JSON.stringify(recentColors));
+        }
+        if(snap.compareA&&safeJsonRead('colorlab.compareA',null)===null){
+          const safeA=sanitizeCompareRecord(snap.compareA);
+          if(safeA){compareA=safeA;localStorage.setItem('colorlab.compareA',JSON.stringify(compareA))}
+        }
+        if(snap.compareB&&safeJsonRead('colorlab.compareB',null)===null){
+          const safeB=sanitizeCompareRecord(snap.compareB);
+          if(safeB){compareB=safeB;localStorage.setItem('colorlab.compareB',JSON.stringify(compareB))}
+        }
+        if(snap.draft&&safeJsonRead('colorlab.draft',null)===null){
+          const d=sanitizeDraftRecord(snap.draft);
+          if(d){
+            localStorage.setItem('colorlab.draft',JSON.stringify(d));
+            selectedColors=[...d.selectedColors];lockedSlots=[...d.lockedSlots];
+            activeSlot=d.activeSlot;mode=d.mode;currentComboName=d.comboName;
+            seed=selectedColors[activeSlot]||selectedColors.find(Boolean)||'#68705E';
+            $('#comboName').value=currentComboName;syncEditor();renderModes();generate(false);updateLockToggle();updatePhotoTarget();
+          }
+        }
       }
     }
-    renderSaved();renderRecentColors();renderCompare();
-    resilienceReady=true;scheduleResilienceBackup();
-    toast('已從本機備份恢復資料');
-  }catch(_){resilienceReady=true}
+
+    if(restoredSaved){renderSaved();renderRecentColors();renderCompare()}
+    resilienceReady=true;scheduleResilienceBackup();updatePreferenceStatus(restoredSaved||restoredPreference);
+    if(restoredSaved||restoredPreference)toast('已從本機備份恢復資料');
+  }catch(_){
+    resilienceReady=true;updatePreferenceStatus(false);
+  }
 }
 
 function snapshotState(){
@@ -2658,13 +2686,16 @@ function learnPalettePreference(paletteLike,weight=1){
 }
 function preferenceIsMature(){return (preferenceState?.totalWeight||0)>=3}
 function updatePreferenceStatus(backedUp=false){
-  const s=$('#dataStatus');if(!s)return;
-  s.textContent=(backedUp?'本機雙重備份已啟用':'資料保存在此裝置')+' · 偏好只存在此裝置';
+  const s=$('#dataStatus'),reset=$('#resetPreference');
+  const weight=Number(preferenceState?.totalWeight)||0;
+  const state=weight<=0?'尚未建立本機偏好':weight<3?'本機偏好學習中':'本機偏好已開始微調推薦';
+  if(s)s.textContent=(backedUp?'本機雙重備份已啟用':'資料保存在此裝置')+' · '+state;
+  if(reset)reset.disabled=weight<=0;
 }
 function resetPreferenceModel(){
   if(!confirm('重置 Color Lab 在此裝置學到的配色偏好？收藏配色不會被刪除。'))return;
   preferenceState=emptyPreferenceModel();
-  localStorage.removeItem('colorlab.preferenceV1');
+  try{localStorage.setItem('colorlab.preferenceV1',JSON.stringify(preferenceState))}catch(_){}
   invalidatePreferenceScoring();scheduleResilienceBackup();updatePreferenceStatus(false);
   if(document.querySelector('.tab-view.active')?.dataset.view==='inspire'){renderIdeas();renderRecommendations()}
   toast('已重置本機配色偏好');
@@ -3541,6 +3572,7 @@ function save(){
     const old=data.splice(existing,1)[0];
     data.unshift({...old,...record,tags:Array.isArray(old.tags)?old.tags:[],folder:old.folder||'',pinned:!!old.pinned});
     localStorage.setItem('colorlab.saved',JSON.stringify(data.slice(0,300)));
+    learnPalettePreference(palette,.35);
     renderSaved();persistDraft();scheduleResilienceBackup();toast('這組配色已收藏 已移到最上方');return;
   }
   data.unshift(record);
@@ -3584,7 +3616,9 @@ function loadSaved(index){
   lockedSlots=Array.isArray(x.lockedSlots)?[...x.lockedSlots]:[false,false,false];while(lockedSlots.length<3)lockedSlots.push(false);
   activeSlot=Math.max(0,selectedColors.findIndex(Boolean));currentComboName=(x.name&&x.name.trim())||'未命名配色';
   $('#comboName').value=currentComboName==='未命名配色'?'':currentComboName;
-  syncEditor();renderModes();palette=completeCombo(chosenColors(),mode);render();pushHistory();switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'});
+  palette=completeCombo(chosenColors(),mode);
+  learnPalettePreference(x.palette,.35);
+  syncEditor();renderModes();render();pushHistory();switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function librarySearchText(x){
   const tags=Array.isArray(x.tags)?x.tags:[];
