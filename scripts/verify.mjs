@@ -460,5 +460,11 @@ if(toggleBlock.includes("removeItem('colorlab.preferenceV1')")||toggleBlock.incl
   fail('turning personalization off must preserve learned model');
 }else pass('turning personalization off preserves learned model');
 
+
+if(!html.includes("hueCoherence=clamp(Math.hypot(role.sumX,role.sumY)/role.w,0,1)")||
+   !html.includes("hueCoherence<.22")){
+  fail('V2.1 mixed-hue preference coherence guard missing');
+}else pass('V2.1 mixed-hue preference coherence guard');
+
 if(process.exitCode) process.exit(process.exitCode);
 console.log('Color Lab V2.1 verification complete.');
