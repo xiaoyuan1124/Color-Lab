@@ -11,6 +11,9 @@ Color Lab 的視覺原則不是「套一套 UI library」，而是把一致性�
 - 1 Section = 1 Purpose
 - 1 Primary Action
 - Accent 少量使用，不讓所有按鈕搶視線
+- 背景層可以延伸到畫面邊界，但文字與操作仍要服從同一條內容網格
+- Blur / Glass 只有在表達「層級、浮層或固定 chrome」時才使用，不能只為了讓畫面看起來更有質感
+- 避免「裝飾層自己縮排、內容又是另一套縮排」；每個邊界都必須能說明它與版面結構的關係
 
 ## Spacing Tokens
 

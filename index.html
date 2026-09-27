@@ -1090,7 +1090,7 @@ body{
     radial-gradient(120% 48% at 50% -6%,rgba(255,255,255,.72),transparent 64%),
     var(--surface-0);
 }
-.app{position:relative}
+.app{position:relative;--app-gutter:clamp(20px,5.8vw,28px)}
 .app::before{
   content:"";
   position:fixed;
@@ -1101,10 +1101,10 @@ body{
   z-index:-1;
 }
 
-/* top chrome */
+/* top chrome: background plane reaches the shell edge; content stays on the editorial grid */
 .app-topbar{
-  margin:0 0 var(--space-7);
-  padding:10px 0 16px;
+  margin:0 0 var(--space-7) calc(-1 * var(--app-gutter));
+  padding:10px 0 16px var(--app-gutter);
   background:linear-gradient(to bottom,rgba(243,239,232,.96) 56%,rgba(243,239,232,0));
   backdrop-filter:blur(16px) saturate(115%);
   -webkit-backdrop-filter:blur(16px) saturate(115%);
@@ -1550,6 +1550,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
 }
 
 @media(max-width:390px){
+  .app{--app-gutter:20px}
   .screen-head h1{font-size:clamp(32px,10vw,40px)}
   .screen-tools{width:100%;display:grid;grid-template-columns:1fr 1fr 1.15fr}
   .tool-btn{padding:0 8px}

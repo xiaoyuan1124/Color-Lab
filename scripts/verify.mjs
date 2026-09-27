@@ -85,6 +85,13 @@ else pass('package version');
 if(!html.includes('Color Lab V2.3')||!html.includes('<div class="version">V2.3</div>')||!html.includes("appVersion:'2.3'")) fail('V2.3 UI or backup version metadata missing');
 else pass('V2.3 version metadata');
 
+
+if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
+   !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
+   !html.includes("padding:10px 0 16px var(--app-gutter)")){
+  fail('top chrome edge-to-grid alignment missing');
+}else pass('top chrome edge-to-grid alignment');
+
 if(manifest.display!=='standalone') fail('manifest display must be standalone');
 if(manifest.orientation!=='portrait-primary') fail('manifest orientation must be portrait-primary');
 pass('manifest app mode');
