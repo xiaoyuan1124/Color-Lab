@@ -76,7 +76,7 @@ for(const src of lazyScripts){
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v21")) fail('service worker cache version is not V2.1');
+if(!sw.includes("color-lab-v22")) fail('service worker cache version is not V2.2');
 else pass('service worker cache version');
 
 if(manifest.display!=='standalone') fail('manifest display must be standalone');
@@ -340,34 +340,34 @@ for(const fn of [
   'preferenceAffinityFromModel','preferenceModelWithPalette','learnPalettePreference',
   'resetPreferenceModel'
 ]){
-  if(!html.includes('function '+fn+'(')) fail('V2.1 preference function missing: '+fn);
+  if(!html.includes('function '+fn+'(')) fail('V2.2 preference function missing: '+fn);
 }
-pass('V2.1 local preference functions present');
+pass('V2.2 local preference functions present');
 
 if(!html.includes("colorlab.preferenceV1")||!html.includes('id="resetPreference"')){
-  fail('V2.1 local preference storage or reset control missing');
-}else pass('V2.1 preference storage and reset control');
+  fail('V2.2 local preference storage or reset control missing');
+}else pass('V2.2 preference storage and reset control');
 
 if(!html.includes("learnPalettePreference(palette,1)")||
    !html.includes("learnPalettePreference(palette,.35)")||
    !html.includes("learnPalettePreference(r.palette,.25)")||
    !html.includes("learnPalettePreference(x.palette,.35)")){
-  fail('V2.1 explicit preference learning signals missing');
-}else pass('V2.1 explicit preference learning signals');
+  fail('V2.2 explicit preference learning signals missing');
+}else pass('V2.2 explicit preference learning signals');
 
 if(!html.includes("if(m.totalWeight<3")){
-  fail('V2.1 preference maturity gate missing');
-}else pass('V2.1 preference maturity gate');
+  fail('V2.2 preference maturity gate missing');
+}else pass('V2.2 preference maturity gate');
 
 if(!html.includes("personal*.45")||!html.includes("reference,accessibility,personal,gamut")){
-  fail('V2.1 personal recommendation dimension missing');
-}else pass('V2.1 personal recommendation dimension');
+  fail('V2.2 personal recommendation dimension missing');
+}else pass('V2.2 personal recommendation dimension');
 
 if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.1'")||
    !html.includes("preference:sanitizePreferenceModel(preferenceState)")||
    !html.includes("preferenceEnabled")){
-  fail('V2.1 backup v4 personalization payload missing');
-}else pass('V2.1 backup v4 personalization payload');
+  fail('V2.2 backup v4 personalization payload missing');
+}else pass('V2.2 backup v4 personalization payload');
 
 for(const schema of ['color-lab-backup-v1','color-lab-backup-v2','color-lab-backup-v3','color-lab-backup-v4']){
   if(!html.includes(schema)) fail('backup compatibility missing: '+schema);
@@ -387,18 +387,18 @@ if(resetBlock.includes("colorlab.saved")){
 
 
 if(!html.includes("w>100")||!html.includes("totalWeight>100")){
-  fail('V2.1 preference corruption bounds missing');
-}else pass('V2.1 preference corruption bounds');
+  fail('V2.2 preference corruption bounds missing');
+}else pass('V2.2 preference corruption bounds');
 
 if(!html.includes("localStorage.setItem('colorlab.preferenceV1',JSON.stringify(preferenceState))")||
    resetBlock.includes("removeItem('colorlab.preferenceV1')")){
-  fail('V2.1 intentional preference reset marker missing');
-}else pass('V2.1 reset cannot be resurrected by stale shadow');
+  fail('V2.2 intentional preference reset marker missing');
+}else pass('V2.2 reset cannot be resurrected by stale shadow');
 
 if(!html.includes("const needsPreference=rawPreference===null;")||
    !html.includes("if(needsPreference&&snap.preference)")){
-  fail('V2.1 independent preference shadow restore missing');
-}else pass('V2.1 independent preference shadow restore');
+  fail('V2.2 independent preference shadow restore missing');
+}else pass('V2.2 independent preference shadow restore');
 
 const generateStart=html.indexOf('function generate(');
 const generateEnd=html.indexOf('function shuffle(',generateStart);
@@ -411,8 +411,8 @@ if(generateBlock.includes('learnPalettePreference(')||renderBlock.includes('lear
 }else pass('preference learns only from explicit actions');
 
 if(!html.includes("尚未建立本機偏好")||!html.includes("本機偏好學習中")||!html.includes("本機偏好已開始微調推薦")){
-  fail('V2.1 preference maturity status missing');
-}else pass('V2.1 preference maturity status');
+  fail('V2.2 preference maturity status missing');
+}else pass('V2.2 preference maturity status');
 
 
 for(const fn of [
@@ -420,14 +420,14 @@ for(const fn of [
   'preferenceSummaryFromModel','preferenceAffinityForSetting',
   'setPreferenceEnabled','togglePreferenceModel'
 ]){
-  if(!html.includes('function '+fn+'(')) fail('V2.1 personalization control missing: '+fn);
+  if(!html.includes('function '+fn+'(')) fail('V2.2 personalization control missing: '+fn);
 }
-pass('V2.1 personalization control functions present');
+pass('V2.2 personalization control functions present');
 
 for(const id of ['togglePreference','preferenceSummary']){
-  if(!html.includes('id="'+id+'"')) fail('V2.1 personalization UI missing: '+id);
+  if(!html.includes('id="'+id+'"')) fail('V2.2 personalization UI missing: '+id);
 }
-pass('V2.1 personalization UI present');
+pass('V2.2 personalization UI present');
 
 if(!html.includes("if(!preferenceEnabled)return;")){
   fail('preference learning does not stop when personalization is disabled');
@@ -438,12 +438,12 @@ if(!html.includes("return enabled?preferenceAffinityFromModel(model,colors):0;")
 }else pass('disabled personalization forces zero affinity');
 
 if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.1'")){
-  fail('V2.1 personalization setting persistence or backup v4 missing');
-}else pass('V2.1 setting persistence and backup v4');
+  fail('V2.2 personalization setting persistence or backup v4 missing');
+}else pass('V2.2 setting persistence and backup v4');
 
 if(!html.includes("schema:'color-lab-shadow-v3'")||!html.includes("preferenceEnabled,")){
-  fail('V2.1 resilience shadow does not include personalization setting');
-}else pass('V2.1 resilience shadow includes personalization setting');
+  fail('V2.2 resilience shadow does not include personalization setting');
+}else pass('V2.2 resilience shadow includes personalization setting');
 
 if(!html.includes("typeof data.preferenceEnabled==='boolean'")){
   fail('backup v4 personalization setting validation missing');
@@ -463,8 +463,30 @@ if(toggleBlock.includes("removeItem('colorlab.preferenceV1')")||toggleBlock.incl
 
 if(!html.includes("hueCoherence=clamp(Math.hypot(role.sumX,role.sumY)/role.w,0,1)")||
    !html.includes("hueCoherence<.22")){
-  fail('V2.1 mixed-hue preference coherence guard missing');
-}else pass('V2.1 mixed-hue preference coherence guard');
+  fail('V2.2 mixed-hue preference coherence guard missing');
+}else pass('V2.2 mixed-hue preference coherence guard');
+
+
+if(!fs.existsSync('scripts/budget.mjs')){
+  fail('V2.2 size budget script missing');
+}else pass('V2.2 size budget script present');
+
+const workflows=[
+  fs.readFileSync('.github/workflows/pages.yml','utf8'),
+  fs.readFileSync('.github/workflows/quality.yml','utf8'),
+  fs.readFileSync('.github/workflows/codeql.yml','utf8')
+].join('\n');
+for(const marker of [
+  'actions/checkout@v7','actions/setup-node@v7','actions/upload-artifact@v7',
+  'actions/upload-pages-artifact@v5','actions/configure-pages@v6','actions/deploy-pages@v5'
+]){
+  if(!workflows.includes(marker)) fail('modern GitHub Action missing: '+marker);
+}
+pass('V2.2 GitHub Actions modernized');
+
+if(!workflows.includes('group: color-lab-codeql-')||!workflows.includes('cancel-in-progress: true')){
+  fail('CodeQL superseded-run concurrency missing');
+}else pass('CodeQL superseded-run concurrency');
 
 if(process.exitCode) process.exit(process.exitCode);
-console.log('Color Lab V2.1 verification complete.');
+console.log('Color Lab V2.2 verification complete.');
