@@ -13,12 +13,16 @@ permissions:
   contents: read
   security-events: write
 
+concurrency:
+  group: color-lab-codeql-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   analyze:
     name: Analyze JavaScript
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
