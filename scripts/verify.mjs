@@ -559,4 +559,4 @@ if(!workflows.includes('group: color-lab-codeql-')||!workflows.includes('cancel-
 }else pass('CodeQL superseded-run concurrency');
 
 if(process.exitCode) process.exit(process.exitCode);
-console.log('Color Lab V2.3 verification complete.');
+console.log('Color Lab V2.4.1 verification complete.');
