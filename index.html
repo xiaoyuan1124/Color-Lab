@@ -565,7 +565,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V2.0 EXPERIENCE PASS */
+/* V2.1 EXPERIENCE PASS */
 .screen-tools{
   display:flex;
   gap:var(--space-2);
@@ -688,7 +688,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V2.0 POWER TOOLS */
+/* V2.1 POWER TOOLS */
 .lock-toggle{
   min-height:34px;
   margin-top:var(--space-2);
@@ -793,7 +793,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V2.0 STUDIO */
+/* V2.1 STUDIO */
 .seed-inline-actions{display:flex;gap:var(--space-3);align-items:center;flex-wrap:wrap}
 .picker-open{color:var(--olive-11)}
 .vision-lab{
@@ -908,13 +908,13 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 .saved-tag-btn{border:0;background:transparent;color:var(--olive-11);padding:0;font-size:var(--text-sm);font-weight:600}
 
 
-/* V2.0.1 STABILIZATION */
+/* V2.1.1 STABILIZATION */
 .tab-view.active{animation:tab-in .18s ease-out both}
 @keyframes tab-in{from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.tab-view.active{animation:none}}
 
 
-/* V2.0 COMPLETE WORKFLOW */
+/* V2.1 COMPLETE WORKFLOW */
 .drag-note{
   margin:-14px 0 var(--space-5);
   color:var(--text-3);
@@ -1074,7 +1074,7 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 
-/* V2.0 VISUAL POLISH — presentation only */
+/* V2.1 VISUAL POLISH — presentation only */
 :root{
   --glass:rgba(250,248,244,.82);
   --glass-strong:rgba(255,253,249,.92);
@@ -1573,7 +1573,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
 }
 
 
-/* V2.0 COLOR QUALITY ENGINE */
+/* V2.1 COLOR QUALITY ENGINE */
 .photo-swatches{align-items:flex-start;padding-bottom:6px}
 .photo-swatch-card{
   flex:0 0 76px;
@@ -1610,7 +1610,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
 }
 
 
-/* V2.0 PERFORMANCE */
+/* V2.1 PERFORMANCE */
 #result .section,
 #inspire .section,
 #library .section{
@@ -1620,7 +1620,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
 .tab-view[hidden]{display:none!important}
 
 
-/* V2.0 PHOTO INTELLIGENCE */
+/* V2.1 PHOTO INTELLIGENCE */
 .photo-insight{
   margin-top:18px;
   padding-top:16px;
@@ -1640,13 +1640,45 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
   color:var(--text-2);
 }
 
+
+/* V2.1 PERSONALIZATION CONTROL */
+.preference-strip{
+  margin:0 0 var(--space-4);
+  padding:14px 0;
+  border-top:1px solid var(--border-subtle);
+  border-bottom:1px solid var(--border-subtle);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+}
+.preference-strip>div{min-width:0}
+.preference-strip strong{
+  display:block;
+  font-size:14px;
+  line-height:1.3;
+  color:var(--text-1);
+}
+.preference-strip span{
+  display:block;
+  margin-top:4px;
+  font-size:12px;
+  line-height:1.45;
+  color:var(--text-2);
+}
+.preference-toggle{
+  flex:0 0 auto;
+  min-height:38px;
+  padding:0 14px;
+}
+
 </style>
 </head>
 <body>
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.0</div>
+    <div class="version">V2.1</div>
   </div>
 
   <main class="app-main">
@@ -1867,6 +1899,13 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
             <option value="">全部分類</option>
           </select></label>
         </div>
+        <div class="preference-strip" id="preferencePanel">
+          <div>
+            <strong>本機個人化</strong>
+            <span id="preferenceSummary">尚未建立偏好輪廓</span>
+          </div>
+          <button type="button" class="utility-btn preference-toggle" id="togglePreference" aria-pressed="true">關閉</button>
+        </div>
         <div class="library-tools">
           <button type="button" class="utility-btn" id="exportBackup">匯出備份</button>
           <button type="button" class="utility-btn" id="importBackup">匯入備份</button>
@@ -1887,7 +1926,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.0</div>
+  <div class="footer app-footer">Color Lab V2.1</div>
 </div>
 
 <nav class="bottom-nav" aria-label="主要功能" role="tablist">
@@ -2010,7 +2049,7 @@ let historyStack=[],historyIndex=-1,isHistoryRestore=false;
 let recentColors=readRecentColors();
 let recommendationCacheKey='',recommendationCacheValue=[];
 let igRelationCache=null;
-let preferenceState=null;
+let preferenceState=null,preferenceEnabled=true;
 const lazyScriptPromises=new Map();
 const oklchCache=new Map();
 const luminanceCache=new Map();
@@ -2074,9 +2113,10 @@ async function writeResilienceSnapshot(){
   try{
     const db=await openResilienceDB();
     const payload={
-      schema:'color-lab-shadow-v2',updatedAt:Date.now(),
+      schema:'color-lab-shadow-v3',updatedAt:Date.now(),
       saved:readSavedData(),
       preference:sanitizePreferenceModel(preferenceState),
+      preferenceEnabled,
       recent:readRecentColors(),
       draft:sanitizeDraftRecord(safeJsonRead('colorlab.draft',null)),
       compareA:sanitizeCompareRecord(safeJsonRead('colorlab.compareA',null)),
@@ -2102,10 +2142,12 @@ async function restoreResilienceIfNeeded(){
   try{
     const currentSaved=readSavedData();
     const rawPreference=safeJsonRead('colorlab.preferenceV1',null);
+    const rawPreferenceEnabled=localStorage.getItem('colorlab.preferenceEnabled');
     const needsSaved=currentSaved.length===0;
     const needsPreference=rawPreference===null;
+    const needsPreferenceEnabled=rawPreferenceEnabled===null;
 
-    if(!needsSaved&&!needsPreference){
+    if(!needsSaved&&!needsPreference&&!needsPreferenceEnabled){
       resilienceReady=true;scheduleResilienceBackup();updatePreferenceStatus(false);return;
     }
 
@@ -2125,6 +2167,12 @@ async function restoreResilienceIfNeeded(){
     if(needsPreference&&snap.preference){
       preferenceState=sanitizePreferenceModel(snap.preference);
       localStorage.setItem('colorlab.preferenceV1',JSON.stringify(preferenceState));
+      invalidatePreferenceScoring();
+      restoredPreference=true;
+    }
+    if(needsPreferenceEnabled&&typeof snap.preferenceEnabled==='boolean'){
+      preferenceEnabled=snap.preferenceEnabled;
+      localStorage.setItem('colorlab.preferenceEnabled',JSON.stringify(preferenceEnabled));
       invalidatePreferenceScoring();
       restoredPreference=true;
     }
@@ -2397,7 +2445,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v3',appVersion:'2.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState)};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.1',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -2468,8 +2516,9 @@ function importBackupFile(file){
   reader.onload=()=>{
     try{
       const data=JSON.parse(String(reader.result||''));
-      if(!['color-lab-backup-v1','color-lab-backup-v2','color-lab-backup-v3'].includes(data.schema)||!Array.isArray(data.saved)||data.saved.length>1000)throw new Error('invalid');
-      if(data.schema==='color-lab-backup-v3'&&(!data.preference||Number(data.preference.version)!==1))throw new Error('invalid');
+      if(!['color-lab-backup-v1','color-lab-backup-v2','color-lab-backup-v3','color-lab-backup-v4'].includes(data.schema)||!Array.isArray(data.saved)||data.saved.length>1000)throw new Error('invalid');
+      if(['color-lab-backup-v3','color-lab-backup-v4'].includes(data.schema)&&(!data.preference||Number(data.preference.version)!==1))throw new Error('invalid');
+      if(data.schema==='color-lab-backup-v4'&&typeof data.preferenceEnabled!=='boolean')throw new Error('invalid');
       const currentRaw=readSavedData();
       const current=currentRaw.map(sanitizeSavedRecord).filter(Boolean);
       const importedSaved=data.saved.map(sanitizeSavedRecord).filter(Boolean);
@@ -2487,6 +2536,12 @@ function importBackupFile(file){
       if(data.preference){
         preferenceState=sanitizePreferenceModel(data.preference);
         localStorage.setItem('colorlab.preferenceV1',JSON.stringify(preferenceState));
+      }
+      if(typeof data.preferenceEnabled==='boolean'){
+        preferenceEnabled=data.preferenceEnabled;
+        localStorage.setItem('colorlab.preferenceEnabled',JSON.stringify(preferenceEnabled));
+      }
+      if(data.preference||typeof data.preferenceEnabled==='boolean'){
         invalidatePreferenceScoring();updatePreferenceStatus(false);
       }
       scheduleResilienceBackup();renderSaved();renderRecentColors();renderCompare();toast('備份已匯入');
@@ -2595,6 +2650,20 @@ function toOKLCH(hex){
   let h=Math.atan2(bb,a)*180/Math.PI;if(h<0)h+=360;
   return boundedCacheSet(oklchCache,key,Object.freeze({l:L,c:C,h:C<.00001?0:h}));
 }
+function readPreferenceEnabled(){
+  const value=safeJsonRead('colorlab.preferenceEnabled',true);
+  return typeof value==='boolean'?value:true;
+}
+function preferenceHueFamily(h){
+  const hh=((Number(h)||0)%360+360)%360;
+  if(hh<25||hh>=345)return'紅系';
+  if(hh<75)return'橙黃系';
+  if(hh<155)return'綠系';
+  if(hh<205)return'青系';
+  if(hh<270)return'藍系';
+  if(hh<330)return'紫系';
+  return'洋紅系';
+}
 function emptyPreferenceRole(){return{w:0,sumL:0,sumC:0,sumX:0,sumY:0}}
 function emptyPreferenceModel(){
   return{version:1,totalWeight:0,roles:{base:emptyPreferenceRole(),structure:emptyPreferenceRole(),accent:emptyPreferenceRole()}};
@@ -2635,6 +2704,26 @@ function preferenceRoleAffinity(roleStats,hex){
   const hSim=1-clamp(hueDistance(o.h,meanH)/150,0,1);
   return clamp(lSim*.48+cSim*.34+(hSim*hueStrength+(1-hueStrength)*.72)*.18,0,1);
 }
+function preferenceRoleDescriptor(roleStats){
+  const role=sanitizePreferenceRole(roleStats);
+  if(role.w<=0)return'尚未建立';
+  const meanL=role.sumL/role.w,meanC=role.sumC/role.w;
+  let meanH=Math.atan2(role.sumY,role.sumX)*180/Math.PI;if(meanH<0)meanH+=360;
+  const light=meanL<.38?'偏深':meanL>.72?'偏亮':'中明度';
+  const chroma=meanC<.045?'低彩':meanC<.12?'中彩':'高彩';
+  return meanC<.045?light+' '+chroma:light+' '+chroma+' '+preferenceHueFamily(meanH);
+}
+function preferenceSummaryFromModel(model){
+  const m=sanitizePreferenceModel(model);
+  if(m.totalWeight<=0)return'尚未建立偏好輪廓';
+  if(m.totalWeight<3)return'正在學習，需要再收藏或套用幾組配色';
+  return '主體 '+preferenceRoleDescriptor(m.roles.base)+
+    ' · 結構 '+preferenceRoleDescriptor(m.roles.structure)+
+    ' · 點綴 '+preferenceRoleDescriptor(m.roles.accent);
+}
+function preferenceAffinityForSetting(enabled,model,colors){
+  return enabled?preferenceAffinityFromModel(model,colors):0;
+}
 function preferenceAffinityFromModel(model,colors){
   const m=sanitizePreferenceModel(model);
   if(m.totalWeight<3||!Array.isArray(colors)||colors.length<3||colors.some(x=>!normHex(String(x))))return 0;
@@ -2670,7 +2759,7 @@ function preferenceModelWithPalette(model,paletteLike,weight=1){
   return next;
 }
 function preferenceAffinity(colors){
-  return preferenceAffinityFromModel(preferenceState,colors);
+  return preferenceAffinityForSetting(preferenceEnabled,preferenceState,colors);
 }
 function invalidatePreferenceScoring(){
   qualityScoreCache.clear();
@@ -2681,17 +2770,32 @@ function persistPreference(){
   scheduleResilienceBackup();
 }
 function learnPalettePreference(paletteLike,weight=1){
+  if(!preferenceEnabled)return;
   preferenceState=preferenceModelWithPalette(preferenceState,paletteLike,weight);
   persistPreference();invalidatePreferenceScoring();updatePreferenceStatus();
 }
-function preferenceIsMature(){return (preferenceState?.totalWeight||0)>=3}
+function preferenceIsMature(){return preferenceEnabled&&(preferenceState?.totalWeight||0)>=3}
 function updatePreferenceStatus(backedUp=false){
-  const s=$('#dataStatus'),reset=$('#resetPreference');
+  const s=$('#dataStatus'),reset=$('#resetPreference'),toggle=$('#togglePreference'),summary=$('#preferenceSummary');
   const weight=Number(preferenceState?.totalWeight)||0;
-  const state=weight<=0?'尚未建立本機偏好':weight<3?'本機偏好學習中':'本機偏好已開始微調推薦';
+  const state=!preferenceEnabled?'個人化已關閉':weight<=0?'尚未建立本機偏好':weight<3?'本機偏好學習中':'本機偏好已開始微調推薦';
   if(s)s.textContent=(backedUp?'本機雙重備份已啟用':'資料保存在此裝置')+' · 偏好只存在此裝置 · '+state;
   if(reset)reset.disabled=weight<=0;
+  if(toggle){
+    toggle.textContent=preferenceEnabled?'關閉':'開啟';
+    toggle.setAttribute('aria-pressed',preferenceEnabled?'true':'false');
+    toggle.setAttribute('aria-label',preferenceEnabled?'關閉本機個人化':'開啟本機個人化');
+  }
+  if(summary)summary.textContent=preferenceEnabled?preferenceSummaryFromModel(preferenceState):'已暫停學習與個人化排序';
 }
+function setPreferenceEnabled(next){
+  preferenceEnabled=!!next;
+  try{localStorage.setItem('colorlab.preferenceEnabled',JSON.stringify(preferenceEnabled))}catch(_){}
+  invalidatePreferenceScoring();scheduleResilienceBackup();updatePreferenceStatus(false);
+  if(document.querySelector('.tab-view.active')?.dataset.view==='inspire'){renderIdeas();renderRecommendations()}
+  toast(preferenceEnabled?'已開啟本機個人化':'已關閉本機個人化');
+}
+function togglePreferenceModel(){setPreferenceEnabled(!preferenceEnabled)}
 function resetPreferenceModel(){
   if(!confirm('重置 Color Lab 在此裝置學到的配色偏好？收藏配色不會被刪除。'))return;
   preferenceState=emptyPreferenceModel();
@@ -3206,7 +3310,9 @@ function renderRecommendations(){
   box.innerHTML='';
   recs.forEach((r,i)=>{
     const b=document.createElement('button');b.className='rec-card';b.type='button';b.dataset.rec=i;b.setAttribute('aria-label','加入推薦配色 '+r.meta.label);
-    b.innerHTML=`<div class="rec-palette"><i style="background:${r.palette.base}"></i><i style="background:${r.palette.structure}"></i><i style="background:${r.palette.accent}"></i></div><div class="rec-name">${r.meta.label}</div><div class="rec-sub">${r.meta.sub}</div><div class="rec-actions"><span class="rec-add">加入</span></div>`;
+    const profile=paletteQualityProfile([r.palette.base,r.palette.structure,r.palette.accent]);
+    const personalHint=preferenceIsMature()&&profile?.personal>=.52?' · 符合本機偏好':'';
+    b.innerHTML=`<div class="rec-palette"><i style="background:${r.palette.base}"></i><i style="background:${r.palette.structure}"></i><i style="background:${r.palette.accent}"></i></div><div class="rec-name">${r.meta.label}</div><div class="rec-sub">${r.meta.sub}${personalHint}</div><div class="rec-actions"><span class="rec-add">加入</span></div>`;
     box.appendChild(b);
   });
 }
@@ -4132,6 +4238,7 @@ document.addEventListener('click',e=>{
 });
 
 preferenceState=sanitizePreferenceModel(safeJsonRead('colorlab.preferenceV1',null));
+preferenceEnabled=readPreferenceEnabled();
 restoreDraft();
 $('#comboName').value=currentComboName||'';
 updatePreferenceStatus(false);
@@ -4161,6 +4268,7 @@ $('#exportPaletteImage').onclick=exportPaletteImage;
 $('#exportBackup').onclick=exportBackup;
 $('#importBackup').onclick=()=>$('#backupInput').click();
 $('#resetPreference').onclick=resetPreferenceModel;
+$('#togglePreference').onclick=togglePreferenceModel;
 $('#backupInput').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(file)importBackupFile(file);e.target.value=''});
 $('#clearRecent').onclick=()=>{recentColors=[];localStorage.removeItem('colorlab.recent');renderRecentColors();toast('已清除最近用色')};
 $('#copyPalette').onclick=()=>{navigator.clipboard?.writeText(paletteText()).then(()=>toast('已複製三色')).catch(()=>toast('無法複製'))};
