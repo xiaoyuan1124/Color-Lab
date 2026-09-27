@@ -2708,10 +2708,13 @@ function preferenceRoleDescriptor(roleStats){
   const role=sanitizePreferenceRole(roleStats);
   if(role.w<=0)return'尚未建立';
   const meanL=role.sumL/role.w,meanC=role.sumC/role.w;
+  const hueCoherence=clamp(Math.hypot(role.sumX,role.sumY)/role.w,0,1);
   let meanH=Math.atan2(role.sumY,role.sumX)*180/Math.PI;if(meanH<0)meanH+=360;
   const light=meanL<.38?'偏深':meanL>.72?'偏亮':'中明度';
   const chroma=meanC<.045?'低彩':meanC<.12?'中彩':'高彩';
-  return meanC<.045?light+' '+chroma:light+' '+chroma+' '+preferenceHueFamily(meanH);
+  return meanC<.045||hueCoherence<.22
+    ?light+' '+chroma
+    :light+' '+chroma+' '+preferenceHueFamily(meanH);
 }
 function preferenceSummaryFromModel(model){
   const m=sanitizePreferenceModel(model);
