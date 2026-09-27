@@ -2605,7 +2605,7 @@ function sanitizePreferenceRole(v){
   if(nums.some(x=>!Number.isFinite(x)))return emptyPreferenceRole();
   const [w,sumL,sumC,sumX,sumY]=nums;
   const eps=1e-6;
-  if(w<0||w>10000)return emptyPreferenceRole();
+  if(w<0||w>100)return emptyPreferenceRole();
   if(sumL<-eps||sumL>w+eps)return emptyPreferenceRole();
   if(sumC<-eps||sumC>w*.5+eps)return emptyPreferenceRole();
   if(Math.abs(sumX)>w+eps||Math.abs(sumY)>w+eps)return emptyPreferenceRole();
@@ -2614,7 +2614,7 @@ function sanitizePreferenceRole(v){
 function sanitizePreferenceModel(v){
   if(!v||typeof v!=='object'||Number(v.version)!==1)return emptyPreferenceModel();
   const totalWeight=Number(v.totalWeight);
-  if(!Number.isFinite(totalWeight)||totalWeight<0||totalWeight>10000)return emptyPreferenceModel();
+  if(!Number.isFinite(totalWeight)||totalWeight<0||totalWeight>100)return emptyPreferenceModel();
   const roles={
     base:sanitizePreferenceRole(v.roles?.base),
     structure:sanitizePreferenceRole(v.roles?.structure),
