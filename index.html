@@ -1674,103 +1674,155 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
 }
 
 
-/* V2.4 SPATIAL NAVIGATION — navigation is a position, not a container */
+/* V2.4.1 CORNER FAN NAVIGATION — navigation appears on demand */
 body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
-.edge-rail{
+.corner-nav{
   position:fixed;
-  top:60%;
-  right:max(calc(10px + env(safe-area-inset-right)),calc((100vw - 540px)/2 + 10px));
-  z-index:90;
-  transform:translateY(-50%);
-  display:flex;
-  flex-direction:column;
-  align-items:flex-end;
-  gap:6px;
-  padding:0;
-  background:transparent;
-  border:0;
+  right:max(calc(14px + env(safe-area-inset-right)),calc((100vw - 540px)/2 + 14px));
+  bottom:calc(16px + env(safe-area-inset-bottom));
+  z-index:120;
+  width:52px;
+  height:52px;
   isolation:isolate;
 }
-.edge-rail::before{
-  content:"";
+.corner-fan{
   position:absolute;
-  inset:-22px -10px -22px -42px;
-  z-index:-1;
+  right:-10px;
+  bottom:-10px;
+  width:218px;
+  height:218px;
+  border-radius:100% 0 0 0;
+  background:rgba(248,245,239,.985);
+  border-top:1px solid var(--hairline);
+  border-left:1px solid var(--hairline);
+  box-shadow:-10px -12px 30px rgba(36,38,36,.07);
+  transform:scale(.14);
+  transform-origin:100% 100%;
+  opacity:0;
   pointer-events:none;
-  background:linear-gradient(to left,
-    rgba(243,239,232,.985) 0%,
-    rgba(243,239,232,.90) 44%,
-    rgba(243,239,232,.46) 72%,
-    rgba(243,239,232,0) 100%);
+  transition:transform .19s cubic-bezier(.2,.8,.2,1),opacity .14s ease;
 }
-.edge-nav-item{
-  position:relative;
-  width:48px;
-  min-width:48px;
-  min-height:52px;
+.corner-nav.open .corner-fan{
+  transform:scale(1);
+  opacity:1;
+}
+.corner-nav-items{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+.corner-nav-item{
+  --tx:0px;
+  --ty:0px;
+  position:absolute;
+  right:-4px;
+  bottom:1px;
+  width:60px;
+  min-width:60px;
+  min-height:50px;
   border:0;
   border-radius:0;
   background:transparent;
-  color:rgba(111,107,101,.66);
-  padding:6px 0;
+  color:var(--text-2);
+  padding:4px 2px;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
   gap:2px;
+  opacity:0;
+  pointer-events:none;
+  transform:translate3d(0,0,0) scale(.72);
+  transform-origin:50% 50%;
+  transition:
+    transform .19s cubic-bezier(.2,.8,.2,1),
+    opacity .12s ease,
+    color .14s ease;
 }
-.edge-nav-item .nav-icon{
-  width:22px;
-  height:22px;
+.corner-nav.open .corner-nav-item{
+  opacity:1;
+  pointer-events:auto;
+  transform:translate3d(var(--tx),var(--ty),0) scale(1);
+}
+#nav-compose{--tx:-4px;--ty:-143px}
+#nav-inspire{--tx:-57px;--ty:-119px}
+#nav-photo{--tx:-103px;--ty:-75px}
+#nav-library{--tx:-130px;--ty:-17px}
+.corner-nav-item .nav-icon{
+  width:21px;
+  height:21px;
   display:block;
 }
-.edge-nav-item .nav-icon svg{
-  width:22px;
-  height:22px;
+.corner-nav-item .nav-icon svg{
+  width:21px;
+  height:21px;
   fill:none;
   stroke:currentColor;
   stroke-width:1.7;
   stroke-linecap:round;
   stroke-linejoin:round;
 }
-#nav-inspire.edge-nav-item .nav-icon svg path{fill:currentColor;stroke:none}
-.edge-nav-item .nav-label{
-  max-height:0;
-  opacity:0;
-  overflow:hidden;
-  transform:translateY(-2px);
+#nav-inspire.corner-nav-item .nav-icon svg path{fill:currentColor;stroke:none}
+.corner-nav-item .nav-label{
   font-size:10px;
-  line-height:1.15;
+  line-height:1.1;
   font-weight:650;
   letter-spacing:.02em;
   white-space:nowrap;
-  transition:max-height .16s ease,opacity .16s ease,transform .16s ease;
 }
-.edge-nav-item.active{
+.corner-nav-item.active{
   color:var(--olive-12);
   background:transparent;
 }
-.edge-nav-item.active::after{
+.corner-nav-item.active::after{
   content:"";
   position:absolute;
-  right:-4px;
-  top:50%;
-  width:2px;
-  height:24px;
-  transform:translateY(-50%);
+  bottom:0;
+  width:12px;
+  height:2px;
   border-radius:999px;
   background:var(--olive-9);
 }
-.edge-nav-item.active .nav-label{
-  max-height:14px;
-  opacity:1;
-  transform:translateY(0);
-}
-.edge-nav-item:active{transform:translateX(-1px);background:transparent}
-.edge-nav-item:focus-visible{
+.corner-nav-item:active{transform:translate3d(var(--tx),var(--ty),0) scale(.95)}
+.corner-nav-item:focus-visible{
   outline:2px solid var(--focus-ring);
-  outline-offset:2px;
+  outline-offset:1px;
 }
+.corner-nav-toggle{
+  position:relative;
+  z-index:3;
+  width:52px;
+  min-width:52px;
+  height:52px;
+  min-height:52px;
+  border:1px solid rgba(36,38,36,.11);
+  border-radius:50%;
+  background:rgba(250,248,244,.97);
+  color:var(--olive-12);
+  padding:0;
+  display:grid;
+  place-items:center;
+  box-shadow:0 8px 24px rgba(36,38,36,.10);
+}
+.corner-nav-toggle:active{transform:scale(.96)}
+.corner-toggle-icon{
+  width:17px;
+  height:17px;
+  display:grid;
+  grid-template-columns:repeat(2,5px);
+  grid-template-rows:repeat(2,5px);
+  gap:3px;
+  place-content:center;
+  transition:transform .18s cubic-bezier(.2,.8,.2,1);
+}
+.corner-toggle-icon i{
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:currentColor;
+  display:block;
+}
+.corner-nav.open .corner-toggle-icon{transform:rotate(45deg) scale(.92)}
 
 /* Library utilities stop competing with the saved colors */
 .library-search{
@@ -1820,15 +1872,21 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
   color:var(--text-2);
   grid-column:auto;
 }
-.toast{bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
+.toast{bottom:calc(env(safe-area-inset-bottom) + 76px)}
 
 @media(max-width:390px){
-  .edge-rail{
-    top:61%;
-    right:max(calc(7px + env(safe-area-inset-right)),calc((100vw - 540px)/2 + 7px));
+  .corner-nav{
+    right:max(calc(10px + env(safe-area-inset-right)),calc((100vw - 540px)/2 + 10px));
+    bottom:calc(12px + env(safe-area-inset-bottom));
+    width:50px;
+    height:50px;
   }
-  .edge-rail::before{inset:-20px -7px -20px -38px}
-  .edge-nav-item{width:46px;min-width:46px;min-height:50px}
+  .corner-nav-toggle{width:50px;min-width:50px;height:50px;min-height:50px}
+  .corner-fan{width:210px;height:210px}
+  #nav-compose{--tx:-2px;--ty:-137px}
+  #nav-inspire{--tx:-53px;--ty:-114px}
+  #nav-photo{--tx:-98px;--ty:-72px}
+  #nav-library{--tx:-124px;--ty:-16px}
 }
 
 </style>
@@ -1837,7 +1895,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.4</div>
+    <div class="version">V2.4.1</div>
   </div>
 
   <main class="app-main">
@@ -2085,35 +2143,41 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.4</div>
+  <div class="footer app-footer">Color Lab V2.4.1</div>
 </div>
 
-<nav class="edge-rail" aria-label="主要功能" role="tablist">
-  <button id="nav-compose" class="edge-nav-item active" data-tab="compose" role="tab" aria-selected="true" aria-label="配色">
-    <span class="nav-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><circle cx="12" cy="16" r="3"/></svg>
-    </span>
-    <span class="nav-label">配色</span>
+<div class="corner-nav" id="cornerNav">
+  <div class="corner-fan" aria-hidden="true"></div>
+  <nav class="corner-nav-items" id="cornerNavMenu" aria-label="主要功能" role="tablist" aria-hidden="true">
+    <button id="nav-compose" class="corner-nav-item active" data-tab="compose" role="tab" aria-selected="true" aria-label="配色" tabindex="-1">
+      <span class="nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><circle cx="12" cy="16" r="3"/></svg>
+      </span>
+      <span class="nav-label">配色</span>
+    </button>
+    <button id="nav-inspire" class="corner-nav-item" data-tab="inspire" role="tab" aria-selected="false" aria-label="靈感" tabindex="-1">
+      <span class="nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 3l1.4 4.1L17.5 8.5l-4.1 1.4L12 14l-1.4-4.1L6.5 8.5l4.1-1.4L12 3z"/><path d="M18 14l.8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8L18 14z"/></svg>
+      </span>
+      <span class="nav-label">靈感</span>
+    </button>
+    <button id="nav-photo" class="corner-nav-item" data-tab="photo" role="tab" aria-selected="false" aria-label="相片" tabindex="-1">
+      <span class="nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M5 17l4-4 3 3 2-2 5 3"/></svg>
+      </span>
+      <span class="nav-label">相片</span>
+    </button>
+    <button id="nav-library" class="corner-nav-item" data-tab="library" role="tab" aria-selected="false" aria-label="收藏" tabindex="-1">
+      <span class="nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M6 4h12v17l-6-4-6 4V4z"/></svg>
+      </span>
+      <span class="nav-label">收藏</span>
+    </button>
+  </nav>
+  <button type="button" class="corner-nav-toggle" id="cornerNavToggle" aria-expanded="false" aria-controls="cornerNavMenu" aria-label="開啟主導航">
+    <span class="corner-toggle-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
   </button>
-  <button id="nav-inspire" class="edge-nav-item" data-tab="inspire" role="tab" aria-selected="false" aria-label="靈感">
-    <span class="nav-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24"><path d="M12 3l1.4 4.1L17.5 8.5l-4.1 1.4L12 14l-1.4-4.1L6.5 8.5l4.1-1.4L12 3z"/><path d="M18 14l.8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8L18 14z"/></svg>
-    </span>
-    <span class="nav-label">靈感</span>
-  </button>
-  <button id="nav-photo" class="edge-nav-item" data-tab="photo" role="tab" aria-selected="false" aria-label="相片">
-    <span class="nav-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M5 17l4-4 3 3 2-2 5 3"/></svg>
-    </span>
-    <span class="nav-label">相片</span>
-  </button>
-  <button id="nav-library" class="edge-nav-item" data-tab="library" role="tab" aria-selected="false" aria-label="收藏">
-    <span class="nav-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24"><path d="M6 4h12v17l-6-4-6 4V4z"/></svg>
-    </span>
-    <span class="nav-label">收藏</span>
-  </button>
-</nav>
+</div>
 <div class="sheet-backdrop" id="savedActionBackdrop" hidden>
   <section class="picker-sheet action-sheet" role="dialog" aria-modal="true" aria-labelledby="savedActionTitle">
     <div class="sheet-handle"></div>
@@ -2605,7 +2669,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.4',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.4.1',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -4419,7 +4483,7 @@ function switchTab(name,scrollTop=true){
     v.hidden=!on;
     v.classList.toggle('active',on);
   });
-  document.querySelectorAll('.edge-nav-item[data-tab]').forEach(b=>{
+  document.querySelectorAll('.corner-nav-item[data-tab]').forEach(b=>{
     const on=b.dataset.tab===name;
     b.classList.toggle('active',on);
     b.setAttribute('aria-selected',on?'true':'false');
@@ -4432,6 +4496,7 @@ function switchTab(name,scrollTop=true){
     requestAnimationFrame(()=>{renderIdeas();renderRecommendations()});
   }
   if(name==='compose')requestAnimationFrame(()=>{renderVision();renderContextPreview()});
+  setCornerNavOpen(false);
   if(scrollTop){
     const targetY=tabScroll[name]??0;
     requestAnimationFrame(()=>window.scrollTo({top:targetY,left:0,behavior:'auto'}));
@@ -4441,12 +4506,35 @@ function updatePhotoTarget(){
   const el=$('#photoTarget');
   if(el)el.textContent='COLOR '+(activeSlot+1);
 }
-document.querySelectorAll('.edge-nav-item[data-tab]').forEach(b=>{
-  b.addEventListener('click',()=>switchTab(b.dataset.tab,true));
+let cornerNavOpen=false;
+function setCornerNavOpen(next,focusToggle=false){
+  const root=$('#cornerNav'),toggle=$('#cornerNavToggle'),menu=$('#cornerNavMenu');
+  if(!root||!toggle||!menu)return;
+  cornerNavOpen=!!next;
+  root.classList.toggle('open',cornerNavOpen);
+  toggle.setAttribute('aria-expanded',cornerNavOpen?'true':'false');
+  toggle.setAttribute('aria-label',cornerNavOpen?'關閉主導航':'開啟主導航');
+  menu.setAttribute('aria-hidden',cornerNavOpen?'false':'true');
+  menu.querySelectorAll('.corner-nav-item').forEach(b=>{b.tabIndex=cornerNavOpen?0:-1});
+  if(!cornerNavOpen&&focusToggle){
+    try{toggle.focus({preventScroll:true})}catch(_){toggle.focus()}
+  }
+}
+function toggleCornerNav(){setCornerNavOpen(!cornerNavOpen)}
+$('#cornerNavToggle').addEventListener('click',e=>{
+  e.stopPropagation();
+  toggleCornerNav();
+});
+document.querySelectorAll('.corner-nav-item[data-tab]').forEach(b=>{
+  b.addEventListener('click',e=>{
+    e.stopPropagation();
+    switchTab(b.dataset.tab,true);
+  });
 });
 document.addEventListener('click',e=>{
   const jump=e.target.closest('[data-jump]');
   if(jump){switchTab(jump.dataset.jump,true);return}
+  if(cornerNavOpen&&!e.target.closest('#cornerNav'))setCornerNavOpen(false);
 });
 
 preferenceState=sanitizePreferenceModel(safeJsonRead('colorlab.preferenceV1',null));
@@ -4469,6 +4557,7 @@ $('#closeInstallGuide').onclick=closeInstallGuide;
 $('#installBackdrop').addEventListener('click',e=>{if(e.target===$('#installBackdrop'))closeInstallGuide()});
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
+  if(cornerNavOpen){setCornerNavOpen(false,true);return}
   if(!$('#pickerBackdrop').hidden)closeStudioPicker();
   else if(!$('#savedActionBackdrop').hidden)closeSavedActions();
   else if(!$('#installBackdrop').hidden)closeInstallGuide();
@@ -4492,6 +4581,7 @@ $('#libraryFolderFilter').addEventListener('change',e=>{libraryFolderFilter=e.ta
 $('#comboName').addEventListener('input',e=>{currentComboName=e.target.value;persistDraft()});
 renderModes();renderComboSlots();renderRecentColors();generate(false);renderCompare();updateLockToggle();setPhotoMode('point');updatePhotoColorSpaceNote();updateInstallCard();
 historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();persistDraft();
+setCornerNavOpen(false);
 switchTab(localStorage.getItem('colorlab.tab')||'compose',false);updatePhotoTarget();restoreResilienceIfNeeded();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>

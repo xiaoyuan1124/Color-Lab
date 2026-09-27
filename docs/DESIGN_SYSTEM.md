@@ -18,9 +18,12 @@ Color Lab 的視覺原則不是「套一套 UI library」，而是把一致性�
 
 ## Spatial Navigation
 
-- Global navigation 使用 Edge Rail，而不是固定底部大容器。
-- Navigation 的存在感來自位置、間距、active marker 與文字，不靠大面積背景。
-- 導航後方不能直接透出可讀內容；必要時使用局部漸層建立 legibility zone，而不是新增一張 glass card。
+- Global navigation 採用按需出現的 Corner Fan，不永久佔據底部或右側內容空間。
+- 收合狀態只保留一個小型入口；四個世界只在使用者主動叫出導航時出現。
+- 展開使用 90° 四分之一扇面，讓幾何本身說明導航來源與層級。
+- 扇面是功能性的 legibility surface，可以使用接近紙張的實色；避免為了「高級感」加入厚重 glass / blur。
+- Active 狀態使用文字、細線、位置與色彩，不使用大型膠囊背景。
+- 收合時隱藏的導航不得停留在 keyboard tab order；展開、收合與 Escape 必須有完整可及性。
 - Global navigation、page primary action、local utility 必須使用不同視覺語言。
 - Utility 優先使用文字、hairline 與留白；只有真正需要邊界時才使用框。
 - 不為了「像 App」而保留 Bottom Tab Bar；導航形式必須服務內容與操作情境。

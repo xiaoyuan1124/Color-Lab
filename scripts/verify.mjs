@@ -77,13 +77,13 @@ for(const src of lazyScripts){
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v24")) fail('service worker cache version is not V2.4');
+if(!sw.includes("color-lab-v241")) fail('service worker cache version is not V2.4.1');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.4.0') fail('package version must be 2.4.0');
+if(pkg.version!=='2.4.1') fail('package version must be 2.4.1');
 else pass('package version');
-if(!html.includes('Color Lab V2.4')||!html.includes('<div class="version">V2.4</div>')||!html.includes("appVersion:'2.4'")) fail('V2.4 UI or backup version metadata missing');
-else pass('V2.4 version metadata');
+if(!html.includes('Color Lab V2.4.1')||!html.includes('<div class="version">V2.4.1</div>')||!html.includes("appVersion:'2.4.1'")) fail('V2.4.1 UI or backup version metadata missing');
+else pass('V2.4.1 version metadata');
 
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
@@ -92,24 +92,33 @@ if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
   fail('top chrome edge-to-grid alignment missing');
 }else pass('top chrome edge-to-grid alignment');
 
-if(!html.includes('<nav class="edge-rail"')||
-   html.includes('<nav class="bottom-nav"')||
-   !html.includes('class="edge-nav-item active"')||
-   !html.includes('navigation is a position, not a container')){
-  fail('V2.4 spatial navigation contract missing');
-}else pass('V2.4 spatial navigation contract');
+if(!html.includes('class="corner-nav" id="cornerNav"')||
+   !html.includes('class="corner-fan"')||
+   !html.includes('id="cornerNavToggle"')||
+   html.includes('<nav class="edge-rail"')||
+   html.includes('<nav class="bottom-nav"')){
+  fail('V2.4.1 corner fan navigation contract missing');
+}else pass('V2.4.1 corner fan navigation contract');
 
-if(!html.includes('.edge-rail::before{')||
-   !html.includes('rgba(243,239,232,0) 100%')||
-   !html.includes('.edge-nav-item.active::after{')){
-  fail('V2.4 edge rail legibility or active marker missing');
-}else pass('V2.4 edge rail legibility and active marker');
+if(!html.includes('border-radius:100% 0 0 0')||
+   !html.includes('transform-origin:100% 100%')||
+   !html.includes('.corner-nav-item.active::after{')||
+   !html.includes('min-height:50px')){
+  fail('V2.4.1 fan geometry, touch target, or active marker missing');
+}else pass('V2.4.1 fan geometry and touch targets');
+
+if(!html.includes('function setCornerNavOpen(')||
+   !html.includes("toggle.setAttribute('aria-expanded'")||
+   !html.includes("b.tabIndex=cornerNavOpen?0:-1")||
+   !html.includes("if(cornerNavOpen&&!e.target.closest('#cornerNav'))setCornerNavOpen(false)")){
+  fail('V2.4.1 fan accessibility or dismissal behavior missing');
+}else pass('V2.4.1 fan accessibility and dismissal');
 
 if(!html.includes('.library-tools .utility-btn{')||
    !html.includes('.library-search{')||
    !html.includes('border-bottom:1px solid var(--hairline)')){
-  fail('V2.4 library de-framing missing');
-}else pass('V2.4 library utilities de-framed');
+  fail('V2.4.1 library de-framing missing');
+}else pass('V2.4.1 library utilities de-framed');
 
 
 if(manifest.display!=='standalone') fail('manifest display must be standalone');
@@ -397,7 +406,7 @@ if(!html.includes("personal*.45")||!html.includes("reference,accessibility,perso
   fail('V2.3 personal recommendation dimension missing');
 }else pass('V2.3 personal recommendation dimension');
 
-if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.4'")||
+if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.4.1'")||
    !html.includes("preference:sanitizePreferenceModel(preferenceState)")||
    !html.includes("preferenceEnabled")){
   fail('V2.3 backup v4 personalization payload missing');
@@ -471,7 +480,7 @@ if(!html.includes("return enabled?preferenceAffinityFromModel(model,colors):0;")
   fail('disabled personalization does not force zero affinity');
 }else pass('disabled personalization forces zero affinity');
 
-if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.4'")){
+if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.4.1'")){
   fail('V2.3 personalization setting persistence or backup v4 missing');
 }else pass('V2.3 setting persistence and backup v4');
 

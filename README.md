@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.4**
+**目前版本：V2.4.1**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -67,19 +67,20 @@ Color Lab 只從明確行為學習：
 使用者可隨時在收藏頁按「重置偏好」。重置不會刪除收藏，而且會留下明確的空偏好狀態，避免舊 IndexedDB 快照把已重置的偏好重新復活。
 
 
-## V2.4 Spatial Navigation
+## V2.4.1 Corner Fan Navigation
 
-V2.4 移除固定底部浮動 Tab Bar，改成右側 Edge Rail：
+V2.4.1 把 V2.4 的右側常駐 Edge Rail 收斂成右下角按需出現的 Corner Fan：
 
-- 全域導航不再是一個大型容器
-- 四個主要世界仍為 Compose / Inspire / Photo / Library
-- 每個導航目標保留至少 44px 觸控區
-- Active 狀態使用細線、文字與位置，不使用大型膠囊背景
-- Rail 右側有局部漸層遮蔽，避免內容從操作目標後方穿透
-- 頁面底部不再被固定 Bottom Bar 遮住
-- Library 搜尋、排序、備份等 utility 開始去框化，讓收藏色彩本身成為主角
+- 平時只保留一顆約 50px 的四點入口，不再長期覆蓋右側內容
+- 點擊後由右下角展開 90° 四分之一扇面
+- Compose / Inspire / Photo / Library 沿弧線分布
+- 選擇導航後自動收起；點外部或按 Escape 也會收起
+- 關閉狀態下四個導航不可被鍵盤焦點誤觸，展開時才進入 tab order
+- Active 狀態以細線與文字辨識，不用大面積膠囊底
+- 扇面使用接近紙張的實色層，不使用厚重 glass / blur
+- Library 去框化仍保留，讓收藏顏色而不是 utility 控制成為主角
 
-這個方向遵循「Navigation 不必是一個容器；Utility 不必是一張 Card」的空間式介面原則。
+核心原則是：**Navigation appears on demand, not as permanent chrome.**
 
 ## 照片分析
 
@@ -154,7 +155,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v24-spatial-navigation`
+目前 cache generation：`color-lab-v241-corner-fan`
 
 ## Quality Gates
 
