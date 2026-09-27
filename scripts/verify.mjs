@@ -363,10 +363,11 @@ if(!html.includes("personal*.45")||!html.includes("reference,accessibility,perso
   fail('V2.1 personal recommendation dimension missing');
 }else pass('V2.1 personal recommendation dimension');
 
-if(!html.includes("color-lab-backup-v3")||!html.includes("appVersion:'2.0'")||
-   !html.includes("preference:sanitizePreferenceModel(preferenceState)")){
-  fail('V2.1 backup v3 preference payload missing');
-}else pass('V2.1 backup v3 preference payload');
+if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.1'")||
+   !html.includes("preference:sanitizePreferenceModel(preferenceState)")||
+   !html.includes("preferenceEnabled")){
+  fail('V2.1 backup v4 personalization payload missing');
+}else pass('V2.1 backup v4 personalization payload');
 
 for(const schema of ['color-lab-backup-v1','color-lab-backup-v2','color-lab-backup-v3','color-lab-backup-v4']){
   if(!html.includes(schema)) fail('backup compatibility missing: '+schema);
