@@ -44,12 +44,14 @@ function extractFunction(name){
 }
 
 const functionNames=[
-  'clamp','hexToRgb','rgbToHex','boundedCacheSet','lum','srgbToLinear','linearToSrgb',
+  'clamp','normHex','hexToRgb','rgbToHex','boundedCacheSet','lum','srgbToLinear','linearToSrgb',
   'toOKLCH','fromOKLCH','perceptualDistance','oklchLinearRgb',
   'isLinearSrgbInGamut','gamutMapOKLCH','hueDistance','signedHueDelta',
   'hueToward','contrastRatio','ensureStructureContrast','cohesionPass','qualityRefineGenerated',
   'qualityMetrics','relationVector','relationVectorDistance',
-  'photoDominanceScore','semanticRolesFromClusters','photoCompositionProfile','photoCompositionProfile'
+  'photoDominanceScore','semanticRolesFromClusters','photoCompositionProfile',
+  'emptyPreferenceRole','emptyPreferenceModel','sanitizePreferenceRole','sanitizePreferenceModel',
+  'preferenceRoleAffinity','preferenceAffinityFromModel','preferenceModelWithPalette'
 ];
 
 const sandbox={console};
@@ -236,6 +238,30 @@ for(const roles of [greyRoles,lightRoles,darkRoles,vividRoles,mixedRoles,edgeRol
   check('semantic roles unique',new Set(roles.map(x=>x.hex)).size===roles.length,JSON.stringify(roles));
   check('semantic roles max five',roles.length<=5,roles.length);
 }
+
+
+const prefPalette=['#8C8378','#292B29','#C8433D'];
+const prefEmpty=A.emptyPreferenceModel();
+check('empty preference model starts immature',prefEmpty.totalWeight===0,JSON.stringify(prefEmpty));
+
+const immature=A.preferenceModelWithPalette(prefEmpty,prefPalette,1);
+check('immature preference does not affect ranking',A.preferenceAffinityFromModel(immature,prefPalette)===0,A.preferenceAffinityFromModel(immature,prefPalette));
+
+const mature=A.preferenceModelWithPalette(prefEmpty,prefPalette,3);
+const sameAffinity=A.preferenceAffinityFromModel(mature,prefPalette);
+const farAffinity=A.preferenceAffinityFromModel(mature,['#F4F1E8','#4E66D8','#49B86D']);
+check('mature preference activates',sameAffinity>0&&sameAffinity<=1,sameAffinity);
+check('learned palette outranks far palette',sameAffinity>farAffinity,JSON.stringify({sameAffinity,farAffinity}));
+
+const malformedPref=A.sanitizePreferenceModel({
+  version:1,totalWeight:5,
+  roles:{
+    base:{w:5,sumL:99,sumC:0,sumX:0,sumY:0},
+    structure:{w:5,sumL:1,sumC:0,sumX:0,sumY:0},
+    accent:{w:5,sumL:1,sumC:0,sumX:0,sumY:0}
+  }
+});
+check('malformed preference model resets safely',malformedPref.totalWeight===0,JSON.stringify(malformedPref));
 
 console.log('Color Lab torture tests:',passed,'passed,',failed,'failed');
 if(failed)process.exit(1);
