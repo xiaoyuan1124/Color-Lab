@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.0**
+**目前版本：V2.3**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -28,7 +28,7 @@ Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把�
 5. Cohesion pass
 6. sRGB gamut protection
 7. Multi-factor quality ranking
-8. V2.0 本機偏好微調
+8. V2.3 本機偏好微調
 
 品質排序會考慮：
 
@@ -44,13 +44,14 @@ Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把�
 
 個人偏好只是一個低權重訊號，不會凌駕基本配色品質，也不會改掉 Color 1 / 2 / 3 的使用者順序。
 
-## V2.0 本機個人化
+## V2.3 本機個人化
 
 Color Lab 只從明確行為學習：
 
 - 收藏新配色：強訊號
 - 重複收藏同一組：弱訊號
 - 套用推薦：弱訊號
+- 套用靈感變體 / A-B 方案：弱訊號
 - 再次打開已收藏配色：弱訊號
 
 不使用：
@@ -61,7 +62,7 @@ Color Lab 只從明確行為學習：
 - 照片內容
 - 背景追蹤
 
-偏好模型只儲存角色的聚合 OKLCH 統計，不保存完整操作歷史。
+偏好模型只儲存角色的聚合 OKLCH 統計，以及色相距離／結構對比等關係統計，不保存完整操作歷史。
 
 使用者可隨時在收藏頁按「重置偏好」。重置不會刪除收藏，而且會留下明確的空偏好狀態，避免舊 IndexedDB 快照把已重置的偏好重新復活。
 
@@ -127,7 +128,7 @@ Color.js、Color Thief、Cohesive Colors 等專案曾作為研究參考；目前
 - IndexedDB resilience snapshot
 - JSON backup / import
 
-Backup V3 可攜帶 V2.0 偏好模型，同時保留 V1 / V2 匯入相容性。
+Backup V4 可攜帶本機偏好模型與個人化開關，同時保留 V1 / V2 / V3 匯入相容性。
 
 ## PWA / Offline
 
@@ -138,7 +139,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v20-personal`
+目前 cache generation：`color-lab-v23-personal-fidelity`
 
 ## Quality Gates
 

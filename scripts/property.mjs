@@ -44,8 +44,8 @@ const functionNames=[
   'hueToward','contrastRatio','ensureStructureContrast','cohesionPass',
   'qualityRefineGenerated','qualityMetrics','relationVector','relationVectorDistance',
   'photoDominanceScore','semanticRolesFromClusters','photoCompositionProfile',
-  'emptyPreferenceRole','emptyPreferenceModel','sanitizePreferenceRole','sanitizePreferenceModel',
-  'preferenceRoleAffinity','preferenceRoleDescriptor','preferenceSummaryFromModel','preferenceAffinityFromModel','preferenceAffinityForSetting','preferenceModelWithPalette','preferenceHueFamily'
+  'emptyPreferenceRole','emptyPreferenceRelation','emptyPreferenceModel','sanitizePreferenceRole','sanitizePreferenceRelation','preferenceRelationMetrics','sanitizePreferenceModel',
+  'preferenceRoleAffinity','preferenceRelationAffinity','preferenceRoleDescriptor','preferenceSummaryFromModel','preferenceAffinityFromModel','preferenceAffinityForSetting','preferenceModelWithPalette','preferenceHueFamily'
 ];
 
 const sandbox={console};
@@ -175,10 +175,17 @@ property('preference affinity stays bounded after learning',[hexArb,hexArb,hexAr
   return Number.isFinite(affinity)&&affinity>=0&&affinity<=1;
 });
 
-property('preference model keeps role weights aligned',[hexArb,hexArb,hexArb],(a,b,c)=>{
+property('preference model keeps role and relation weights aligned',[hexArb,hexArb,hexArb],(a,b,c)=>{
   const model=A.preferenceModelWithPalette(A.emptyPreferenceModel(),[a,b,c],3);
   return model.totalWeight===3&&
-    model.roles.base.w===3&&model.roles.structure.w===3&&model.roles.accent.w===3;
+    model.roles.base.w===3&&model.roles.structure.w===3&&model.roles.accent.w===3&&model.relation.w===3;
+});
+
+property('preference relation affinity stays bounded',[hexArb,hexArb,hexArb],(a,b,c)=>{
+  const model=A.preferenceModelWithPalette(A.emptyPreferenceModel(),[a,b,c],3);
+  const value=A.preferenceRelationAffinity(model.relation,[a,b,c]);
+  return Number.isFinite(value)&&value>=0&&value<=1&&
+    Object.values(model.relation).every(Number.isFinite);
 });
 
 property('repeated preference learning remains finite and bounded',
@@ -188,7 +195,8 @@ property('repeated preference learning remains finite and bounded',
     for(let i=0;i<steps;i++)model=A.preferenceModelWithPalette(model,[a,b,c],3);
     const roles=Object.values(model.roles);
     return Number.isFinite(model.totalWeight)&&model.totalWeight>=0&&model.totalWeight<=80.0001&&
-      roles.every(r=>Object.values(r).every(Number.isFinite)&&Math.abs(r.w-model.totalWeight)<1e-6);
+      roles.every(r=>Object.values(r).every(Number.isFinite)&&Math.abs(r.w-model.totalWeight)<1e-6)&&
+      Object.values(model.relation).every(Number.isFinite)&&model.relation.w<=model.totalWeight+1e-6;
   },
   {numRuns:180}
 );

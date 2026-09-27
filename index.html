@@ -1926,7 +1926,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.2</div>
+  <div class="footer app-footer">Color Lab V2.3</div>
 </div>
 
 <nav class="bottom-nav" aria-label="主要功能" role="tablist">
@@ -2372,7 +2372,7 @@ function toggleActiveLock(){
   toast(lockedSlots[activeSlot]?'已鎖定 COLOR '+(activeSlot+1):'已解除鎖定');
 }
 function compareSnapshot(){
-  return {name:(($('#comboName')?.value||currentComboName||'').trim()||'未命名配色'),palette:{...palette},colors:[...selectedColors],mode,date:Date.now()};
+  return {name:(($('#comboName')?.value||currentComboName||'').trim()||'未命名配色'),palette:{...palette},colors:[palette.base,palette.structure,palette.accent],mode,date:Date.now()};
 }
 function saveCompare(which){
   const snap=compareSnapshot();
@@ -2400,10 +2400,11 @@ function renderCompare(){
 }
 function useCompare(which){
   const x=which==='A'?compareA:compareB;if(!x)return;
-  selectedColors=(x.colors||[x.palette.base,x.palette.structure,x.palette.accent]).slice(0,3);
-  while(selectedColors.length<3)selectedColors.push(null);
+  selectedColors=[x.palette.base,x.palette.structure,x.palette.accent];
   lockedSlots=[false,false,false];activeSlot=0;mode=MODES[x.mode]?x.mode:'quiet';currentComboName=x.name||'';
-  seed=selectedColors[0]||x.palette.base;$('#comboName').value=currentComboName;syncEditor();renderModes();generate(false);pushHistory();switchTab('compose',false);toast('已套用方案 '+which);
+  seed=selectedColors[0];palette=orderedPalette(selectedColors);$('#comboName').value=currentComboName;
+  learnPalettePreference(x.palette,.2);
+  syncEditor();renderModes();render();pushHistory();switchTab('compose',false);toast('已套用方案 '+which);
 }
 function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
 function drawPaletteCard(){
@@ -2445,7 +2446,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.1',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.3',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -2665,8 +2666,9 @@ function preferenceHueFamily(h){
   return'洋紅系';
 }
 function emptyPreferenceRole(){return{w:0,sumL:0,sumC:0,sumX:0,sumY:0}}
+function emptyPreferenceRelation(){return{w:0,sumHueBS:0,sumHueBA:0,sumContrast:0,sumLightGap:0}}
 function emptyPreferenceModel(){
-  return{version:1,totalWeight:0,roles:{base:emptyPreferenceRole(),structure:emptyPreferenceRole(),accent:emptyPreferenceRole()}};
+  return{version:1,totalWeight:0,roles:{base:emptyPreferenceRole(),structure:emptyPreferenceRole(),accent:emptyPreferenceRole()},relation:emptyPreferenceRelation()};
 }
 function sanitizePreferenceRole(v){
   if(!v||typeof v!=='object')return emptyPreferenceRole();
@@ -2680,6 +2682,25 @@ function sanitizePreferenceRole(v){
   if(Math.abs(sumX)>w+eps||Math.abs(sumY)>w+eps)return emptyPreferenceRole();
   return{w,sumL,sumC,sumX,sumY};
 }
+function sanitizePreferenceRelation(v){
+  if(!v||typeof v!=='object')return emptyPreferenceRelation();
+  const nums=['w','sumHueBS','sumHueBA','sumContrast','sumLightGap'].map(k=>Number(v[k]));
+  if(nums.some(x=>!Number.isFinite(x)))return emptyPreferenceRelation();
+  const [w,sumHueBS,sumHueBA,sumContrast,sumLightGap]=nums,eps=1e-6;
+  if(w<0||w>100)return emptyPreferenceRelation();
+  if([sumHueBS,sumHueBA,sumContrast,sumLightGap].some(x=>x<-eps||x>w+eps))return emptyPreferenceRelation();
+  return{w,sumHueBS,sumHueBA,sumContrast,sumLightGap};
+}
+function preferenceRelationMetrics(colors){
+  if(!Array.isArray(colors)||colors.length<3||colors.some(x=>!normHex(String(x))))return null;
+  const p=colors.map(toOKLCH);
+  return{
+    hueBS:Math.min(p[0].c,p[1].c)<.025?.5:hueDistance(p[0].h,p[1].h)/180,
+    hueBA:Math.min(p[0].c,p[2].c)<.025?.5:hueDistance(p[0].h,p[2].h)/180,
+    contrast:clamp((contrastRatio(colors[0],colors[1])-1)/10,0,1),
+    lightGap:clamp(Math.abs(p[0].l-p[1].l),0,1)
+  };
+}
 function sanitizePreferenceModel(v){
   if(!v||typeof v!=='object'||Number(v.version)!==1)return emptyPreferenceModel();
   const totalWeight=Number(v.totalWeight);
@@ -2690,7 +2711,7 @@ function sanitizePreferenceModel(v){
     accent:sanitizePreferenceRole(v.roles?.accent)
   };
   if(totalWeight>0&&Object.values(roles).some(r=>Math.abs(r.w-totalWeight)>1e-4))return emptyPreferenceModel();
-  return{version:1,totalWeight,roles};
+  return{version:1,totalWeight,roles,relation:sanitizePreferenceRelation(v.relation)};
 }
 function preferenceRoleAffinity(roleStats,hex){
   const role=sanitizePreferenceRole(roleStats);
@@ -2703,6 +2724,23 @@ function preferenceRoleAffinity(roleStats,hex){
   const hueStrength=clamp(Math.max(o.c,meanC)/.11,0,1);
   const hSim=1-clamp(hueDistance(o.h,meanH)/150,0,1);
   return clamp(lSim*.48+cSim*.34+(hSim*hueStrength+(1-hueStrength)*.72)*.18,0,1);
+}
+function preferenceRelationAffinity(relationStats,colors){
+  const relation=sanitizePreferenceRelation(relationStats),metrics=preferenceRelationMetrics(colors);
+  if(!metrics||relation.w<1)return .5;
+  const means={
+    hueBS:relation.sumHueBS/relation.w,
+    hueBA:relation.sumHueBA/relation.w,
+    contrast:relation.sumContrast/relation.w,
+    lightGap:relation.sumLightGap/relation.w
+  };
+  return clamp(
+    (1-Math.abs(metrics.hueBS-means.hueBS))*.23+
+    (1-Math.abs(metrics.hueBA-means.hueBA))*.27+
+    (1-Math.abs(metrics.contrast-means.contrast))*.32+
+    (1-Math.abs(metrics.lightGap-means.lightGap))*.18,
+    0,1
+  );
 }
 function preferenceRoleDescriptor(roleStats){
   const role=sanitizePreferenceRole(roleStats);
@@ -2735,8 +2773,10 @@ function preferenceAffinityFromModel(model,colors){
     preferenceRoleAffinity(m.roles.structure,colors[1]),
     preferenceRoleAffinity(m.roles.accent,colors[2])
   ];
+  const roleScore=scores[0]*.42+scores[1]*.34+scores[2]*.24;
+  const relationScore=preferenceRelationAffinity(m.relation,colors);
   const maturity=clamp(m.totalWeight/10,.35,1);
-  return clamp((scores[0]*.42+scores[1]*.34+scores[2]*.24)*maturity,0,1);
+  return clamp((roleScore*.82+relationScore*.18)*maturity,0,1);
 }
 function preferenceModelWithPalette(model,paletteLike,weight=1){
   const next=sanitizePreferenceModel(model);
@@ -2745,11 +2785,19 @@ function preferenceModelWithPalette(model,paletteLike,weight=1){
     :[paletteLike?.base,paletteLike?.structure,paletteLike?.accent];
   const w=clamp(Number(weight)||0,0,3);
   if(w<=0||colors.length<3||colors.some(x=>!normHex(String(x))))return next;
-  const keys=['base','structure','accent'];
+  const keys=['base','structure','accent'],metrics=preferenceRelationMetrics(colors);
   keys.forEach((key,i)=>{
     const o=toOKLCH(colors[i]),r=next.roles[key],rad=o.h*Math.PI/180;
     r.w+=w;r.sumL+=o.l*w;r.sumC+=o.c*w;r.sumX+=Math.cos(rad)*w;r.sumY+=Math.sin(rad)*w;
   });
+  if(metrics){
+    const r=next.relation;
+    r.w+=w;
+    r.sumHueBS+=metrics.hueBS*w;
+    r.sumHueBA+=metrics.hueBA*w;
+    r.sumContrast+=metrics.contrast*w;
+    r.sumLightGap+=metrics.lightGap*w;
+  }
   next.totalWeight+=w;
   if(next.totalWeight>80){
     const factor=.82;
@@ -2758,6 +2806,8 @@ function preferenceModelWithPalette(model,paletteLike,weight=1){
       const r=next.roles[key];
       r.w*=factor;r.sumL*=factor;r.sumC*=factor;r.sumX*=factor;r.sumY*=factor;
     });
+    const r=next.relation;
+    r.w*=factor;r.sumHueBS*=factor;r.sumHueBA*=factor;r.sumContrast*=factor;r.sumLightGap*=factor;
   }
   return next;
 }
@@ -3654,7 +3704,7 @@ function renderIdeas(){
     cards.forEach((item,idx)=>{
       const p=orderedPalette(item.colors),btn=document.createElement('button');btn.className='idea';btn.type='button';
       btn.innerHTML=`<div class="idea-top"><i style="background:${p.base}"></i><i style="background:${p.structure}"></i><i style="background:${p.accent}"></i></div><div class="idea-name">${item.label}</div><div class="idea-meta">${item.colors.join(' · ')}</div>`;
-      if(idx>0)btn.onclick=()=>{selectedColors=item.colors.map((hex,i)=>lockedSlots[i]?original[i]:hex);activeSlot=0;seed=selectedColors[0];syncEditor();generate(false);pushHistory();switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'});toast('已套用 '+item.label)};
+      if(idx>0)btn.onclick=()=>{selectedColors=item.colors.map((hex,i)=>lockedSlots[i]?original[i]:hex);activeSlot=0;seed=selectedColors[0];syncEditor();generate(false);learnPalettePreference(orderedPalette(selectedColors),.2);pushHistory();switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'});toast('已套用 '+item.label)};
       box.appendChild(btn);
     });
     return;
@@ -3662,7 +3712,7 @@ function renderIdeas(){
   Object.entries(MODES).forEach(([key,m])=>{
     const p=completeCombo(chosenColors(),key),btn=document.createElement('button');btn.className='idea';btn.type='button';
     btn.innerHTML=`<div class="idea-top"><i style="background:${p.base}"></i><i style="background:${p.structure}"></i><i style="background:${p.accent}"></i></div><div class="idea-name">${m.label}</div><div class="idea-meta">${p.base} · ${p.structure} · ${p.accent}</div>`;
-    btn.onclick=()=>{mode=key;palette=p;renderModes();render();pushHistory();$('#result').scrollIntoView({behavior:'smooth',block:'start'})};
+    btn.onclick=()=>{mode=key;palette=p;learnPalettePreference(p,.2);renderModes();render();pushHistory();$('#result').scrollIntoView({behavior:'smooth',block:'start'})};
     box.appendChild(btn);
   })
 }
@@ -3720,12 +3770,12 @@ function openSavedActions(index){
 function closeSavedActions(){savedActionIndex=null;$('#savedActionBackdrop').hidden=true;document.body.style.overflow=''}
 function loadSaved(index){
   const data=readSavedData(),x=data[index];if(!x)return;
-  seed=x.seed;mode=MODES[x.mode]?x.mode:'quiet';
-  selectedColors=x.selectedColors?[...x.selectedColors]:[x.seed,null,null];while(selectedColors.length<3)selectedColors.push(null);
+  mode=MODES[x.mode]?x.mode:'quiet';
+  selectedColors=[x.palette.base,x.palette.structure,x.palette.accent];
   lockedSlots=Array.isArray(x.lockedSlots)?[...x.lockedSlots]:[false,false,false];while(lockedSlots.length<3)lockedSlots.push(false);
-  activeSlot=Math.max(0,selectedColors.findIndex(Boolean));currentComboName=(x.name&&x.name.trim())||'未命名配色';
+  activeSlot=0;seed=selectedColors[0];currentComboName=(x.name&&x.name.trim())||'未命名配色';
   $('#comboName').value=currentComboName==='未命名配色'?'':currentComboName;
-  palette=completeCombo(chosenColors(),mode);
+  palette=orderedPalette(selectedColors);
   learnPalettePreference(x.palette,.35);
   syncEditor();renderModes();render();pushHistory();switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'});
 }

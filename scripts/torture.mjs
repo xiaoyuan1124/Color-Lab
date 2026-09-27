@@ -50,8 +50,8 @@ const functionNames=[
   'hueToward','contrastRatio','ensureStructureContrast','cohesionPass','qualityRefineGenerated',
   'qualityMetrics','relationVector','relationVectorDistance',
   'photoDominanceScore','semanticRolesFromClusters','photoCompositionProfile',
-  'emptyPreferenceRole','emptyPreferenceModel','sanitizePreferenceRole','sanitizePreferenceModel',
-  'preferenceRoleAffinity','preferenceRoleDescriptor','preferenceSummaryFromModel','preferenceAffinityFromModel','preferenceAffinityForSetting','preferenceModelWithPalette','preferenceHueFamily'
+  'emptyPreferenceRole','emptyPreferenceRelation','emptyPreferenceModel','sanitizePreferenceRole','sanitizePreferenceRelation','preferenceRelationMetrics','sanitizePreferenceModel',
+  'preferenceRoleAffinity','preferenceRelationAffinity','preferenceRoleDescriptor','preferenceSummaryFromModel','preferenceAffinityFromModel','preferenceAffinityForSetting','preferenceModelWithPalette','preferenceHueFamily'
 ];
 
 const sandbox={console};
@@ -248,6 +248,11 @@ const immature=A.preferenceModelWithPalette(prefEmpty,prefPalette,1);
 check('immature preference does not affect ranking',A.preferenceAffinityFromModel(immature,prefPalette)===0,A.preferenceAffinityFromModel(immature,prefPalette));
 
 const mature=A.preferenceModelWithPalette(prefEmpty,prefPalette,3);
+check('mature preference captures relation evidence',mature.relation.w===3&&finiteObject(mature.relation),JSON.stringify(mature.relation));
+const sameRelation=A.preferenceRelationAffinity(mature.relation,prefPalette);
+check('relation preference affinity stays bounded',sameRelation>=0&&sameRelation<=1,sameRelation);
+const legacyMigrated=A.sanitizePreferenceModel({version:1,totalWeight:3,roles:mature.roles});
+check('legacy preference model migrates with neutral relation evidence',legacyMigrated.relation.w===0,JSON.stringify(legacyMigrated));
 const sameAffinity=A.preferenceAffinityFromModel(mature,prefPalette);
 const farAffinity=A.preferenceAffinityFromModel(mature,['#F4F1E8','#4E66D8','#49B86D']);
 check('mature preference activates',sameAffinity>0&&sameAffinity<=1,sameAffinity);
@@ -279,6 +284,10 @@ check('long-running preference remains bounded',longPreference.totalWeight<=80.0
 check('long-running role weights stay aligned',
   ['base','structure','accent'].every(k=>Math.abs(longPreference.roles[k].w-longPreference.totalWeight)<1e-6),
   JSON.stringify(longPreference)
+);
+check('long-running relation evidence remains finite and bounded',
+  finiteObject(longPreference.relation)&&longPreference.relation.w<=longPreference.totalWeight+1e-6,
+  JSON.stringify(longPreference.relation)
 );
 
 const sourceModel=A.preferenceModelWithPalette(A.emptyPreferenceModel(),prefPalette,3);
