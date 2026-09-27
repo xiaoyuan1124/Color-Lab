@@ -306,5 +306,13 @@ check('mature preference summary is concise and role based',
   explainSummary
 );
 
+
+const incoherentRole={w:2,sumL:1.1,sumC:.28,sumX:0,sumY:0};
+const incoherentLabel=A.preferenceRoleDescriptor(incoherentRole);
+check('mixed hue preference does not invent hue family',
+  typeof incoherentLabel==='string'&&!incoherentLabel.includes('系'),
+  incoherentLabel
+);
+
 console.log('Color Lab torture tests:',passed,'passed,',failed,'failed');
 if(failed)process.exit(1);
