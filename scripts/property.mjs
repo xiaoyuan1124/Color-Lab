@@ -181,4 +181,38 @@ property('preference model keeps role weights aligned',[hexArb,hexArb,hexArb],(a
     model.roles.base.w===3&&model.roles.structure.w===3&&model.roles.accent.w===3;
 });
 
+property('repeated preference learning remains finite and bounded',
+  [hexArb,hexArb,hexArb,fc.integer({min:20,max:160})],
+  (a,b,c,steps)=>{
+    let model=A.emptyPreferenceModel();
+    for(let i=0;i<steps;i++)model=A.preferenceModelWithPalette(model,[a,b,c],3);
+    const roles=Object.values(model.roles);
+    return Number.isFinite(model.totalWeight)&&model.totalWeight>=0&&model.totalWeight<=80.0001&&
+      roles.every(r=>Object.values(r).every(Number.isFinite)&&Math.abs(r.w-model.totalWeight)<1e-6);
+  },
+  {numRuns:180}
+);
+
+property('preference model update is immutable',
+  [hexArb,hexArb,hexArb,hexArb,hexArb,hexArb],
+  (a,b,c,d,e,f)=>{
+    const model=A.preferenceModelWithPalette(A.emptyPreferenceModel(),[a,b,c],3);
+    const before=JSON.stringify(model);
+    A.preferenceModelWithPalette(model,[d,e,f],1);
+    return JSON.stringify(model)===before;
+  }
+);
+
+property('sanitized preference affinity is always bounded',
+  [hexArb,hexArb,hexArb,fc.integer({min:3,max:80})],
+  (a,b,c,w)=>{
+    let model=A.emptyPreferenceModel();
+    model=A.preferenceModelWithPalette(model,[a,b,c],Math.min(3,w));
+    while(model.totalWeight<Math.min(w,20))model=A.preferenceModelWithPalette(model,[a,b,c],1);
+    const value=A.preferenceAffinityFromModel(model,[a,b,c]);
+    return Number.isFinite(value)&&value>=0&&value<=1;
+  }
+);
+
+
 console.log('Color Lab property tests:',assertions,'generated cases passed');
