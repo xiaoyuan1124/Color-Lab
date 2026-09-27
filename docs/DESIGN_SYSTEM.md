@@ -15,6 +15,16 @@ Color Lab 的視覺原則不是「套一套 UI library」，而是把一致性�
 - Blur / Glass 只有在表達「層級、浮層或固定 chrome」時才使用，不能只為了讓畫面看起來更有質感
 - 避免「裝飾層自己縮排、內容又是另一套縮排」；每個邊界都必須能說明它與版面結構的關係
 
+
+## Spatial Navigation
+
+- Global navigation 使用 Edge Rail，而不是固定底部大容器。
+- Navigation 的存在感來自位置、間距、active marker 與文字，不靠大面積背景。
+- 導航後方不能直接透出可讀內容；必要時使用局部漸層建立 legibility zone，而不是新增一張 glass card。
+- Global navigation、page primary action、local utility 必須使用不同視覺語言。
+- Utility 優先使用文字、hairline 與留白；只有真正需要邊界時才使用框。
+- 不為了「像 App」而保留 Bottom Tab Bar；導航形式必須服務內容與操作情境。
+
 ## Spacing Tokens
 
 4 / 8 / 12 / 16 / 24 / 32 / 40 / 48 / 64

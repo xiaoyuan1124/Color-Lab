@@ -77,13 +77,13 @@ for(const src of lazyScripts){
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v23")) fail('service worker cache version is not V2.3');
+if(!sw.includes("color-lab-v24")) fail('service worker cache version is not V2.4');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.3.0') fail('package version must be 2.3.0');
+if(pkg.version!=='2.4.0') fail('package version must be 2.4.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.3')||!html.includes('<div class="version">V2.3</div>')||!html.includes("appVersion:'2.3'")) fail('V2.3 UI or backup version metadata missing');
-else pass('V2.3 version metadata');
+if(!html.includes('Color Lab V2.4')||!html.includes('<div class="version">V2.4</div>')||!html.includes("appVersion:'2.4'")) fail('V2.4 UI or backup version metadata missing');
+else pass('V2.4 version metadata');
 
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
@@ -91,6 +91,26 @@ if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("padding:10px 0 16px var(--app-gutter)")){
   fail('top chrome edge-to-grid alignment missing');
 }else pass('top chrome edge-to-grid alignment');
+
+if(!html.includes('<nav class="edge-rail"')||
+   html.includes('<nav class="bottom-nav"')||
+   !html.includes('class="edge-nav-item active"')||
+   !html.includes('navigation is a position, not a container')){
+  fail('V2.4 spatial navigation contract missing');
+}else pass('V2.4 spatial navigation contract');
+
+if(!html.includes('.edge-rail::before{')||
+   !html.includes('rgba(243,239,232,0) 100%')||
+   !html.includes('.edge-nav-item.active::after{')){
+  fail('V2.4 edge rail legibility or active marker missing');
+}else pass('V2.4 edge rail legibility and active marker');
+
+if(!html.includes('.library-tools .utility-btn{')||
+   !html.includes('.library-search{')||
+   !html.includes('border-bottom:1px solid var(--hairline)')){
+  fail('V2.4 library de-framing missing');
+}else pass('V2.4 library utilities de-framed');
+
 
 if(manifest.display!=='standalone') fail('manifest display must be standalone');
 if(manifest.orientation!=='portrait-primary') fail('manifest orientation must be portrait-primary');

@@ -1673,13 +1673,171 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
   padding:0 14px;
 }
 
+
+/* V2.4 SPATIAL NAVIGATION — navigation is a position, not a container */
+body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
+.edge-rail{
+  position:fixed;
+  top:60%;
+  right:max(calc(10px + env(safe-area-inset-right)),calc((100vw - 540px)/2 + 10px));
+  z-index:90;
+  transform:translateY(-50%);
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:6px;
+  padding:0;
+  background:transparent;
+  border:0;
+  isolation:isolate;
+}
+.edge-rail::before{
+  content:"";
+  position:absolute;
+  inset:-22px -10px -22px -42px;
+  z-index:-1;
+  pointer-events:none;
+  background:linear-gradient(to left,
+    rgba(243,239,232,.985) 0%,
+    rgba(243,239,232,.90) 44%,
+    rgba(243,239,232,.46) 72%,
+    rgba(243,239,232,0) 100%);
+}
+.edge-nav-item{
+  position:relative;
+  width:48px;
+  min-width:48px;
+  min-height:52px;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:rgba(111,107,101,.66);
+  padding:6px 0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+}
+.edge-nav-item .nav-icon{
+  width:22px;
+  height:22px;
+  display:block;
+}
+.edge-nav-item .nav-icon svg{
+  width:22px;
+  height:22px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.7;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+#nav-inspire.edge-nav-item .nav-icon svg path{fill:currentColor;stroke:none}
+.edge-nav-item .nav-label{
+  max-height:0;
+  opacity:0;
+  overflow:hidden;
+  transform:translateY(-2px);
+  font-size:10px;
+  line-height:1.15;
+  font-weight:650;
+  letter-spacing:.02em;
+  white-space:nowrap;
+  transition:max-height .16s ease,opacity .16s ease,transform .16s ease;
+}
+.edge-nav-item.active{
+  color:var(--olive-12);
+  background:transparent;
+}
+.edge-nav-item.active::after{
+  content:"";
+  position:absolute;
+  right:-4px;
+  top:50%;
+  width:2px;
+  height:24px;
+  transform:translateY(-50%);
+  border-radius:999px;
+  background:var(--olive-9);
+}
+.edge-nav-item.active .nav-label{
+  max-height:14px;
+  opacity:1;
+  transform:translateY(0);
+}
+.edge-nav-item:active{transform:translateX(-1px);background:transparent}
+.edge-nav-item:focus-visible{
+  outline:2px solid var(--focus-ring);
+  outline-offset:2px;
+}
+
+/* Library utilities stop competing with the saved colors */
+.library-search{
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  border-bottom:1px solid var(--hairline);
+  padding-left:0;
+  padding-right:0;
+}
+.library-organize{gap:var(--space-5)}
+.select-wrap select{
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  border-bottom:1px solid var(--hairline);
+  padding-left:0;
+}
+.preference-toggle{
+  border:0;
+  background:transparent;
+  padding-left:8px;
+  padding-right:8px;
+  color:var(--olive-11);
+}
+.library-tools{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:2px var(--space-4);
+  padding:0 0 var(--space-4);
+  margin-bottom:var(--space-5);
+  border-bottom:1px solid var(--hairline);
+}
+.library-tools .utility-btn{
+  min-height:44px;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  padding:0;
+  color:var(--olive-11);
+}
+#resetPreference{
+  color:var(--text-2);
+  grid-column:auto;
+}
+.toast{bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
+
+@media(max-width:390px){
+  .edge-rail{
+    top:61%;
+    right:max(calc(7px + env(safe-area-inset-right)),calc((100vw - 540px)/2 + 7px));
+  }
+  .edge-rail::before{inset:-20px -7px -20px -38px}
+  .edge-nav-item{width:46px;min-width:46px;min-height:50px}
+}
+
 </style>
 </head>
 <body>
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.3</div>
+    <div class="version">V2.4</div>
   </div>
 
   <main class="app-main">
@@ -1927,33 +2085,33 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.3</div>
+  <div class="footer app-footer">Color Lab V2.4</div>
 </div>
 
-<nav class="bottom-nav" aria-label="主要功能" role="tablist">
-  <button id="nav-compose" class="nav-item active" data-tab="compose" role="tab" aria-selected="true">
+<nav class="edge-rail" aria-label="主要功能" role="tablist">
+  <button id="nav-compose" class="edge-nav-item active" data-tab="compose" role="tab" aria-selected="true" aria-label="配色">
     <span class="nav-icon" aria-hidden="true">
       <svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><circle cx="12" cy="16" r="3"/></svg>
     </span>
-    <span>配色</span>
+    <span class="nav-label">配色</span>
   </button>
-  <button id="nav-inspire" class="nav-item" data-tab="inspire" role="tab" aria-selected="false">
+  <button id="nav-inspire" class="edge-nav-item" data-tab="inspire" role="tab" aria-selected="false" aria-label="靈感">
     <span class="nav-icon" aria-hidden="true">
       <svg viewBox="0 0 24 24"><path d="M12 3l1.4 4.1L17.5 8.5l-4.1 1.4L12 14l-1.4-4.1L6.5 8.5l4.1-1.4L12 3z"/><path d="M18 14l.8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8L18 14z"/></svg>
     </span>
-    <span>靈感</span>
+    <span class="nav-label">靈感</span>
   </button>
-  <button id="nav-photo" class="nav-item" data-tab="photo" role="tab" aria-selected="false">
+  <button id="nav-photo" class="edge-nav-item" data-tab="photo" role="tab" aria-selected="false" aria-label="相片">
     <span class="nav-icon" aria-hidden="true">
       <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M5 17l4-4 3 3 2-2 5 3"/></svg>
     </span>
-    <span>相片</span>
+    <span class="nav-label">相片</span>
   </button>
-  <button id="nav-library" class="nav-item" data-tab="library" role="tab" aria-selected="false">
+  <button id="nav-library" class="edge-nav-item" data-tab="library" role="tab" aria-selected="false" aria-label="收藏">
     <span class="nav-icon" aria-hidden="true">
       <svg viewBox="0 0 24 24"><path d="M6 4h12v17l-6-4-6 4V4z"/></svg>
     </span>
-    <span>收藏</span>
+    <span class="nav-label">收藏</span>
   </button>
 </nav>
 <div class="sheet-backdrop" id="savedActionBackdrop" hidden>
@@ -2447,7 +2605,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.3',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.4',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -4261,7 +4419,7 @@ function switchTab(name,scrollTop=true){
     v.hidden=!on;
     v.classList.toggle('active',on);
   });
-  document.querySelectorAll('.nav-item[data-tab]').forEach(b=>{
+  document.querySelectorAll('.edge-nav-item[data-tab]').forEach(b=>{
     const on=b.dataset.tab===name;
     b.classList.toggle('active',on);
     b.setAttribute('aria-selected',on?'true':'false');
@@ -4283,7 +4441,7 @@ function updatePhotoTarget(){
   const el=$('#photoTarget');
   if(el)el.textContent='COLOR '+(activeSlot+1);
 }
-document.querySelectorAll('.nav-item[data-tab]').forEach(b=>{
+document.querySelectorAll('.edge-nav-item[data-tab]').forEach(b=>{
   b.addEventListener('click',()=>switchTab(b.dataset.tab,true));
 });
 document.addEventListener('click',e=>{

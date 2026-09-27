@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.3**
+**目前版本：V2.4**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -65,6 +65,21 @@ Color Lab 只從明確行為學習：
 偏好模型只儲存角色的聚合 OKLCH 統計，以及色相距離／結構對比等關係統計，不保存完整操作歷史。
 
 使用者可隨時在收藏頁按「重置偏好」。重置不會刪除收藏，而且會留下明確的空偏好狀態，避免舊 IndexedDB 快照把已重置的偏好重新復活。
+
+
+## V2.4 Spatial Navigation
+
+V2.4 移除固定底部浮動 Tab Bar，改成右側 Edge Rail：
+
+- 全域導航不再是一個大型容器
+- 四個主要世界仍為 Compose / Inspire / Photo / Library
+- 每個導航目標保留至少 44px 觸控區
+- Active 狀態使用細線、文字與位置，不使用大型膠囊背景
+- Rail 右側有局部漸層遮蔽，避免內容從操作目標後方穿透
+- 頁面底部不再被固定 Bottom Bar 遮住
+- Library 搜尋、排序、備份等 utility 開始去框化，讓收藏色彩本身成為主角
+
+這個方向遵循「Navigation 不必是一個容器；Utility 不必是一張 Card」的空間式介面原則。
 
 ## 照片分析
 
@@ -139,7 +154,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v23-personal-fidelity`
+目前 cache generation：`color-lab-v24-spatial-navigation`
 
 ## Quality Gates
 
