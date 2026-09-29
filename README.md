@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.6.1**
+**目前版本：V2.6.2**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -115,6 +115,13 @@ V2.6 把「功能」往「理解與決策」推進：
 - ×、••• 等視覺 glyph 與 screen-reader 名稱分離
 - Color Slot 與照片色票保留 visible label 在 accessible name 中
 
+## V2.6.2 Deferred Depth
+
+- Compose 關閉「深入理解」時，不再背景計算色覺模擬與情境預覽
+- 展開時才產生最新 Vision / Context Preview
+- 切回 Compose 也只在深度區已展開時更新
+- 修正 drag note 與 eyebrow 使用透明度造成的小字對比問題
+
 ## 照片分析
 
 照片功能支援：
@@ -188,7 +195,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v261-accessibility`
+目前 cache generation：`color-lab-v262-deferred-depth`
 
 ## Quality Gates
 

@@ -40,3 +40,19 @@ const accessibilityFailures=accessibilityRefs
   .map(a=>({id:a.id,title:a.title,score:a.score,displayValue:a.displayValue||''}));
 console.log('Lighthouse accessibility failures');
 for(const a of accessibilityFailures)console.log(JSON.stringify(a));
+
+
+console.log('Lighthouse accessibility nodes');
+for(const failure of accessibilityFailures){
+  const audit=report.audits?.[failure.id];
+  const items=audit?.details?.items||[];
+  for(const item of items.slice(0,8)){
+    const node=item.node||{};
+    console.log(JSON.stringify({
+      audit:failure.id,
+      selector:node.selector||'',
+      snippet:node.snippet||'',
+      explanation:node.explanation||item.explanation||''
+    }));
+  }
+}

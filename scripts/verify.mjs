@@ -77,13 +77,13 @@ for(const src of lazyScripts){
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v261")) fail('service worker cache version is not V2.6.1');
+if(!sw.includes("color-lab-v262")) fail('service worker cache version is not V2.6.2');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.6.1') fail('package version must be 2.6.1');
+if(pkg.version!=='2.6.2') fail('package version must be 2.6.2');
 else pass('package version');
-if(!html.includes('Color Lab V2.6.1')||!html.includes('<div class="version">V2.6.1</div>')||!html.includes("appVersion:'2.6.1'")) fail('V2.6.1 UI or backup version metadata missing');
-else pass('V2.6.1 version metadata');
+if(!html.includes('Color Lab V2.6.2')||!html.includes('<div class="version">V2.6.2</div>')||!html.includes("appVersion:'2.6.2'")) fail('V2.6.2 UI or backup version metadata missing');
+else pass('V2.6.2 version metadata');
 
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
@@ -168,6 +168,12 @@ if(!html.includes('--text-3:#716C66')||
    html.includes("b.setAttribute('aria-label','加入推薦配色")){
   fail('V2.6.1 accessibility contrast or label hardening missing');
 }else pass('V2.6.1 accessibility contrast and labels');
+
+if(!html.includes("if(deep?.open){renderVision();renderContextPreview()}")||
+   !html.includes("$('#composeDeepDive').addEventListener('toggle'")||
+   !html.includes('color:var(--text-3);')){
+  fail('V2.6.2 deferred deep-dive or contrast follow-up missing');
+}else pass('V2.6.2 deferred deep-dive and contrast follow-up');
 
 if(manifest.display!=='standalone') fail('manifest display must be standalone');
 if(manifest.orientation!=='portrait-primary') fail('manifest orientation must be portrait-primary');
@@ -454,7 +460,7 @@ if(!html.includes("personal*.45")||!html.includes("reference,accessibility,perso
   fail('V2.3 personal recommendation dimension missing');
 }else pass('V2.3 personal recommendation dimension');
 
-if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.6.1'")||
+if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.6.2'")||
    !html.includes("preference:sanitizePreferenceModel(preferenceState)")||
    !html.includes("preferenceEnabled")){
   fail('V2.3 backup v4 personalization payload missing');
@@ -528,7 +534,7 @@ if(!html.includes("return enabled?preferenceAffinityFromModel(model,colors):0;")
   fail('disabled personalization does not force zero affinity');
 }else pass('disabled personalization forces zero affinity');
 
-if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.6.1'")){
+if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.6.2'")){
   fail('V2.3 personalization setting persistence or backup v4 missing');
 }else pass('V2.3 setting persistence and backup v4');
 
@@ -609,4 +615,4 @@ if(!workflows.includes('group: color-lab-codeql-')||!workflows.includes('cancel-
 }else pass('CodeQL superseded-run concurrency');
 
 if(process.exitCode) process.exit(process.exitCode);
-console.log('Color Lab V2.6.1 verification complete.');
+console.log('Color Lab V2.6.2 verification complete.');
