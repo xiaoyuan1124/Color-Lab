@@ -226,11 +226,11 @@ if(!html.includes('function scheduleNonCriticalStartup(')||
   fail('V2.7.3 non-critical startup deferral missing');
 }else pass('V2.7.3 non-critical startup deferral');
 
-const renderStart=html.indexOf('function render(){');
-const renderEnd=html.indexOf('function scheduleSecondaryRender()',renderStart);
-const renderBlock=renderStart>=0&&renderEnd>renderStart?html.slice(renderStart,renderEnd):'';
-if(renderBlock.includes('renderRelationshipExplanation();scheduleSecondaryRender()')||
-   !renderBlock.includes("if(deep?.open)renderRelationshipExplanation()")){
+const startupRenderStart=html.indexOf('function render(){');
+const startupRenderEnd=html.indexOf('function scheduleSecondaryRender()',startupRenderStart);
+const startupRenderBlock=startupRenderStart>=0&&startupRenderEnd>startupRenderStart?html.slice(startupRenderStart,startupRenderEnd):'';
+if(startupRenderBlock.includes('renderRelationshipExplanation();scheduleSecondaryRender()')||
+   !startupRenderBlock.includes("if(deep?.open)renderRelationshipExplanation()")){
   fail('V2.7.3 hidden relationship rendering still blocks startup');
 }else pass('V2.7.3 hidden relationship rendering deferred');
 
