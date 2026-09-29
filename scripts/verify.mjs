@@ -534,7 +534,9 @@ if(!html.includes("typeof data.preferenceEnabled==='boolean'")){
   fail('backup v4 personalization setting validation missing');
 }else pass('backup v4 personalization setting validation');
 
-if(!html.includes("符合本機偏好")){
+if(!html.includes("personalHint=preferenceIsMature()")||
+   !html.includes("profile?.personal>=.52")||
+   !html.includes("本機排序微調")){
   fail('personalized recommendation explanation missing');
 }else pass('personalized recommendation explanation');
 
