@@ -2,7 +2,7 @@ module.exports = {
   ci: {
     collect: {
       staticDistDir: '.',
-      numberOfRuns: 1,
+      numberOfRuns: 3,
       settings: {
         onlyCategories: ['performance', 'accessibility', 'best-practices'],
         chromeFlags: '--no-sandbox --headless=new'

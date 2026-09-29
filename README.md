@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.7.2**
+**目前版本：V2.7.3**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,16 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
 
+## V2.7.3 Startup Budget
+
+V2.7.3 針對 Lighthouse 的 Total Blocking Time 做首屏工作分流：
+
+- Compare、Photo 初始化、Install 狀態、Recent Colors、Resilience restore 不再全部卡在第一個同步 startup task
+- 深度關係說明只在「深入理解」真的展開時才計算
+- 對應頁面的初始化移到使用者切換到該頁時
+- 非必要本機恢復工作放到 requestIdleCallback
+- Lighthouse 維持 Performance ≥ 90，改跑 3 次降低單次 shared-runner 波動；不降低門檻
+
 ## V2.7.2 Lazy Intelligence
 
 V2.7.2 把完整推薦引擎從首屏移到真正的使用者意圖：
@@ -226,7 +236,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v272-lazy-intelligence`
+目前 cache generation：`color-lab-v273-startup-budget`
 
 ## Quality Gates
 

@@ -56,3 +56,11 @@ for(const failure of accessibilityFailures){
     }));
   }
 }
+
+
+const metricIds=['first-contentful-paint','largest-contentful-paint','speed-index','total-blocking-time','interactive','cumulative-layout-shift','mainthread-work-breakdown'];
+console.log('Lighthouse performance metrics');
+for(const id of metricIds){
+  const a=report.audits?.[id];
+  if(a)console.log(JSON.stringify({id,title:a.title,score:a.score,numericValue:Math.round((a.numericValue||0)*100)/100,displayValue:a.displayValue||''}));
+}
