@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.6**
+**目前版本：V2.6.1**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -105,6 +105,16 @@ V2.6 把「功能」往「理解與決策」推進：
 - Personalization 詳細偏好改為按需查看，平時只說明它只微調排序、不改三色
 - Lighthouse 日誌開始列出真正失敗的 accessibility audits，後續只針對實際問題修正
 
+## V2.6.1 Accessibility Hardening
+
+依 Lighthouse 實際失敗 audit 修正：
+
+- Secondary / tertiary small text 提升到可讀對比
+- 次要層級改由字級、字重與留白表達，不再靠低 opacity
+- 推薦卡不再用較短 aria-label 覆蓋可見文字
+- ×、••• 等視覺 glyph 與 screen-reader 名稱分離
+- Color Slot 與照片色票保留 visible label 在 accessible name 中
+
 ## 照片分析
 
 照片功能支援：
@@ -178,7 +188,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v26-color-reasoning`
+目前 cache generation：`color-lab-v261-accessibility`
 
 ## Quality Gates
 

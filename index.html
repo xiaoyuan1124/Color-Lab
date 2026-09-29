@@ -24,7 +24,7 @@ button{cursor:pointer}
 .app{max-width:520px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 28px) 24px calc(env(safe-area-inset-bottom) + 44px)}
 .topline{display:flex;justify-content:space-between;align-items:center;margin-bottom:54px}
 .brand{font-size:11px;letter-spacing:.18em;font-weight:700;color:var(--olive)}
-.version{font-size:11px;color:#9A958E}
+.version{font-size:11px;color:var(--text-3)}
 .hero{margin-bottom:56px}
 .hero h1{font-size:43px;line-height:1.08;letter-spacing:-.045em;margin:0 0 18px;font-weight:700}
 .hero p{font-size:16px;line-height:1.75;color:var(--muted);margin:0;max-width:390px}
@@ -37,16 +37,16 @@ button{cursor:pointer}
 .seed-meta{flex:1;min-width:0}
 .seed-kicker{font-size:12px;color:var(--muted);margin-bottom:8px}
 .hex{width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;padding:0 0 10px;font-size:28px;font-weight:600;letter-spacing:.02em;color:var(--ink);text-transform:uppercase;outline:none}
-.seed-note{font-size:13px;color:#8A857E;line-height:1.6;margin-top:10px}
+.seed-note{font-size:13px;color:var(--text-3);line-height:1.6;margin-top:10px}
 .combo-head{display:flex;align-items:center;justify-content:space-between;margin:-2px 0 12px}
 .combo-title{font-size:12px;color:var(--muted)}
-.combo-count{font-size:11px;color:#9A958E}
+.combo-count{font-size:11px;color:var(--text-3)}
 .combo-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
 .slot-wrap{position:relative}
 .combo-slot{width:100%;height:86px;border:1px solid var(--line);border-radius:17px;background:transparent;padding:12px;text-align:left;display:flex;flex-direction:column;justify-content:space-between;transition:.18s ease;overflow:hidden}
 .combo-slot.active{box-shadow:0 0 0 2px var(--ink);border-color:transparent}
-.combo-slot.empty{border-style:dashed;align-items:center;justify-content:center;color:#8F8982;font-size:24px}
-.slot-no{font-size:10px;letter-spacing:.1em;font-weight:700;opacity:.7}
+.combo-slot.empty{border-style:dashed;align-items:center;justify-content:center;color:var(--text-3);font-size:24px}
+.slot-no{font-size:10px;letter-spacing:.1em;font-weight:700;opacity:1}
 .slot-hex{font-size:12px;font-weight:650;letter-spacing:.01em}
 .slot-remove{position:absolute;right:7px;top:7px;width:24px;height:24px;border:0;border-radius:12px;background:rgba(20,20,20,.28);color:#fff;line-height:24px;padding:0;text-align:center;font-size:15px;z-index:2}
 .source-actions{display:flex;align-items:center;gap:12px;margin:-4px 0 26px}
@@ -69,8 +69,8 @@ button{cursor:pointer}
 .photo-change{border:0;background:transparent;padding:0;color:var(--ink);font-size:12px;font-weight:600}
 .photo-auto{margin-top:18px}
 .photo-auto-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.photo-auto-title{font-size:11px;letter-spacing:.12em;font-weight:700;color:#817C75}
-.photo-auto-note{font-size:11px;color:#9A958E}
+.photo-auto-title{font-size:11px;letter-spacing:.12em;font-weight:700;color:var(--text-3)}
+.photo-auto-note{font-size:11px;color:var(--text-3)}
 .photo-swatches{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .photo-swatches::-webkit-scrollbar{display:none}
 .photo-swatch{flex:0 0 auto;width:54px;height:54px;border-radius:16px;border:1px solid rgba(36,38,36,.08);box-shadow:0 4px 12px rgba(36,38,36,.05);position:relative}
@@ -78,13 +78,13 @@ button{cursor:pointer}
 .intel{margin-top:28px;padding-top:24px;border-top:1px solid var(--line)}
 .intel-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:14px}
 .intel-title{font-size:15px;font-weight:700}
-.intel-note{font-size:11px;color:#969089}
+.intel-note{font-size:11px;color:var(--text-3)}
 .rec-scroll{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;margin:0 -24px;padding:2px 24px 8px}
 .rec-scroll::-webkit-scrollbar{display:none}
 .rec-card{scroll-snap-align:start;flex:0 0 74%;max-width:300px;border:1px solid var(--line);background:rgba(255,255,255,.28);border-radius:18px;padding:12px;text-align:left}
 .rec-palette{display:grid;grid-template-columns:75fr 18fr 7fr;height:104px;border-radius:14px;overflow:hidden;margin-bottom:11px}
 .rec-name{font-size:14px;font-weight:700}
-.rec-sub{font-size:11px;color:#8B867F;margin-top:4px}
+.rec-sub{font-size:11px;color:var(--text-3);margin-top:4px}
 .rec-actions{display:flex;gap:8px;margin-top:10px}
 .rec-add{border:0;border-radius:10px;background:var(--ink);color:#fff;font-size:12px;font-weight:600;padding:9px 11px}
 .rec-ghost{border:0;background:transparent;color:var(--olive);font-size:12px;font-weight:600;padding:9px 4px}
@@ -108,15 +108,15 @@ button{cursor:pointer}
 .relation:last-child{border-bottom:0}
 .relation-main{display:grid;grid-template-columns:52px 1fr;align-items:center;gap:14px}
 .dot{width:52px;height:52px;border-radius:15px;border:1px solid rgba(36,38,36,.07)}
-.role{font-size:11px;letter-spacing:.13em;font-weight:700;color:#817C75;margin-bottom:5px}
+.role{font-size:11px;letter-spacing:.13em;font-weight:700;color:var(--text-3);margin-bottom:5px}
 .role-line{display:flex;align-items:baseline;gap:10px}
 .pct{font-size:23px;font-weight:650;letter-spacing:-.03em}
 .hex-mini{border:0;background:transparent;color:var(--muted);padding:0;font-size:13px;font-weight:500}
 .shuffle{border:0;background:transparent;color:#6E6963;font-size:13px;padding:10px 0 10px 14px}
 .name-field{margin-top:22px}
-.name-label{font-size:11px;letter-spacing:.12em;color:#817C75;font-weight:700;margin-bottom:8px}
+.name-label{font-size:11px;letter-spacing:.12em;color:var(--text-3);font-weight:700;margin-bottom:8px}
 .name-input{width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;padding:4px 0 11px;font-size:18px;font-weight:600;color:var(--ink);outline:none}
-.name-input::placeholder{color:#A59F97;font-weight:400}
+.name-input::placeholder{color:var(--text-3);font-weight:400}
 .save{margin-top:16px;width:100%;border:1px solid var(--ink);background:transparent;color:var(--ink);border-radius:14px;padding:14px 16px;font-size:14px;font-weight:600}
 .ideas-wrap{overflow:hidden;margin:0 -24px}
 .ideas{display:flex;gap:14px;overflow-x:auto;padding:2px 24px 8px;scroll-snap-type:x mandatory;scrollbar-width:none}
@@ -124,7 +124,7 @@ button{cursor:pointer}
 .idea{scroll-snap-align:start;flex:0 0 78%;max-width:320px;border:0;background:transparent;padding:0;text-align:left}
 .idea-top{display:grid;grid-template-columns:75fr 18fr 7fr;height:168px;border-radius:20px;overflow:hidden;margin-bottom:14px}
 .idea-name{font-size:17px;font-weight:600;letter-spacing:-.01em}
-.idea-meta{font-size:11px;color:#8B867F;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.idea-meta{font-size:11px;color:var(--text-3);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .saved-empty{font-size:14px;line-height:1.7;color:var(--muted);padding:4px 0 2px}
 .saved-list{display:grid}
 .saved-item{display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--line)}
@@ -136,7 +136,7 @@ button{cursor:pointer}
 .saved-actions{display:flex;align-items:center;gap:10px;margin-left:auto}
 .saved-rename,.saved-copy{border:0;background:transparent;color:var(--olive);font-size:13px;font-weight:600;padding:10px 0}
 .saved-rename{color:#7E7871}
-.footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--line);font-size:11px;line-height:1.7;color:#969089}
+.footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--line);font-size:11px;line-height:1.7;color:var(--text-3)}
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translate(-50%,20px);background:#202220;color:#fff;padding:10px 14px;border-radius:999px;font-size:12px;opacity:0;pointer-events:none;transition:.22s ease}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 @media(max-width:390px){
@@ -196,8 +196,8 @@ button{cursor:pointer}
   --border-subtle:#DED8CF;
   --border-strong:#C9C2B8;
   --text-1:#242624;
-  --text-2:#6F6B65;
-  --text-3:#918B84;
+  --text-2:#5F5B56;
+  --text-3:#716C66;
   --focus-ring:rgba(104,112,94,.34);
 
   --shadow-soft:0 10px 30px rgba(36,38,36,.06);
@@ -1545,7 +1545,7 @@ body{padding-bottom:calc(98px + env(safe-area-inset-bottom))}
 
 /* hide nonessential footer chrome inside an app shell */
 .app-footer{
-  opacity:.58;
+  opacity:1;
   margin-top:48px;
 }
 
@@ -2071,13 +2071,26 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 .preference-detail[open]>summary::after{content:" −"}
 .preference-detail #preferenceSummary{margin-top:7px;max-width:36ch}
 
+
+/* V2.6.1 ACCESSIBILITY HARDENING */
+.sr-only{
+  position:absolute!important;
+  width:1px!important;height:1px!important;
+  padding:0!important;margin:-1px!important;
+  overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;
+  white-space:nowrap!important;
+  border:0!important;
+}
+.saved-menu::before{content:"•••";font-size:20px;letter-spacing:.08em}
+
 </style>
 </head>
 <body>
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.6</div>
+    <div class="version">V2.6.1</div>
   </div>
 
   <main class="app-main">
@@ -2342,7 +2355,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.6</div>
+  <div class="footer app-footer">Color Lab V2.6.1</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2385,7 +2398,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
         <div class="eyebrow">LIBRARY</div>
         <h2 id="savedActionTitle">配色操作</h2>
       </div>
-      <button type="button" class="sheet-close" id="closeSavedActions" aria-label="關閉">×</button>
+      <button type="button" class="sheet-close" id="closeSavedActions"><span aria-hidden="true">×</span><span class="sr-only">關閉</span></button>
     </div>
     <div class="action-list">
       <button type="button" class="action-row" data-saved-action="load"><span>套用配色</span><span>→</span></button>
@@ -2406,7 +2419,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
         <div class="eyebrow">INSTALL</div>
         <h2 id="installTitle">加入主畫面</h2>
       </div>
-      <button type="button" class="sheet-close" id="closeInstallGuide" aria-label="關閉">×</button>
+      <button type="button" class="sheet-close" id="closeInstallGuide"><span aria-hidden="true">×</span><span class="sr-only">關閉</span></button>
     </div>
     <div class="install-steps">
       <div><b>1</b><span>使用 Safari 開啟 Color Lab</span></div>
@@ -2424,7 +2437,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
         <div class="eyebrow">COLOR PICKER</div>
         <h2 id="pickerTitle">選顏色</h2>
       </div>
-      <button type="button" class="sheet-close" id="closeStudioPicker" aria-label="關閉">×</button>
+      <button type="button" class="sheet-close" id="closeStudioPicker"><span aria-hidden="true">×</span><span class="sr-only">關閉</span></button>
     </div>
     <div class="iro-host" id="iroPicker"></div>
     <div class="picker-value" id="pickerHex">#68705E</div>
@@ -2878,7 +2891,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.6',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.6.1',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -3807,7 +3820,7 @@ function renderRecommendations(){
   const recs=recommendationCombos();
   box.innerHTML='';
   recs.forEach((r,i)=>{
-    const b=document.createElement('button');b.className='rec-card';b.type='button';b.dataset.rec=i;b.setAttribute('aria-label','加入推薦配色 '+r.meta.label);
+    const b=document.createElement('button');b.className='rec-card';b.type='button';b.dataset.rec=i;
     const profile=paletteQualityProfile([r.palette.base,r.palette.structure,r.palette.accent]);
     const direction=recommendationDirection(r.palette,r.meta);
     const personalHint=preferenceIsMature()&&profile?.personal>=.52?' · 本機排序微調':'';
@@ -4090,20 +4103,20 @@ function renderComboSlots(){
     const btn=document.createElement('button');
     btn.type='button';
     btn.className='combo-slot '+(hex?'':'empty')+(i===activeSlot?' active':'');
-    btn.dataset.slot=i;btn.setAttribute('aria-label',hex?'編輯顏色 '+(i+1)+' '+hex+'，Alt 加左右方向鍵可調整順序':'新增顏色 '+(i+1));
+    btn.dataset.slot=i;
     if(hex)btn.setAttribute('aria-keyshortcuts','Alt+ArrowLeft Alt+ArrowRight');
     if(hex){
       btn.style.background=hex;
       btn.style.color=textFor(hex);
-      btn.innerHTML=(lockedSlots[i]?'<span class="slot-lock-mark">LOCK</span>':'')+'<span class="slot-no">COLOR '+(i+1)+'</span><span class="slot-hex">'+hex+'</span>';
+      btn.innerHTML=(lockedSlots[i]?'<span class="slot-lock-mark">LOCK</span>':'')+'<span class="slot-no">COLOR '+(i+1)+'</span><span class="slot-hex">'+hex+'</span><span class="sr-only">編輯此色。Alt 加左右方向鍵可調整順序。</span>';
       if(chosenColors().length>1){
-        const rm=document.createElement('button');rm.type='button';rm.className='slot-remove';rm.dataset.removeSlot=i;rm.textContent='×';rm.setAttribute('aria-label','移除顏色 '+(i+1));wrap.appendChild(rm);
+        const rm=document.createElement('button');rm.type='button';rm.className='slot-remove';rm.dataset.removeSlot=i;rm.innerHTML='<span aria-hidden="true">×</span><span class="sr-only">移除顏色 '+(i+1)+'</span>';wrap.appendChild(rm);
       }
       if(chosenColors().length>1){
         const drag=document.createElement('span');drag.className='drag-handle';drag.textContent='⋮⋮';drag.setAttribute('aria-hidden','true');wrap.appendChild(drag);
       }
     }else{
-      btn.innerHTML='<span>＋</span><span class="slot-no">ADD COLOR</span>';
+      btn.innerHTML='<span aria-hidden="true">＋</span><span class="slot-no">ADD COLOR</span><span class="sr-only"> 新增顏色 '+(i+1)+'</span>';
     }
     wrap.insertBefore(btn,wrap.firstChild);
     box.appendChild(wrap);
@@ -4260,7 +4273,7 @@ function renderSaved(){
     const title=(x.name&&x.name.trim())||'未命名配色';
     const tags=Array.isArray(x.tags)?x.tags:[];
     const no=String(position+1).padStart(2,'0');
-    d.innerHTML=`<div class="saved-piece-no">${no}</div><button class="saved-menu" type="button" data-saved-menu="${i}" aria-label="${escapeHtml(title)} 更多操作">•••</button><button class="saved-palette-open" type="button" data-load-saved="${i}" aria-label="套用配色 ${escapeHtml(title)}"><span class="mini3"><i style="background:${x.palette.base}"></i><i style="background:${x.palette.structure}"></i><i style="background:${x.palette.accent}"></i></span></button><div class="saved-info"><b>${x.pinned?'★ ':''}${escapeHtml(title)}</b><div class="saved-piece-meta"><span>75 / 18 / 7</span><span>${x.palette.base}</span>${x.folder?'<span>'+escapeHtml(x.folder)+'</span>':''}${x.pinned?'<span>PINNED</span>':''}</div>${tags.length?'<div class="saved-tags">'+tags.map(t=>'<button type="button" class="saved-tag" data-tag-filter="'+escapeHtml(t)+'">'+escapeHtml(t)+'</button>').join('')+'</div>':''}</div>`;
+    d.innerHTML=`<div class="saved-piece-no">${no}</div><button class="saved-menu" type="button" data-saved-menu="${i}" aria-label="${escapeHtml(title)} 更多操作"></button><button class="saved-palette-open" type="button" data-load-saved="${i}" aria-label="套用配色 ${escapeHtml(title)}"><span class="mini3"><i style="background:${x.palette.base}"></i><i style="background:${x.palette.structure}"></i><i style="background:${x.palette.accent}"></i></span></button><div class="saved-info"><b>${x.pinned?'★ ':''}${escapeHtml(title)}</b><div class="saved-piece-meta"><span>75 / 18 / 7</span><span>${x.palette.base}</span>${x.folder?'<span>'+escapeHtml(x.folder)+'</span>':''}${x.pinned?'<span>PINNED</span>':''}</div>${tags.length?'<div class="saved-tags">'+tags.map(t=>'<button type="button" class="saved-tag" data-tag-filter="'+escapeHtml(t)+'">'+escapeHtml(t)+'</button>').join('')+'</div>':''}</div>`;
     list.appendChild(d);
   })
 }
@@ -4318,8 +4331,8 @@ function renderPhotoPalette(items){
   unique.forEach(row=>{
     const b=document.createElement('button');b.className='photo-swatch-card';b.type='button';b.dataset.photoColor=row.hex;
     const pct=Number.isFinite(row.proportion)?Math.round(row.proportion*100)+'%':'';
-    b.title=row.hex;b.setAttribute('aria-label','加入照片'+row.label+' '+row.hex);
-    b.innerHTML='<span class="photo-swatch-chip" style="background:'+row.hex+'"></span><span class="photo-swatch-name">'+escapeHtml(row.label)+'</span><span class="photo-swatch-share">'+escapeHtml(pct||row.hex)+'</span>';
+    b.title=row.hex;
+    b.innerHTML='<span class="sr-only">加入照片顏色 </span><span class="photo-swatch-chip" style="background:'+row.hex+'"></span><span class="photo-swatch-name">'+escapeHtml(row.label)+'</span><span class="photo-swatch-share">'+escapeHtml(pct||row.hex)+'</span>';
     box.appendChild(b);
   });
 }

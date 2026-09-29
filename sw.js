@@ -1,4 +1,4 @@
-const CACHE='color-lab-v26-color-reasoning';
+const CACHE='color-lab-v261-accessibility';
 const ASSETS=['./','./index.html','./manifest.json','./apple-touch-icon.png','./icon-192.png','./icon-512.png','./vendor/poline.umd.js','./vendor/iro.min.js','./vendor/Sortable.min.js','./data/fashion-palettes.js','./data/ig-style-patterns.js'];
 
 self.addEventListener('install',event=>{

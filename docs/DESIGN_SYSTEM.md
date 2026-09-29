@@ -53,6 +53,13 @@ Color Lab 的視覺原則不是「套一套 UI library」，而是把一致性�
 - Recommendation 優先說明方向與取捨，而不是只有來源名稱。
 - Personalization 主要被使用者感覺到，而不是長期佔據畫面。
 
+## Accessible Restraint
+
+- 次要資訊用字級、字重、間距建立層級，不靠低對比或透明度。
+- 小字文字與主要紙面背景至少維持 WCAG AA 對比。
+- 可見文字與 accessible name 必須語意一致；裝飾 glyph 使用 aria-hidden。
+- 不為了「安靜」把資訊淡到難以閱讀。
+
 ## Spacing Tokens
 
 4 / 8 / 12 / 16 / 24 / 32 / 40 / 48 / 64
