@@ -146,9 +146,9 @@ check('contrast identity',approx(A.contrastRatio('#68705E','#68705E'),1,.0001),A
 
 for(const bgHex of edgeHexes){
   const chosen=A.textFor(bgHex);
-  const dark=A.contrastRatio(bgHex,'#242624'),light=A.contrastRatio(bgHex,'#FFFDF9');
+  const dark=A.contrastRatio(bgHex,'#000000'),light=A.contrastRatio(bgHex,'#FFFFFF');
   check('textFor chooses stronger contrast '+bgHex,
-    (chosen==='#242624'||chosen==='#FFFDF9')&&A.contrastRatio(bgHex,chosen)>=Math.max(dark,light)-1e-10,
+    (chosen==='#000000'||chosen==='#FFFFFF')&&A.contrastRatio(bgHex,chosen)>=Math.max(dark,light)-1e-10,
     chosen+' '+dark+' / '+light);
 }
 const midText=A.textFor('#838A7B');
