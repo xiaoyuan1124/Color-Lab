@@ -112,3 +112,13 @@ Therefore:
 - the Service Worker still precaches all required local runtime assets
 - Color 1 remains untouched
 - all-three-user-selected palettes remain untouched
+
+## V2.7 Inspiration Scoring
+
+Color Lab now separates the quality floor from inspiration value.
+
+The normal quality engine still protects role order, gamut and minimum usable structure contrast. Inspiration ranking then adds surprise, cross-route diversity, relation distance and an archetype novelty prior.
+
+Recommendation lanes are editorial, atmospheric, fashion, expressive and unexpected. The selector tries to return different lanes before filling extra slots, so the five visible cards cannot all come from the same safe visual neighborhood.
+
+For inspiration candidates, inspirationRefineGenerated() intentionally does not pull generated hue toward the base color. It only applies gamut mapping and a minimum structure contrast guard.

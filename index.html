@@ -2090,7 +2090,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.6.3</div>
+    <div class="version">V2.7</div>
   </div>
 
   <main class="app-main">
@@ -2240,9 +2240,9 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
       <section class="section app-section">
         <div class="section-head">
           <div>
-            <div class="eyebrow">VARIATIONS</div>
-            <h2>不同氣氛</h2>
-            <div class="section-desc">同一組起點可以走向不同方向</div>
+            <div class="eyebrow">INSPIRATION ROUTES</div>
+            <h2>五條不同路線</h2>
+            <div class="section-desc">不是同一組微調，刻意拉開色相、明暗與彩度關係</div>
           </div>
         </div>
         <div class="ideas-wrap"><div class="ideas" id="ideas"></div></div>
@@ -2355,7 +2355,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.6.3</div>
+  <div class="footer app-footer">Color Lab V2.7</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2450,6 +2450,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <script src="./vendor/poline.umd.js"></script>
 <script src="./data/fashion-palettes.js"></script>
 <script src="./data/ig-style-patterns.js"></script>
+<script src="./data/inspiration-atlas.js"></script>
 <script>
 const MODES={
   quiet:{label:'安靜',baseL:.93,structureL:.27,accentShift:22,sat:.26},
@@ -2894,7 +2895,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.6.3',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.7',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -3582,6 +3583,84 @@ function fashionReferenceCombos(inputs){
     .slice(0,14);
 }
 
+function inspirationAtlas(){
+  return Array.isArray(window.INSPIRATION_ATLAS)?window.INSPIRATION_ATLAS:[];
+}
+function inspirationRefineGenerated(colors,preserveCount=1){
+  const out=colors.map(x=>String(x).toUpperCase());
+  for(let i=preserveCount;i<3;i++){
+    const o=toOKLCH(out[i]);
+    out[i]=gamutMapOKLCH(clamp(o.l,.08,.94),clamp(o.c,.01,.32),o.h);
+  }
+  if(preserveCount<=1&&contrastRatio(out[0],out[1])<2.15){
+    out[1]=ensureStructureContrast(out[0],out[1],2.15);
+  }
+  return out;
+}
+function paletteSurpriseScore(colors){
+  if(!Array.isArray(colors)||colors.length<3||colors.some(x=>!x))return 0;
+  const p=colors.map(toOKLCH);
+  const huePairs=[hueDistance(p[0].h,p[1].h),hueDistance(p[0].h,p[2].h),hueDistance(p[1].h,p[2].h)].sort((a,b)=>b-a);
+  const hueSpread=clamp((huePairs[0]-28)/145,0,1);
+  const chromas=p.map(x=>x.c),lights=p.map(x=>x.l);
+  const chromaRange=Math.max(...chromas)-Math.min(...chromas);
+  const lightRange=Math.max(...lights)-Math.min(...lights);
+  const accentLift=p[2].c/((p[0].c+p[1].c)/2+.03);
+  const asymmetric=clamp(Math.abs(huePairs[0]-huePairs[1])/110,0,1);
+  return clamp(hueSpread*.35+clamp(chromaRange/.18,0,1)*.18+clamp(lightRange/.52,0,1)*.18+clamp((accentLift-.75)/1.45,0,1)*.17+asymmetric*.12,0,1);
+}
+function archetypeExpected(archetype,seedHex){
+  const sample=archetype?.sample;
+  if(!Array.isArray(sample)||sample.length<3)return null;
+  return [seedHex,transferFashionColor(seedHex,sample[0],sample[1]),transferFashionColor(seedHex,sample[0],sample[2])];
+}
+function archetypeCombos(inputs){
+  const atlas=inspirationAtlas();
+  if(!atlas.length||!inputs.length||inputs.length>=3)return[];
+  const rows=[];
+  for(const archetype of atlas){
+    const expected=archetypeExpected(archetype,inputs[0]);if(!expected)continue;
+    let colors,compatibility=1;
+    if(inputs.length===1){
+      colors=inspirationRefineGenerated(expected,1);
+    }else{
+      colors=inspirationRefineGenerated([inputs[0],inputs[1],expected[2]],2);
+      const d=fashionSupportDistance(inputs[0],inputs[1],{colors:archetype.sample});
+      compatibility=Math.max(.15,1-Math.min(1,d/1.85));
+    }
+    const surprise=paletteSurpriseScore(colors);
+    const quality=orderedPaletteScore(colors);
+    rows.push({
+      colors,palette:orderedPalette(colors),
+      added:inputs.length===1?[colors[1],colors[2]]:[colors[2]],
+      score:quality*.42+surprise*2.05+(archetype.novelty||.7)*.8+compatibility*.35,
+      surprise,
+      meta:{label:archetype.label,sub:archetype.note,lane:archetype.lane||'editorial',novelty:archetype.novelty||.7,source:'atlas'}
+    });
+  }
+  return rows.sort((a,b)=>b.score-a.score);
+}
+function igLane(pattern){
+  const id=pattern?.id||'';
+  if(/dopamine|three|complement|wheel|festival/.test(id))return'expressive';
+  if(/mono|tonal|earth|soft|warm/.test(id))return'atmospheric';
+  return'editorial';
+}
+function recommendationLane(item){return item?.meta?.lane||'editorial'}
+function inspirationUtility(item,out=[]){
+  const paletteColors=[item.palette.base,item.palette.structure,item.palette.accent];
+  const surprise=Number.isFinite(item.surprise)?item.surprise:paletteSurpriseScore(paletteColors);
+  const diversity=out.length?Math.min(...out.map(x=>recommendationDistance(item,x))):1;
+  const novelty=Number(item.meta?.novelty)||0;
+  const repeatedLabel=out.some(x=>x.meta?.label===item.meta?.label);
+  return item.score*.32+surprise*2.15+diversity*1.55+novelty*.55-(repeatedLabel?.4:0);
+}
+function inspirationVariations(original,limit=6){
+  const seed=original?.[0];if(!seed)return[];
+  const baseVector=relationVector(original);
+  const candidates=archetypeCombos([seed]).map(x=>({...x,score:x.score+relationVectorDistance(baseVector,relationVector(x.colors))*.2}));
+  return selectDiverseRecommendations(candidates,limit);
+}
 function applyStyleDelta(seedHex,delta){
   const seed=toOKLCH(seedHex);
   return fromOKLCH(
@@ -3707,18 +3786,22 @@ function classifyCandidate(hex,inputs){
   const o=toOKLCH(hex),ds=inputs.map(i=>perceptualDistance(i,hex));
   const hueAvg=inputs.map(i=>toOKLCH(i).h);
   const h0=hueAvg[0]??0,dh=hueDistance(o.h,h0);
-  if(o.c<.055&&o.l>.78)return{label:'柔和',sub:'低彩度 留白感'};
-  if(dh>145&&dh<215)return{label:'對比',sub:'拉開色相距離'};
-  if(ds.every(d=>d>.20))return{label:'意外',sub:'較跳脫但仍可成立'};
-  if(o.l<.38)return{label:'結構',sub:'適合建立深色重量'};
-  return{label:'平衡',sub:'整體關係穩定'};
+  if(o.c<.055&&o.l>.78)return{label:'柔和',sub:'低彩度 留白感',lane:'atmospheric',novelty:.35};
+  if(dh>145&&dh<215)return{label:'對比',sub:'拉開色相距離',lane:'expressive',novelty:.72};
+  if(ds.every(d=>d>.20))return{label:'意外',sub:'較跳脫但仍可成立',lane:'unexpected',novelty:.88};
+  if(o.l<.38)return{label:'結構',sub:'適合建立深色重量',lane:'editorial',novelty:.48};
+  return{label:'平衡',sub:'整體關係穩定',lane:'editorial',novelty:.3};
 }
+
 function recommendationDistance(a,b){
-  const d1=perceptualDistance(a.palette.structure,b.palette.structure);
-  const d2=perceptualDistance(a.palette.accent,b.palette.accent);
-  const h1=hueDistance(toOKLCH(a.palette.accent).h,toOKLCH(b.palette.accent).h)/180;
-  return clamp(d1*.9+d2*1.15+h1*.08,0,1);
+  const av=relationVector([a.palette.base,a.palette.structure,a.palette.accent]);
+  const bv=relationVector([b.palette.base,b.palette.structure,b.palette.accent]);
+  const relation=clamp(relationVectorDistance(av,bv)/4.2,0,1);
+  const structure=perceptualDistance(a.palette.structure,b.palette.structure);
+  const accent=perceptualDistance(a.palette.accent,b.palette.accent);
+  return clamp(relation*.62+structure*.55+accent*.72,0,1);
 }
+
 function selectDiverseRecommendations(candidates,limit=5){
   const unique=[],signatures=new Set();
   for(const item of candidates){
@@ -3727,43 +3810,54 @@ function selectDiverseRecommendations(candidates,limit=5){
     signatures.add(signature);unique.push(item);
   }
   const remaining=[...unique],out=[];
-  while(remaining.length&&out.length<limit){
-    let bestIndex=0,bestUtility=-Infinity;
-    for(let i=0;i<remaining.length;i++){
-      const item=remaining[i];
-      const diversity=out.length?Math.min(...out.map(x=>recommendationDistance(item,x))):1;
-      const repeatedLabel=out.some(x=>x.meta.label===item.meta.label);
-      const utility=item.score+diversity*.72-(repeatedLabel ? .18 : 0);
-      if(utility>bestUtility){bestUtility=utility;bestIndex=i}
+  const lanes=['editorial','atmospheric','fashion','expressive','unexpected'];
+  const takeBest=pool=>{
+    let best=null,bestUtility=-Infinity;
+    for(const item of pool){
+      const utility=inspirationUtility(item,out);
+      if(utility>bestUtility){best=item;bestUtility=utility}
     }
-    out.push(remaining.splice(bestIndex,1)[0]);
+    if(!best)return false;
+    out.push(best);
+    const index=remaining.indexOf(best);if(index>=0)remaining.splice(index,1);
+    return true;
+  };
+  for(const lane of lanes){
+    if(out.length>=limit)break;
+    const pool=remaining.filter(x=>recommendationLane(x)===lane);
+    if(pool.length)takeBest(pool);
   }
+  while(remaining.length&&out.length<limit)takeBest(remaining);
   return out;
 }
+
 function recommendationCombos(){
   const inputs=chosenColors();
   if(inputs.length>=3)return[];
-  const cacheKey=[...inputs,mode,(window.FASHION_PALETTES||[]).length,(window.IG_STYLE_PATTERNS||[]).length].join('|');
+  const cacheKey=[...inputs,mode,(window.FASHION_PALETTES||[]).length,(window.IG_STYLE_PATTERNS||[]).length,(window.INSPIRATION_ATLAS||[]).length].join('|');
   if(cacheKey===recommendationCacheKey&&recommendationCacheValue.length)return recommendationCacheValue;
 
   const pool=intelligentPool(inputs,mode);
   const candidates=[
+    ...archetypeCombos(inputs),
     ...fashionReferenceCombos(inputs).map(x=>{
-      const refined=qualityRefineGenerated(x.colors,inputs.length);
+      const refined=inspirationRefineGenerated(x.colors,inputs.length),surprise=paletteSurpriseScore(refined);
       return{
         added:inputs.length===1?[refined[1],refined[2]]:[refined[2]],
         palette:orderedPalette(refined),
-        score:orderedPaletteScore(refined)+x.score*.22,
-        meta:{label:'時裝關係',sub:'品牌關係 · Cohesion 修正'}
+        score:orderedPaletteScore(refined)*.48+x.score*.18+surprise*1.35,
+        surprise,
+        meta:{label:'時裝關係',sub:'Fashion reference · 保留原始張力',lane:'fashion',novelty:.62}
       };
     }),
     ...igStyleCombos(inputs).map(x=>{
-      const refined=qualityRefineGenerated(x.colors,inputs.length);
+      const refined=inspirationRefineGenerated(x.colors,inputs.length),surprise=paletteSurpriseScore(refined),lane=igLane(x.pattern);
       return{
         added:inputs.length===1?[refined[1],refined[2]]:[refined[2]],
         palette:orderedPalette(refined),
-        score:orderedPaletteScore(refined)+x.score*.22,
-        meta:{label:x.pattern.label,sub:'IG 實穿 · Cohesion 修正'}
+        score:orderedPaletteScore(refined)*.48+x.score*.18+surprise*1.4,
+        surprise,
+        meta:{label:x.pattern.label,sub:'Styling pattern · 保留色相距離',lane,novelty:lane==='expressive'?.78:.5}
       };
     })
   ];
@@ -3771,13 +3865,14 @@ function recommendationCombos(){
   if(inputs.length===2){
     for(const x of pool){
       const trio=qualityRefineGenerated([inputs[0],inputs[1],x],2);
-      candidates.push({added:[trio[2]],palette:orderedPalette(trio),score:trioScore(trio),meta:classifyCandidate(trio[2],inputs)});
+      const meta=classifyCandidate(trio[2],inputs),surprise=paletteSurpriseScore(trio);
+      candidates.push({added:[trio[2]],palette:orderedPalette(trio),score:trioScore(trio)*.42+surprise*1.25,surprise,meta});
     }
   }else{
     for(let i=0;i<pool.length;i++){
       for(let j=i+1;j<Math.min(pool.length,i+16);j++){
-        const trio=qualityRefineGenerated([inputs[0],pool[i],pool[j]],1);
-        candidates.push({added:[trio[1],trio[2]],palette:orderedPalette(trio),score:trioScore(trio),meta:{label:'完整組合',sub:'從單色延伸 · Cohesion 修正'}});
+        const trio=qualityRefineGenerated([inputs[0],pool[i],pool[j]],1),surprise=paletteSurpriseScore(trio);
+        candidates.push({added:[trio[1],trio[2]],palette:orderedPalette(trio),score:trioScore(trio)*.4+surprise*1.3,surprise,meta:{label:'生成關係',sub:'從單色延伸',lane:surprise>.72?'unexpected':'editorial',novelty:surprise}});
       }
     }
   }
@@ -3787,6 +3882,7 @@ function recommendationCombos(){
   recommendationCacheValue=out;
   return out;
 }
+
 function applyRecommendation(index){
   const recs=recommendationCombos(),r=recs[index];if(!r)return;
   const empties=selectedColors.map((v,i)=>v?null:i).filter(v=>v!==null);
@@ -3802,13 +3898,18 @@ function recommendationDirection(paletteLike,meta={}){
   const avgC=(b.c+s.c)/2;
   const structureContrast=contrastRatio(colors[0],colors[1]);
   const accentHue=Math.min(hueDistance(b.h,a.h),hueDistance(s.h,a.h));
-  if(meta.label==='時裝關係')return{label:'更時裝',reason:'借用品牌常見的角色關係，再保留你的主體色'};
+  if(meta.lane==='unexpected')return{label:'更意外',reason:'刻意跨出熟悉色相區域，但仍由 75 / 18 / 7 維持秩序'};
+  if(meta.lane==='expressive')return{label:'更有張力',reason:'保留較大的色相或彩度差，避免被安全分數磨平'};
+  if(meta.lane==='atmospheric')return{label:'更有空氣',reason:'把戲劇感放在材質、明暗與溫度，而不是全靠高彩度'};
+  if(meta.lane==='fashion'||meta.label==='時裝關係')return{label:'更時裝',reason:'借用時裝常見角色關係，同時保留你的主體色'};
+  if(meta.lane==='editorial')return{label:'更編輯',reason:'讓結構色與焦點色扮演更清楚的不同角色'};
   if(avgC<.065&&a.c<.13)return{label:'更安靜',reason:'降低整體彩度，讓層級主要由明暗建立'};
   if(structureContrast>=5.2)return{label:'更銳利',reason:'拉開主體與結構的明暗，閱讀層級更直接'};
   if(a.c>Math.max(.13,avgC*1.45))return{label:'更有焦點',reason:'把較高彩度留給 7% Accent，注意力更集中'};
   if(accentHue>=95)return{label:'更有張力',reason:'Accent 與主體色相距離拉開，但仍維持 75 / 18 / 7'};
   return{label:'更平衡',reason:'保留三色差異，同時控制明暗與色相不要互相搶戲'};
 }
+
 function renderRecommendations(){
   const box=$('#recommendations');if(!box)return;
   const inputs=chosenColors();
@@ -3819,7 +3920,7 @@ function renderRecommendations(){
     return;
   }
   $('#intelHeading').textContent=inputs.length===2?'推薦第三色':'推薦完整三色';
-  $('#intelDescription').textContent=preferenceIsMature()?'Fashion × IG × Cohesion × 本機偏好':'Fashion × IG × Cohesion × 色域保護';
+  $('#intelDescription').textContent=preferenceIsMature()?'Atlas × Fashion × IG × Novelty × 本機偏好':'Atlas × Fashion × IG × Novelty × 色域保護';
   const recs=recommendationCombos();
   box.innerHTML='';
   recs.forEach((r,i)=>{
@@ -4161,25 +4262,41 @@ function scheduleSecondaryRender(){
 
 function renderIdeas(){
   const box=$('#ideas');box.innerHTML='';
-  if(chosenColors().length===3){
-    const original=[...chosenColors()];
-    const cards=[{key:'original',label:'原始組合',colors:original}];
-    ['quiet','warm','cool','luxe','natural','bold'].forEach(key=>cards.push({key,label:MODES[key].label,colors:trioVariation(original,key)}));
+  const inputs=chosenColors();
+  if(!inputs.length)return;
+  if(inputs.length===3){
+    const original=[...inputs];
+    const cards=[
+      {key:'original',label:'原始組合',colors:original,meta:{sub:'你目前的三色'}},
+      ...inspirationVariations(original,6).map((x,i)=>({key:'atlas-'+i,label:x.meta.label,colors:[x.palette.base,x.palette.structure,x.palette.accent],meta:{sub:x.meta.sub,lane:x.meta.lane}}))
+    ];
     cards.forEach((item,idx)=>{
       const p=orderedPalette(item.colors),btn=document.createElement('button');btn.className='idea';btn.type='button';
-      btn.innerHTML=`<div class="idea-top"><i style="background:${p.base}"></i><i style="background:${p.structure}"></i><i style="background:${p.accent}"></i></div><div class="idea-name">${item.label}</div><div class="idea-meta">${item.colors.join(' · ')}</div>`;
-      if(idx>0)btn.onclick=()=>{selectedColors=item.colors.map((hex,i)=>lockedSlots[i]?original[i]:hex);activeSlot=0;seed=selectedColors[0];syncEditor();generate(false);learnPalettePreference(orderedPalette(selectedColors),.2);pushHistory();switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'});toast('已套用 '+item.label)};
+      const lane=item.meta?.lane?'<span class="rec-direction">'+item.meta.lane.toUpperCase()+'</span>':'';
+      btn.innerHTML='<div class="idea-top"><i style="background:'+p.base+'"></i><i style="background:'+p.structure+'"></i><i style="background:'+p.accent+'"></i></div>'+lane+'<div class="idea-name">'+escapeHtml(item.label)+'</div><div class="idea-meta">'+escapeHtml(item.meta?.sub||item.colors.join(' · '))+'</div>';
+      if(idx>0)btn.onclick=()=>{
+        selectedColors=item.colors.map((hex,i)=>lockedSlots[i]?original[i]:hex);
+        activeSlot=0;seed=selectedColors[0];syncEditor();generate(false);learnPalettePreference(orderedPalette(selectedColors),.2);pushHistory();
+        switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'});toast('已套用 '+item.label);
+      };
       box.appendChild(btn);
     });
     return;
   }
-  Object.entries(MODES).forEach(([key,m])=>{
-    const p=completeCombo(chosenColors(),key),btn=document.createElement('button');btn.className='idea';btn.type='button';
-    btn.innerHTML=`<div class="idea-top"><i style="background:${p.base}"></i><i style="background:${p.structure}"></i><i style="background:${p.accent}"></i></div><div class="idea-name">${m.label}</div><div class="idea-meta">${p.base} · ${p.structure} · ${p.accent}</div>`;
-    btn.onclick=()=>{mode=key;palette=p;learnPalettePreference(p,.2);renderModes();render();pushHistory();$('#result').scrollIntoView({behavior:'smooth',block:'start'})};
+  const routes=selectDiverseRecommendations(archetypeCombos(inputs),6);
+  routes.forEach(r=>{
+    const p=r.palette,btn=document.createElement('button');btn.className='idea';btn.type='button';
+    btn.innerHTML='<div class="idea-top"><i style="background:'+p.base+'"></i><i style="background:'+p.structure+'"></i><i style="background:'+p.accent+'"></i></div><span class="rec-direction">'+r.meta.lane.toUpperCase()+'</span><div class="idea-name">'+escapeHtml(r.meta.label)+'</div><div class="idea-meta">'+escapeHtml(r.meta.sub)+'</div>';
+    btn.onclick=()=>{
+      const colors=[p.base,p.structure,p.accent];
+      selectedColors=colors.map((hex,index)=>lockedSlots[index]&&selectedColors[index]?selectedColors[index]:hex);
+      activeSlot=0;seed=selectedColors[0];syncEditor();generate(false);learnPalettePreference(orderedPalette(selectedColors),.2);pushHistory();
+      switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'});toast('已套用 '+r.meta.label);
+    };
     box.appendChild(btn);
-  })
+  });
 }
+
 function renderModes(){}
 function paletteSignature(x){
   const p=x?.palette||x;

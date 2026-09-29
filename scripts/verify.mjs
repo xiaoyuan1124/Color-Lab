@@ -6,6 +6,7 @@ const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
 const fashion=fs.readFileSync('data/fashion-palettes.js','utf8');
 const igStyles=fs.readFileSync('data/ig-style-patterns.js','utf8');
+const inspirationAtlas=fs.readFileSync('data/inspiration-atlas.js','utf8');
 
 const fail=(msg)=>{console.error('FAIL:',msg);process.exitCode=1};
 const pass=(msg)=>console.log('PASS:',msg);
@@ -63,7 +64,7 @@ for(const fn of requiredFunctions){
 }
 pass('core functions present');
 
-const eagerScripts=['./vendor/poline.umd.js','./data/fashion-palettes.js','./data/ig-style-patterns.js'];
+const eagerScripts=['./vendor/poline.umd.js','./data/fashion-palettes.js','./data/ig-style-patterns.js','./data/inspiration-atlas.js'];
 for(const src of eagerScripts){
   if(!html.includes('<script src="'+src+'"></script>')) fail('eager local dependency missing: '+src);
   if(!sw.includes(src)) fail('offline cache missing: '+src);
@@ -77,13 +78,13 @@ for(const src of lazyScripts){
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v263")) fail('service worker cache version is not V2.6.3');
+if(!sw.includes("color-lab-v27")) fail('service worker cache version is not V2.7');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.6.3') fail('package version must be 2.6.3');
+if(pkg.version!=='2.7.0') fail('package version must be 2.7.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.6.3')||!html.includes('<div class="version">V2.6.3</div>')||!html.includes("appVersion:'2.6.3'")) fail('V2.6.3 UI or backup version metadata missing');
-else pass('V2.6.3 version metadata');
+if(!html.includes('Color Lab V2.7')||!html.includes('<div class="version">V2.7</div>')||!html.includes("appVersion:'2.7'")) fail('V2.7 UI or backup version metadata missing');
+else pass('V2.7 version metadata');
 
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
@@ -185,6 +186,27 @@ if(!html.includes('background:transparent;\n  backdrop-filter:none;')||
   fail('V2.6.3 direct-on-color preview labels missing');
 }else pass('V2.6.3 direct-on-color preview labels');
 
+try { new Function(inspirationAtlas); pass('inspiration atlas syntax'); }
+catch(e){ fail('inspiration atlas syntax: '+e.message); }
+const atlasCount=(inspirationAtlas.match(/\{id:/g)||[]).length;
+if(atlasCount<30) fail('inspiration atlas too small: '+atlasCount);
+else pass('inspiration atlas size '+atlasCount);
+
+for(const fn of ['inspirationRefineGenerated','paletteSurpriseScore','archetypeCombos','inspirationUtility','inspirationVariations']){
+  if(!html.includes('function '+fn+'(')) fail('V2.7 inspiration function missing: '+fn);
+}
+if(!html.includes("const lanes=['editorial','atmospheric','fashion','expressive','unexpected']")){
+  fail('V2.7 lane-first diversity missing');
+}else pass('V2.7 lane-first diversity');
+if(!html.includes('...archetypeCombos(inputs)')||!html.includes('inspirationRefineGenerated(x.colors,inputs.length)')){
+  fail('V2.7 relation-first recommendation sources missing');
+}else pass('V2.7 relation-first recommendation sources');
+const v27IdeaStart=html.indexOf('function renderIdeas(){');
+const v27IdeaEnd=html.indexOf('function renderModes()',v27IdeaStart);
+const v27IdeaBlock=v27IdeaStart>=0&&v27IdeaEnd>v27IdeaStart?html.slice(v27IdeaStart,v27IdeaEnd):'';
+if(!v27IdeaBlock.includes('inspirationVariations(original,6)')||v27IdeaBlock.includes('trioVariation(original')){
+  fail('V2.7 inspiration ideas still use micro variations');
+}else pass('V2.7 inspiration ideas use distinct routes');
 if(manifest.display!=='standalone') fail('manifest display must be standalone');
 if(manifest.orientation!=='portrait-primary') fail('manifest orientation must be portrait-primary');
 pass('manifest app mode');
@@ -253,7 +275,7 @@ for(const fn of ['fashionAffinity','fashionTransferPool','fashionReferenceCombos
 }
 pass('fashion recommendation functions present');
 
-if(!html.includes("Fashion × IG × Cohesion × 色域保護")) fail('fashion recommendation description missing');
+if(!html.includes("Atlas × Fashion × IG × Novelty × 色域保護")) fail('fashion recommendation description missing');
 else pass('fashion recommendation UI description');
 
 
@@ -269,7 +291,7 @@ for(const fn of ['igPatternAffinity','igStyleTransferPool','igStyleCombos','appl
 }
 pass('IG style recommendation functions present');
 
-if(!html.includes("Fashion × IG × Cohesion × 色域保護")) fail('IG styling recommendation description missing');
+if(!html.includes("Atlas × Fashion × IG × Novelty × 色域保護")) fail('IG styling recommendation description missing');
 else pass('IG styling recommendation UI description');
 
 
@@ -278,7 +300,7 @@ for(const fn of ['gamutMapOKLCH','cohesionPass','qualityRefineGenerated','qualit
 }
 pass('V1.5 quality engine functions present');
 
-if(!html.includes('Fashion × IG × Cohesion × 色域保護')) fail('V1.5 intelligence description missing');
+if(!html.includes('Atlas × Fashion × IG × Novelty × 色域保護')) fail('V1.5 intelligence description missing');
 else pass('V1.5 intelligence description');
 
 if(!html.includes('主體／鮮明／柔和／深色／淺色')) fail('semantic photo swatch UI missing');
@@ -470,7 +492,7 @@ if(!html.includes("personal*.45")||!html.includes("reference,accessibility,perso
   fail('V2.3 personal recommendation dimension missing');
 }else pass('V2.3 personal recommendation dimension');
 
-if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.6.3'")||
+if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.7'")||
    !html.includes("preference:sanitizePreferenceModel(preferenceState)")||
    !html.includes("preferenceEnabled")){
   fail('V2.3 backup v4 personalization payload missing');
@@ -544,7 +566,7 @@ if(!html.includes("return enabled?preferenceAffinityFromModel(model,colors):0;")
   fail('disabled personalization does not force zero affinity');
 }else pass('disabled personalization forces zero affinity');
 
-if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.6.3'")){
+if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.7'")){
   fail('V2.3 personalization setting persistence or backup v4 missing');
 }else pass('V2.3 setting persistence and backup v4');
 
@@ -625,4 +647,4 @@ if(!workflows.includes('group: color-lab-codeql-')||!workflows.includes('cancel-
 }else pass('CodeQL superseded-run concurrency');
 
 if(process.exitCode) process.exit(process.exitCode);
-console.log('Color Lab V2.6.3 verification complete.');
+console.log('Color Lab V2.7 verification complete.');

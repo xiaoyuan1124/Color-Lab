@@ -79,7 +79,7 @@ const functionNames=[
   'isLinearSrgbInGamut','gamutMapOKLCH','hueDistance','signedHueDelta',
   'hueToward','contrastRatio','ensureStructureContrast','cohesionPass','qualityRefineGenerated',
   'qualityMetrics','relationVector','relationVectorDistance',
-  'photoDominanceScore','semanticRolesFromClusters','photoCompositionProfile','photoPaletteFromRoles','recommendationDirection',
+  'photoDominanceScore','semanticRolesFromClusters','photoCompositionProfile','photoPaletteFromRoles','recommendationDirection','paletteSurpriseScore',
   'emptyPreferenceRole','emptyPreferenceRelation','emptyPreferenceModel','sanitizePreferenceRole','sanitizePreferenceRelation','preferenceRelationMetrics','sanitizePreferenceModel',
   'preferenceRoleAffinity','preferenceRelationAffinity','preferenceRoleDescriptor','preferenceSummaryFromModel','preferenceAffinityFromModel','preferenceAffinityForSetting','preferenceModelWithPalette','preferenceHueFamily'
 ];
@@ -156,6 +156,11 @@ check('textFor fixes medium olive contrast regression',
   A.contrastRatio('#838A7B',midText)>=4.5,
   midText+' ratio='+A.contrastRatio('#838A7B',midText));
 
+const quietSurprise=A.paletteSurpriseScore(['#E8E4DC','#CEC8BE','#B6B0A8']);
+const vividSurprise=A.paletteSurpriseScore(['#1F2224','#B7A2D7','#B4D63B']);
+check('surprise score separates quiet and unexpected relationships',
+  vividSurprise>quietSurprise+.18,
+  'quiet='+quietSurprise+' vivid='+vividSurprise);
 const photoTrio=A.photoPaletteFromRoles([
   {label:'主體',hex:'#F3EFE8'},
   {label:'鮮明',hex:'#C8433D'},

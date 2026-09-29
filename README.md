@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.6.3**
+**目前版本：V2.7**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,18 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
 
+## V2.7 Inspiration Engine
+
+V2.7 重寫靈感與推薦邏輯，目標不是再產生更多「安全的相似色」，而是讓不同候選真的代表不同審美路線。
+
+- 新增 data/inspiration-atlas.js：30 組 Color Lab 自建關係原型，橫跨 editorial / atmospheric / fashion / expressive / unexpected
+- Atlas 儲存的是角色關係，不是把固定色票硬套給使用者
+- 新增 surprise score，衡量色相跨度、彩度反差、明暗跨度與 Accent lift
+- 推薦改成 lane-first selection，優先各取一條不同路線，再補足剩餘候選
+- Fashion / IG 在 Inspiration 模式不再經過會把 hue 拉回主色的 cohesion pass，只做色域與最低結構對比保護
+- 完整三色的「不同氣氛」不再使用微小 H/C/L 位移，改為從 Atlas 轉譯真正不同的方向
+- 使用者已選的顏色與 lock 規則仍然保持，不因追求驚艷而偷偷改動
+
 ## Fashion / IG Reference
 
 資料層位於：
@@ -201,7 +213,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v263-contrast-choice`
+目前 cache generation：`color-lab-v27-inspiration-engine`
 
 ## Quality Gates
 
