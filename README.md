@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.5**
+**目前版本：V2.6**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -94,6 +94,17 @@ V2.5 把功能完整度轉換成更清楚的閱讀節奏：
 - 收藏色塊可直接套用；Pinned palette 取得更大的展示比例
 - 新增 Visual Quality Audit Gate，專門防止 Bottom Tab 回歸、永久側欄、無理由 glass 與資訊層級 regression
 
+## V2.6 Color Reasoning
+
+V2.6 把「功能」往「理解與決策」推進：
+
+- 推薦會說明它想把配色帶往更安靜、更銳利、更有焦點、更有張力或更平衡哪個方向
+- 明暗、色相、焦點可以直接點開短篇概念說明，不新增第五個主導航
+- Photo 可以一鍵把主體／結構／焦點三色帶回 Compose
+- Photo 會描述照片三色與目前 Compose 三色是接近、可見差異或方向差異明顯
+- Personalization 詳細偏好改為按需查看，平時只說明它只微調排序、不改三色
+- Lighthouse 日誌開始列出真正失敗的 accessibility audits，後續只針對實際問題修正
+
 ## 照片分析
 
 照片功能支援：
@@ -167,7 +178,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v25-editorial-hierarchy`
+目前 cache generation：`color-lab-v26-color-reasoning`
 
 ## Quality Gates
 

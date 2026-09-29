@@ -24,6 +24,8 @@ check(html.includes('<details class="compose-deep-dive"'),'Compose has progressi
 check(!html.includes('<details class="compose-deep-dive" id="composeDeepDive" open'),'deep analysis is not forced open');
 check(html.includes('YOUR COLOR ARCHIVE'),'Library uses archive framing');
 check(html.includes('saved-palette-open'),'saved palette is a first-class action');
+check(html.includes('class="preference-detail"'),'personalization detail is secondary, not dashboard-like');
+check(html.includes('rec-direction'),'recommendations communicate design direction');
 check(html.includes('height:118px')||html.includes('height:108px'),'saved color preview has visual weight');
 
 check(design.includes('功能存在不代表功能必須同時可見'),'design system records progressive disclosure');

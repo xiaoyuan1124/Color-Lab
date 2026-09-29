@@ -31,3 +31,12 @@ const audits=Object.values(report.audits||{})
   }));
 console.log('Lighthouse top audits');
 for(const a of audits)console.log(JSON.stringify(a));
+
+
+const accessibilityRefs=c.accessibility?.auditRefs||[];
+const accessibilityFailures=accessibilityRefs
+  .map(ref=>report.audits?.[ref.id])
+  .filter(a=>a&&a.score!==1&&a.scoreDisplayMode!=='notApplicable')
+  .map(a=>({id:a.id,title:a.title,score:a.score,displayValue:a.displayValue||''}));
+console.log('Lighthouse accessibility failures');
+for(const a of accessibilityFailures)console.log(JSON.stringify(a));

@@ -2017,13 +2017,67 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
   .saved-item.library-piece.featured .mini3{height:130px}
 }
 
+
+/* V2.6 COLOR REASONING */
+.learn-term{
+  min-height:34px;
+  border:0;
+  background:transparent;
+  color:var(--olive-11);
+  padding:0;
+  font:inherit;
+  font-weight:700;
+  text-align:left;
+  text-decoration:underline;
+  text-decoration-thickness:1px;
+  text-underline-offset:4px;
+  text-decoration-color:rgba(104,112,94,.28);
+}
+.learning-note{
+  margin:18px 0 4px;
+  padding:16px 0 0;
+  border-top:1px solid var(--hairline);
+}
+.learning-note strong{display:block;font-size:13px;color:var(--text-1)}
+.learning-note p{
+  margin:5px 0 0;
+  max-width:36ch;
+  font-size:12px;
+  line-height:1.6;
+  color:var(--text-2);
+}
+.rec-direction{
+  display:block;
+  margin-bottom:4px;
+  font-size:10px;
+  letter-spacing:.12em;
+  color:var(--olive-10);
+  font-weight:700;
+}
+.photo-use-palette{margin-top:10px;min-height:40px}
+.preference-purpose{max-width:34ch}
+.preference-detail{margin-top:7px;color:var(--text-2)}
+.preference-detail>summary{
+  list-style:none;
+  cursor:pointer;
+  width:max-content;
+  max-width:100%;
+  font-size:11px;
+  font-weight:650;
+  color:var(--olive-11);
+}
+.preference-detail>summary::-webkit-details-marker{display:none}
+.preference-detail>summary::after{content:" ＋";font-weight:400}
+.preference-detail[open]>summary::after{content:" −"}
+.preference-detail #preferenceSummary{margin-top:7px;max-width:36ch}
+
 </style>
 </head>
 <body>
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.5</div>
+    <div class="version">V2.6</div>
   </div>
 
   <main class="app-main">
@@ -2092,6 +2146,10 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
             <div class="relationship-explain">
               <div class="micro-head"><span>為什麼這組成立</span><span>依目前三色關係</span></div>
               <div class="explain-grid" id="relationshipExplain"></div>
+              <div class="learning-note" id="learningNote" hidden aria-live="polite">
+                <strong id="learningTitle"></strong>
+                <p id="learningText"></p>
+              </div>
             </div>
 
             <div class="vision-lab">
@@ -2217,6 +2275,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
             <div class="photo-insight" id="photoInsight" hidden>
               <strong id="photoInsightLead"></strong>
               <p id="photoInsightText"></p>
+              <button type="button" class="text-action photo-use-palette" id="photoUsePalette" hidden>使用照片三色 →</button>
             </div>
           </div>
         </div>
@@ -2255,7 +2314,11 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
         <div class="preference-strip" id="preferencePanel">
           <div>
             <strong>本機個人化</strong>
-            <span id="preferenceSummary">尚未建立偏好輪廓</span>
+            <span class="preference-purpose">只用來微調推薦排序，不改動你的三色</span>
+            <details class="preference-detail" id="preferenceDetail">
+              <summary>看看目前學到什麼</summary>
+              <span id="preferenceSummary">尚未建立偏好輪廓</span>
+            </details>
           </div>
           <button type="button" class="utility-btn preference-toggle" id="togglePreference" aria-pressed="true">關閉</button>
         </div>
@@ -2279,7 +2342,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.5</div>
+  <div class="footer app-footer">Color Lab V2.6</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2656,6 +2719,16 @@ function contrastRatio(a,b){
   return (hi+.05)/(lo+.05);
 }
 
+const LEARNING_CONCEPTS={
+  hierarchy:{title:'Hierarchy｜層級',text:'明暗差不是越大越好。它的作用是讓視線知道誰是背景、誰負責結構。75% 與 18% 有足夠差異時，畫面會更容易閱讀。'},
+  hue:{title:'Hue Distance｜色相距離',text:'接近的色相帶來連續感，距離拉開則增加辨識與張力。7% Accent 可以離主體更遠，因為它只負責少量注意力。'},
+  focus:{title:'Focus｜焦點',text:'焦點通常來自彩度、明暗或色相中的一到兩種差異，而不是全部一起拉滿。克制能讓 7% 真正有力量。'}
+};
+function showLearningConcept(key){
+  const note=$('#learningNote'),title=$('#learningTitle'),text=$('#learningText'),item=LEARNING_CONCEPTS[key];
+  if(!note||!title||!text||!item)return;
+  note.hidden=false;title.textContent=item.title;text.textContent=item.text;
+}
 function renderRelationshipExplanation(){
   const host=$('#relationshipExplain');if(!host)return;
   const b=toOKLCH(palette.base),s=toOKLCH(palette.structure),a=toOKLCH(palette.accent);
@@ -2671,9 +2744,9 @@ function renderRelationshipExplanation(){
   const avgC=(b.c+s.c)/2,focusRatio=a.c/(avgC+.015);
   const focusText=focusRatio>1.6?'Accent 彩度明顯較高 很適合只放在 7%':focusRatio>.9?'Accent 彩度與整體平衡 焦點感較克制':'Accent 比主色更安靜 焦點主要來自明暗與色相';
   host.innerHTML=
-    '<div class="explain-card"><b>明暗</b><span>'+structureText+'</span></div>'+
-    '<div class="explain-card"><b>色相</b><span>'+hueText+'</span></div>'+
-    '<div class="explain-card"><b>焦點</b><span>'+focusText+'</span></div>';
+    '<div class="explain-card"><button type="button" class="learn-term" data-learn="hierarchy">明暗 ↗</button><span>'+structureText+'</span></div>'+
+    '<div class="explain-card"><button type="button" class="learn-term" data-learn="hue">色相 ↗</button><span>'+hueText+'</span></div>'+
+    '<div class="explain-card"><button type="button" class="learn-term" data-learn="focus">焦點 ↗</button><span>'+focusText+'</span></div>';
 }
 function renderPaletteHealth(){
   const host=$('#paletteHealth');if(!host)return;
@@ -2805,7 +2878,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.5',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.6',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -3707,6 +3780,19 @@ function applyRecommendation(index){
   learnPalettePreference(r.palette,.25);
   syncEditor();generate(false);pushHistory();switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'});toast('已加入推薦顏色');
 }
+function recommendationDirection(paletteLike,meta={}){
+  const colors=[paletteLike.base,paletteLike.structure,paletteLike.accent];
+  const b=toOKLCH(colors[0]),s=toOKLCH(colors[1]),a=toOKLCH(colors[2]);
+  const avgC=(b.c+s.c)/2;
+  const structureContrast=contrastRatio(colors[0],colors[1]);
+  const accentHue=Math.min(hueDistance(b.h,a.h),hueDistance(s.h,a.h));
+  if(meta.label==='時裝關係')return{label:'更時裝',reason:'借用品牌常見的角色關係，再保留你的主體色'};
+  if(avgC<.065&&a.c<.13)return{label:'更安靜',reason:'降低整體彩度，讓層級主要由明暗建立'};
+  if(structureContrast>=5.2)return{label:'更銳利',reason:'拉開主體與結構的明暗，閱讀層級更直接'};
+  if(a.c>Math.max(.13,avgC*1.45))return{label:'更有焦點',reason:'把較高彩度留給 7% Accent，注意力更集中'};
+  if(accentHue>=95)return{label:'更有張力',reason:'Accent 與主體色相距離拉開，但仍維持 75 / 18 / 7'};
+  return{label:'更平衡',reason:'保留三色差異，同時控制明暗與色相不要互相搶戲'};
+}
 function renderRecommendations(){
   const box=$('#recommendations');if(!box)return;
   const inputs=chosenColors();
@@ -3723,8 +3809,9 @@ function renderRecommendations(){
   recs.forEach((r,i)=>{
     const b=document.createElement('button');b.className='rec-card';b.type='button';b.dataset.rec=i;b.setAttribute('aria-label','加入推薦配色 '+r.meta.label);
     const profile=paletteQualityProfile([r.palette.base,r.palette.structure,r.palette.accent]);
-    const personalHint=preferenceIsMature()&&profile?.personal>=.52?' · 符合本機偏好':'';
-    b.innerHTML=`<div class="rec-palette"><i style="background:${r.palette.base}"></i><i style="background:${r.palette.structure}"></i><i style="background:${r.palette.accent}"></i></div><div class="rec-name">${r.meta.label}</div><div class="rec-sub">${r.meta.sub}${personalHint}</div><div class="rec-actions"><span class="rec-add">加入</span></div>`;
+    const direction=recommendationDirection(r.palette,r.meta);
+    const personalHint=preferenceIsMature()&&profile?.personal>=.52?' · 本機排序微調':'';
+    b.innerHTML=`<div class="rec-palette"><i style="background:${r.palette.base}"></i><i style="background:${r.palette.structure}"></i><i style="background:${r.palette.accent}"></i></div><span class="rec-direction">${direction.label}</span><div class="rec-name">${r.meta.label}</div><div class="rec-sub">${direction.reason} · ${r.meta.sub}${personalHint}</div><div class="rec-actions"><span class="rec-add">加入</span></div>`;
     box.appendChild(b);
   });
 }
@@ -4213,6 +4300,7 @@ function detectPhotoColorCapability(){
 const photoDisplayCapability=detectPhotoColorCapability();
 const photoInput=$('#photoInput'),photoCanvas=$('#photoCanvas'),photoPanel=$('#photoPanel'),pickMarker=$('#pickMarker');
 const photoCtx=photoCanvas.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'});
+let lastPhotoRoles=[];
 const magnifier=$('#magnifier'),magnifierCanvas=$('#magnifierCanvas'),magnifierCtx=magnifierCanvas.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'}),pickReadout=$('#pickReadout');
 let photoObjectURL=null,photoPicking=false,lastPicked=null;
 
@@ -4379,6 +4467,32 @@ function photoCompositionProfile(clusters,roles=[]){
     edgeShare:edgeCandidate?.edgeShare||0
   };
 }
+function photoPaletteFromRoles(roles){
+  if(!Array.isArray(roles)||!roles.length)return null;
+  const pick=label=>roles.find(x=>x.label===label)?.hex||null;
+  const preferred=[pick('主體'),pick('深色')||pick('柔和'),pick('鮮明')||pick('淺色')];
+  const out=[];
+  for(const hex of [...preferred,...roles.map(x=>x.hex)]){
+    const n=normHex(String(hex||''));if(n&&!out.includes(n))out.push(n);
+    if(out.length===3)break;
+  }
+  return out.length===3?out:null;
+}
+function photoCurrentRelationship(photoColors){
+  const current=chosenColors();
+  if(current.length!==3||!photoColors)return'';
+  const distance=current.reduce((sum,hex,i)=>sum+perceptualDistance(hex,photoColors[i]),0)/3;
+  return distance<.10?'與目前三色關係接近':distance<.22?'與目前三色有可見差異':'與目前三色方向差異明顯';
+}
+function usePhotoPalette(){
+  const colors=photoPaletteFromRoles(lastPhotoRoles);
+  if(!colors){toast('照片需要至少三個可區分的顏色');return}
+  selectedColors=[...colors];lockedSlots=[false,false,false];activeSlot=0;seed=colors[0];
+  palette=orderedPalette(colors);currentComboName='';$('#comboName').value='';
+  syncEditor();renderModes();render();pushHistory();switchTab('compose',false);
+  $('#result').scrollIntoView({behavior:'smooth',block:'start'});
+  toast('已把照片三色帶入 Compose');
+}
 function renderPhotoInsight(clusters,roles){
   const host=$('#photoInsight'),lead=$('#photoInsightLead'),text=$('#photoInsightText');
   if(!host||!lead||!text)return;
@@ -4391,7 +4505,10 @@ function renderPhotoInsight(clusters,roles){
   if(profile.edgeHex&&profile.edgeHex!==profile.primaryHex){
     parts.push('邊緣色 '+profile.edgeHex+' 可能是背景');
   }
+  const photoColors=photoPaletteFromRoles(roles),relation=photoCurrentRelationship(photoColors);
+  if(relation)parts.push(relation);
   text.textContent=parts.join(' · ');
+  const use=$('#photoUsePalette');if(use)use.hidden=!photoColors;
 }
 function updatePhotoColorSpaceNote(){
   const note=$('#photoColorSpaceNote');if(!note)return;
@@ -4408,6 +4525,7 @@ function fallbackPhotoPalette(region=null){
 function extractPhotoPalette(region=null){
   const clusters=fallbackPhotoClusters(region);
   const roles=semanticRolesFromClusters(clusters);
+  lastPhotoRoles=roles;
   renderPhotoPalette(roles);
   renderPhotoInsight(clusters,roles);
 }
@@ -4510,6 +4628,7 @@ function updatePhotoPick(clientX,clientY,commit=false){
 $('#comboSlots').addEventListener('keydown',handleSlotKeyboard);
 $('#photoTrigger').onclick=openPhotoPicker;
 $('#photoChange').onclick=openPhotoPicker;
+$('#photoUsePalette').onclick=usePhotoPalette;
 photoInput.addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(file)loadPhoto(file);e.target.value=''});
 
 photoCanvas.addEventListener('pointerdown',e=>{
@@ -4555,6 +4674,7 @@ $('#generate').onclick=()=>generate(true);
 $('#save').onclick=save;
 document.addEventListener('click',e=>{
   const pm=e.target.closest('[data-photo-mode]');if(pm){setPhotoMode(pm.dataset.photoMode);return}
+  const learn=e.target.closest('[data-learn]');if(learn){showLearningConcept(learn.dataset.learn);return}
   const menu=e.target.closest('[data-saved-menu]');if(menu){openSavedActions(+menu.dataset.savedMenu);return}
   const load=e.target.closest('[data-load-saved]');if(load){loadSaved(+load.dataset.loadSaved);return}
   const action=e.target.closest('[data-saved-action]');if(action&&savedActionIndex!==null){

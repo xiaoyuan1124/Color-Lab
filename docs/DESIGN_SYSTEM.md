@@ -46,6 +46,13 @@ Color Lab 的視覺原則不是「套一套 UI library」，而是把一致性�
 - Library 收藏色彩必須比管理工具更有視覺權重
 - Utility / Navigation / Primary Action 必須保持不同視覺語言
 
+## Contextual Learning
+
+- 教學不建立獨立主導航；知識出現在使用者正在做決策的位置。
+- 解釋必須回答「這個關係為什麼成立」，不展示假精準的審美分數。
+- Recommendation 優先說明方向與取捨，而不是只有來源名稱。
+- Personalization 主要被使用者感覺到，而不是長期佔據畫面。
+
 ## Spacing Tokens
 
 4 / 8 / 12 / 16 / 24 / 32 / 40 / 48 / 64
