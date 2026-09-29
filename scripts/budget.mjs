@@ -24,12 +24,14 @@ function pass(label,value,limit){
 }
 
 const sizes=Object.fromEntries(Object.entries(files).map(([k,p])=>[k,size(p)]));
-const eager=sizes.poline+sizes.fashion+sizes.ig+sizes.atlas;
+const eager=sizes.poline+sizes.fashion+sizes.ig;
+const lazyReference=sizes.atlas;
 const lazy=sizes.iro+sizes.sortable;
 const core=Object.values(sizes).reduce((a,b)=>a+b,0);
 
 pass('index.html budget',sizes.index,230*KB);
 pass('eager script budget',eager,80*KB);
+pass('lazy reference budget',lazyReference,24*KB);
 pass('lazy interaction tools budget',lazy,110*KB);
 pass('core runtime budget',core,420*KB);
 
@@ -43,6 +45,7 @@ if(sizes.fashion<4*KB||sizes.ig<2*KB||sizes.atlas<5*KB){
 console.log('Color Lab size budget',{
   index:sizes.index,
   eager,
+  lazyReference,
   lazy,
   core
 });

@@ -64,7 +64,7 @@ for(const fn of requiredFunctions){
 }
 pass('core functions present');
 
-const eagerScripts=['./vendor/poline.umd.js','./data/fashion-palettes.js','./data/ig-style-patterns.js','./data/inspiration-atlas.js'];
+const eagerScripts=['./vendor/poline.umd.js','./data/fashion-palettes.js','./data/ig-style-patterns.js'];
 for(const src of eagerScripts){
   if(!html.includes('<script src="'+src+'"></script>')) fail('eager local dependency missing: '+src);
   if(!sw.includes(src)) fail('offline cache missing: '+src);
@@ -75,16 +75,21 @@ for(const src of lazyScripts){
   if(!html.includes("loadScriptOnce('"+src+"'")) fail('lazy dependency loader missing: '+src);
   if(!sw.includes(src)) fail('offline cache missing for lazy dependency: '+src);
 }
+if(html.includes('<script src="./data/inspiration-atlas.js"></script>')) fail('inspiration atlas regressed to eager runtime');
+else if(!html.includes("loadScriptOnce('./data/inspiration-atlas.js','INSPIRATION_ATLAS')")) fail('inspiration atlas lazy loader missing');
+else if(!sw.includes('./data/inspiration-atlas.js')) fail('offline cache missing for inspiration atlas');
+else pass('inspiration atlas lazy runtime');
+
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v27")) fail('service worker cache version is not V2.7');
+if(!sw.includes("color-lab-v271")) fail('service worker cache version is not V2.7.1');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.7.0') fail('package version must be 2.7.0');
+if(pkg.version!=='2.7.1') fail('package version must be 2.7.1');
 else pass('package version');
-if(!html.includes('Color Lab V2.7')||!html.includes('<div class="version">V2.7</div>')||!html.includes("appVersion:'2.7'")) fail('V2.7 UI or backup version metadata missing');
-else pass('V2.7 version metadata');
+if(!html.includes('Color Lab V2.7.1')||!html.includes('<div class="version">V2.7.1</div>')||!html.includes("appVersion:'2.7.1'")) fail('V2.7.1 UI or backup version metadata missing');
+else pass('V2.7.1 version metadata');
 
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
@@ -492,7 +497,7 @@ if(!html.includes("personal*.45")||!html.includes("reference,accessibility,perso
   fail('V2.3 personal recommendation dimension missing');
 }else pass('V2.3 personal recommendation dimension');
 
-if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.7'")||
+if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.7.1'")||
    !html.includes("preference:sanitizePreferenceModel(preferenceState)")||
    !html.includes("preferenceEnabled")){
   fail('V2.3 backup v4 personalization payload missing');
@@ -566,7 +571,7 @@ if(!html.includes("return enabled?preferenceAffinityFromModel(model,colors):0;")
   fail('disabled personalization does not force zero affinity');
 }else pass('disabled personalization forces zero affinity');
 
-if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.7'")){
+if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.7.1'")){
   fail('V2.3 personalization setting persistence or backup v4 missing');
 }else pass('V2.3 setting persistence and backup v4');
 
@@ -647,4 +652,4 @@ if(!workflows.includes('group: color-lab-codeql-')||!workflows.includes('cancel-
 }else pass('CodeQL superseded-run concurrency');
 
 if(process.exitCode) process.exit(process.exitCode);
-console.log('Color Lab V2.7 verification complete.');
+console.log('Color Lab V2.7.1 verification complete.');
