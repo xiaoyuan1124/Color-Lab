@@ -179,6 +179,12 @@ if(!html.includes("return contrastRatio(bg,dark)>=contrastRatio(bg,light)?dark:l
   fail('V2.6.3 contrast-aware preview text chooser missing');
 }else pass('V2.6.3 contrast-aware preview text chooser');
 
+
+if(!html.includes('background:transparent;\n  backdrop-filter:none;')||
+   html.includes('background:rgba(255,255,255,.18);\n  backdrop-filter:blur(6px)')){
+  fail('V2.6.3 direct-on-color preview labels missing');
+}else pass('V2.6.3 direct-on-color preview labels');
+
 if(manifest.display!=='standalone') fail('manifest display must be standalone');
 if(manifest.orientation!=='portrait-primary') fail('manifest orientation must be portrait-primary');
 pass('manifest app mode');

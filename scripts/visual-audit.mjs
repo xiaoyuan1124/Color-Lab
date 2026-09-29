@@ -20,6 +20,13 @@ check(!!fanBlock,'corner fan style block found');
 check(!fanBlock.includes('backdrop-filter:'),'corner fan avoids decorative blur');
 check(!fanBlock.includes('linear-gradient('),'corner fan avoids decorative gradient');
 
+const previewStart=html.indexOf('/* palette hero */');
+const previewEnd=html.indexOf('/* reduce card-card-card feeling */',previewStart);
+const previewBlock=previewStart>=0&&previewEnd>previewStart?html.slice(previewStart,previewEnd):'';
+check(!!previewBlock,'palette hero style block found');
+check(previewBlock.includes('background:transparent'),'ratio labels sit directly on palette colors');
+check(!previewBlock.includes('backdrop-filter:blur'),'palette hero avoids decorative glass labels');
+
 check(html.includes('<details class="compose-deep-dive"'),'Compose has progressive disclosure');
 check(!html.includes('<details class="compose-deep-dive" id="composeDeepDive" open'),'deep analysis is not forced open');
 check(html.includes('YOUR COLOR ARCHIVE'),'Library uses archive framing');

@@ -132,6 +132,7 @@ Semantic roles:
 ### Palette Preview
 - 顏色本身是主角
 - 只顯示必要比例
+- 比例文字直接落在色塊上，不用 glass pill 改變實際背景色
 - 不疊加大量文字
 
 ### Recommendation Card

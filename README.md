@@ -126,7 +126,7 @@ V2.6 把「功能」往「理解與決策」推進：
 
 Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版用固定 luminance threshold 決定黑／白文字，會在部分中間色選錯。
 
-現在 textFor() 直接計算深色字與淺色字的實際 contrast ratio，永遠選兩者中較高的一個；Torture Gate 也加入中間橄欖色 regression case，以及 Photo role / recommendation direction 基本契約測試。
+現在 textFor() 直接計算深色字與淺色字的實際 contrast ratio，永遠選兩者中較高的一個；75 / 18 / 7 比例文字也直接落在色塊上，不再加半透明 glass pill，讓 contrast 計算與實際背景一致。Torture Gate 也加入中間橄欖色 regression case，以及 Photo role / recommendation direction 基本契約測試。
 
 ## 照片分析
 

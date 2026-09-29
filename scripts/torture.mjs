@@ -9,10 +9,40 @@ if(!scriptMatch){
 }
 const source=scriptMatch[1];
 
+function findFunctionBodyOpen(start){
+  const paramsOpen=source.indexOf('(',start);
+  if(paramsOpen<0)throw new Error('missing parameter list');
+  let depth=0,quote=null,escape=false,lineComment=false,blockComment=false;
+  for(let i=paramsOpen;i<source.length;i++){
+    const ch=source[i],next=source[i+1];
+    if(lineComment){if(ch==='\n')lineComment=false;continue}
+    if(blockComment){if(ch==='*'&&next==='/'){blockComment=false;i++}continue}
+    if(quote){
+      if(escape){escape=false;continue}
+      if(ch==='\\'){escape=true;continue}
+      if(ch===quote)quote=null;
+      continue;
+    }
+    if(ch==='/'&&next==='/'){lineComment=true;i++;continue}
+    if(ch==='/'&&next==='*'){blockComment=true;i++;continue}
+    if(ch==="'"||ch==='"'||ch==='\`'){quote=ch;continue}
+    if(ch==='(')depth++;
+    else if(ch===')'){
+      depth--;
+      if(depth===0){
+        const body=source.indexOf('{',i+1);
+        if(body<0)throw new Error('missing function body');
+        return body;
+      }
+    }
+  }
+  throw new Error('unterminated parameter list');
+}
+
 function extractFunction(name){
   const start=source.indexOf('function '+name+'(');
   if(start<0)throw new Error('missing function '+name);
-  const open=source.indexOf('{',start);
+  const open=findFunctionBodyOpen(start);
   let depth=0,quote=null,escape=false,lineComment=false,blockComment=false;
   for(let i=open;i<source.length;i++){
     const ch=source[i],next=source[i+1];
