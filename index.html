@@ -2090,7 +2090,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.7.1</div>
+    <div class="version">V2.7.2</div>
   </div>
 
   <main class="app-main">
@@ -2355,7 +2355,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.7.1</div>
+  <div class="footer app-footer">Color Lab V2.7.2</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2447,9 +2447,6 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 
 <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true">已複製</div>
 
-<script src="./vendor/poline.umd.js"></script>
-<script src="./data/fashion-palettes.js"></script>
-<script src="./data/ig-style-patterns.js"></script>
 <script>
 const MODES={
   quiet:{label:'安靜',baseL:.93,structureL:.27,accentShift:22,sat:.26},
@@ -2505,9 +2502,19 @@ function loadScriptOnce(src,globalName=''){
   lazyScriptPromises.set(src,promise);
   return promise;
 }
+function ensureRecommendationReferences(){
+  return Promise.all([
+    loadScriptOnce('./vendor/poline.umd.js','poline').catch(()=>null),
+    loadScriptOnce('./data/fashion-palettes.js','FASHION_PALETTES').catch(()=>[]),
+    loadScriptOnce('./data/ig-style-patterns.js','IG_STYLE_PATTERNS').catch(()=>[])
+  ]);
+}
 function ensureInspirationAtlas(){
   if(Array.isArray(window.INSPIRATION_ATLAS))return Promise.resolve(window.INSPIRATION_ATLAS);
   return loadScriptOnce('./data/inspiration-atlas.js','INSPIRATION_ATLAS').catch(()=>[]);
+}
+function ensureInspirationResources(){
+  return Promise.all([ensureRecommendationReferences(),ensureInspirationAtlas()]);
 }
 function boundedCacheSet(map,key,value,max=512){
   if(map.size>=max&&!map.has(key))map.delete(map.keys().next().value);
@@ -2898,7 +2905,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.7.1',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.7.2',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -4234,6 +4241,14 @@ function renderComboSlots(){
 function derive(seed,style=mode){const[h,s,l]=rgbToHsl(...hexToRgb(seed)),m=MODES[style];let baseH=h,baseS=Math.min(.14,Math.max(.04,s*.22)),baseL=m.baseL;if(style==='warm')baseH=h-10;if(style==='cool')baseH=h+8;let structureH=h+(m.structureShift??0),structureS=Math.min(.34,Math.max(.08,s*.48)),structureL=m.structureL??(.24+(l>.62?-.04:.04));let accentH=h+m.accentShift,accentS=Math.min(.78,Math.max(m.sat,s*.78)),accentL=style==='bold'?.52:.48;if(style==='natural'){structureH=h-24;accentH=h+42;structureS=.20;accentS=.38}return{base:hslHex(baseH,baseS,baseL),structure:hslHex(structureH,structureS,structureL),accent:hslHex(accentH,accentS,accentL)}}
 function scorePair(a,b,role){const[ha,sa,la]=rgbToHsl(...hexToRgb(a)),[hb,sb,lb]=rgbToHsl(...hexToRgb(b));let dh=Math.abs(ha-hb);dh=Math.min(dh,360-dh);let score=0;if(role==='structure'){score+=Math.abs(lum(a)-lum(b))*2.2;score+=dh>20&&dh<80?.25:0;score+=sb<.5?.2:0}else{score+=(dh>25&&dh<75?.45:0)+(dh>140?.35:0);score+=sb>.25?.25:0;score+=Math.abs(lum(a)-lum(b))*.7}return score}
 function alternatives(role){const[h,s,l]=rgbToHsl(...hexToRgb(seed)),shifts=role==='accent'?[25,-25,45,-45,150,-150,180,90,-90]:[0,20,-20,35,-35,160];return shifts.map((sh,i)=>{let hh=h+sh,ss=role==='accent'?Math.max(.28,Math.min(.72,s*.85+.08)):Math.max(.10,Math.min(.38,s*.45)),ll=role==='accent'?[.46,.52,.42,.55][i%4]:[.18,.24,.3,.34][i%4],hex=hslHex(hh,ss,ll);return{hex,score:scorePair(seed,hex,role)}}).sort((a,b)=>b.score-a.score).map(x=>x.hex)}
+function fastInitialPalette(){
+  const inputs=chosenColors();
+  if(inputs.length>=3)return orderedPalette(inputs.slice(0,3));
+  if(!inputs.length)return orderedPalette(['#68705E','#2F3430','#C67A4A']);
+  const fallback=derive(inputs[0],mode);
+  if(inputs.length===2)return orderedPalette([inputs[0],inputs[1],fallback.accent]);
+  return orderedPalette([inputs[0],fallback.structure,fallback.accent]);
+}
 function generate(scroll=false){palette=completeCombo(chosenColors(),mode);renderComboSlots();render();if(scroll)$('#result').scrollIntoView({behavior:'smooth',block:'start'})}
 function shuffle(role){if(role==='base'){const[h,s]=rgbToHsl(...hexToRgb(seed)),opts=[.89,.92,.95,.97];palette.base=hslHex(h,Math.min(.16,s*.22),opts[Math.floor(Math.random()*opts.length)])}else{const opts=alternatives(role);palette[role]=opts[Math.floor(Math.random()*Math.min(5,opts.length))]}render()}
 function render(){
@@ -4258,7 +4273,7 @@ function scheduleSecondaryRender(){
       const deep=$('#composeDeepDive');
       if(deep?.open){renderVision();renderContextPreview()}
     }else if(active==='inspire'){
-      ensureInspirationAtlas().then(()=>{if(token===secondaryRenderToken){renderIdeas();renderRecommendations()}});
+      ensureInspirationResources().then(()=>{if(token===secondaryRenderToken){renderIdeas();renderRecommendations()}});
     }
   };
   if('requestIdleCallback'in window)requestIdleCallback(run,{timeout:180});
@@ -4810,7 +4825,12 @@ photoCanvas.addEventListener('pointercancel',()=>{
 
 $('#color').addEventListener('input',e=>{setColorAtActive(e.target.value.toUpperCase())});
 $('#hex').addEventListener('change',e=>{const h=normHex(e.target.value);if(h)setColorAtActive(h);else e.target.value=selectedColors[activeSlot]||seed});
-$('#generate').onclick=()=>generate(true);
+$('#generate').onclick=async()=>{
+  const button=$('#generate'),label=button.textContent;
+  button.disabled=true;button.textContent='準備靈感資料…';
+  try{await ensureRecommendationReferences();generate(true)}
+  finally{button.disabled=false;button.textContent=label}
+};
 $('#save').onclick=save;
 document.addEventListener('click',e=>{
   const pm=e.target.closest('[data-photo-mode]');if(pm){setPhotoMode(pm.dataset.photoMode);return}
@@ -4892,7 +4912,7 @@ function switchTab(name,scrollTop=true){
   if(name==='library')renderSaved();
   if(name==='inspire'){
     renderCompare();
-    ensureInspirationAtlas().then(()=>requestAnimationFrame(()=>{renderIdeas();renderRecommendations()}));
+    ensureInspirationResources().then(()=>requestAnimationFrame(()=>{renderIdeas();renderRecommendations()}));
   }
   if(name==='compose'&&$('#composeDeepDive')?.open)requestAnimationFrame(()=>{renderVision();renderContextPreview()});
   setCornerNavOpen(false);
@@ -4989,7 +5009,7 @@ $('#comboName').addEventListener('input',e=>{currentComboName=e.target.value;per
 $('#composeDeepDive').addEventListener('toggle',e=>{
   if(e.currentTarget.open)requestAnimationFrame(()=>{renderVision();renderContextPreview()});
 });
-renderModes();renderComboSlots();renderRecentColors();generate(false);renderCompare();updateLockToggle();setPhotoMode('point');updatePhotoColorSpaceNote();updateInstallCard();
+renderModes();renderRecentColors();palette=fastInitialPalette();renderComboSlots();render();renderCompare();updateLockToggle();setPhotoMode('point');updatePhotoColorSpaceNote();updateInstallCard();
 historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();persistDraft();
 setCornerNavOpen(false);
 switchTab(localStorage.getItem('colorlab.tab')||'compose',false);updatePhotoTarget();restoreResilienceIfNeeded();

@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.7.1**
+**目前版本：V2.7.2**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,15 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
 
+## V2.7.2 Lazy Intelligence
+
+V2.7.2 把完整推薦引擎從首屏移到真正的使用者意圖：
+- 首屏只用 fastInitialPalette() 建立立即可看的 75 / 18 / 7
+- Poline、Fashion、IG、Inspiration Atlas 全部改為按需載入
+- 進入 Inspire 時一次準備完整 reference stack
+- 主動按「產生」時先載入 reference，再執行完整智慧推薦
+- Service Worker 仍預快取全部本機 reference，離線能力不變
+
 ## V2.7 Inspiration Engine
 
 V2.7 重寫靈感與推薦邏輯，目標不是再產生更多「安全的相似色」，而是讓不同候選真的代表不同審美路線。
@@ -217,7 +226,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v271-lazy-atlas`
+目前 cache generation：`color-lab-v272-lazy-intelligence`
 
 ## Quality Gates
 

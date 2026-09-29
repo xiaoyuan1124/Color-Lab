@@ -64,32 +64,39 @@ for(const fn of requiredFunctions){
 }
 pass('core functions present');
 
-const eagerScripts=['./vendor/poline.umd.js','./data/fashion-palettes.js','./data/ig-style-patterns.js'];
-for(const src of eagerScripts){
-  if(!html.includes('<script src="'+src+'"></script>')) fail('eager local dependency missing: '+src);
-  if(!sw.includes(src)) fail('offline cache missing: '+src);
-}
-const lazyScripts=['./vendor/iro.min.js','./vendor/Sortable.min.js'];
-for(const src of lazyScripts){
+const lazyScripts=[
+  ['./vendor/iro.min.js','iro'],
+  ['./vendor/Sortable.min.js','Sortable'],
+  ['./vendor/poline.umd.js','poline'],
+  ['./data/fashion-palettes.js','FASHION_PALETTES'],
+  ['./data/ig-style-patterns.js','IG_STYLE_PATTERNS'],
+  ['./data/inspiration-atlas.js','INSPIRATION_ATLAS']
+];
+for(const [src] of lazyScripts){
   if(html.includes('<script src="'+src+'"></script>')) fail('lazy dependency regressed to eager script: '+src);
   if(!html.includes("loadScriptOnce('"+src+"'")) fail('lazy dependency loader missing: '+src);
   if(!sw.includes(src)) fail('offline cache missing for lazy dependency: '+src);
 }
-if(html.includes('<script src="./data/inspiration-atlas.js"></script>')) fail('inspiration atlas regressed to eager runtime');
-else if(!html.includes("loadScriptOnce('./data/inspiration-atlas.js','INSPIRATION_ATLAS')")) fail('inspiration atlas lazy loader missing');
-else if(!sw.includes('./data/inspiration-atlas.js')) fail('offline cache missing for inspiration atlas');
-else pass('inspiration atlas lazy runtime');
+if(!html.includes('function ensureRecommendationReferences(')||
+   !html.includes('function ensureInspirationResources(')){
+  fail('V2.7.2 lazy intelligence orchestration missing');
+}else pass('V2.7.2 lazy intelligence orchestration');
+
+if(!html.includes('function fastInitialPalette(')||
+   html.includes('renderModes();renderComboSlots();renderRecentColors();generate(false);')){
+  fail('V2.7.2 fast startup path missing');
+}else pass('V2.7.2 fast startup path');
 
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v271")) fail('service worker cache version is not V2.7.1');
+if(!sw.includes("color-lab-v272")) fail('service worker cache version is not V2.7.2');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.7.1') fail('package version must be 2.7.1');
+if(pkg.version!=='2.7.2') fail('package version must be 2.7.2');
 else pass('package version');
-if(!html.includes('Color Lab V2.7.1')||!html.includes('<div class="version">V2.7.1</div>')||!html.includes("appVersion:'2.7.1'")) fail('V2.7.1 UI or backup version metadata missing');
-else pass('V2.7.1 version metadata');
+if(!html.includes('Color Lab V2.7.2')||!html.includes('<div class="version">V2.7.2</div>')||!html.includes("appVersion:'2.7.2'")) fail('V2.7.2 UI or backup version metadata missing');
+else pass('V2.7.2 version metadata');
 
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
@@ -318,8 +325,9 @@ if(!html.includes("if(chosen.length===3)return orderedPalette(chosen);")){
 const recommendStart=html.indexOf('function recommendationCombos(){');
 const recommendEnd=html.indexOf('function applyRecommendation',recommendStart);
 const recommendBlock=recommendStart>=0&&recommendEnd>recommendStart?html.slice(recommendStart,recommendEnd):'';
-if(!recommendBlock.includes('qualityRefineGenerated')) fail('recommendations bypass quality refinement');
-else pass('recommendations use quality refinement');
+if(!recommendBlock.includes('inspirationRefineGenerated')||!recommendBlock.includes('qualityRefineGenerated')){
+  fail('recommendations missing inspiration or safety refinement paths');
+}else pass('recommendations use inspiration and safety refinement paths');
 
 if(!html.includes("added:inputs.length===1?[refined[1],refined[2]]:[refined[2]]")){
   fail('refined recommendation colors are not applied');
@@ -497,7 +505,7 @@ if(!html.includes("personal*.45")||!html.includes("reference,accessibility,perso
   fail('V2.3 personal recommendation dimension missing');
 }else pass('V2.3 personal recommendation dimension');
 
-if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.7.1'")||
+if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.7.2'")||
    !html.includes("preference:sanitizePreferenceModel(preferenceState)")||
    !html.includes("preferenceEnabled")){
   fail('V2.3 backup v4 personalization payload missing');
@@ -571,7 +579,7 @@ if(!html.includes("return enabled?preferenceAffinityFromModel(model,colors):0;")
   fail('disabled personalization does not force zero affinity');
 }else pass('disabled personalization forces zero affinity');
 
-if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.7.1'")){
+if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.7.2'")){
   fail('V2.3 personalization setting persistence or backup v4 missing');
 }else pass('V2.3 setting persistence and backup v4');
 
@@ -652,4 +660,4 @@ if(!workflows.includes('group: color-lab-codeql-')||!workflows.includes('cancel-
 }else pass('CodeQL superseded-run concurrency');
 
 if(process.exitCode) process.exit(process.exitCode);
-console.log('Color Lab V2.7.1 verification complete.');
+console.log('Color Lab V2.7.2 verification complete.');
