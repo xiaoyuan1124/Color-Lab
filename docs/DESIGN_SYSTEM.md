@@ -28,6 +28,24 @@ Color Lab 的視覺原則不是「套一套 UI library」，而是把一致性�
 - Utility 優先使用文字、hairline 與留白；只有真正需要邊界時才使用框。
 - 不為了「像 App」而保留 Bottom Tab Bar；導航形式必須服務內容與操作情境。
 
+## Progressive Disclosure
+
+- 第一層只放完成當前任務所需的資訊；解釋、模擬、比較等深度工具按需展開。
+- 功能存在不代表功能必須同時可見。
+- Color Lab 的第一屏優先回答「我現在在做什麼」，第二層才回答「為什麼」。
+- 收藏區優先像作品檔案館，而不是資料表或 CRUD list。
+
+## Visual Quality Gate
+
+每次 release 除了程式測試，也檢查：
+
+- 不得重新出現固定 Bottom Tab Bar 或永久側欄
+- Navigation 不可長時間遮住主要閱讀內容
+- Corner navigation 不使用 blur / glass 作為裝飾理由
+- 深度分析不得再次全部平鋪在 Compose 第一層
+- Library 收藏色彩必須比管理工具更有視覺權重
+- Utility / Navigation / Primary Action 必須保持不同視覺語言
+
 ## Spacing Tokens
 
 4 / 8 / 12 / 16 / 24 / 32 / 40 / 48 / 64

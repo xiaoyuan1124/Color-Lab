@@ -31,6 +31,8 @@ jobs:
         run: npm run test:budget
       - name: Verify Color Lab
         run: npm run test:verify
+      - name: Visual quality audit
+        run: npm run test:visual
       - name: Torture test color engine
         run: npm run test:torture
       - name: Property test color engine

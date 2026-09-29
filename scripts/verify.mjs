@@ -77,13 +77,13 @@ for(const src of lazyScripts){
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v241")) fail('service worker cache version is not V2.4.1');
+if(!sw.includes("color-lab-v25")) fail('service worker cache version is not V2.5');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.4.1') fail('package version must be 2.4.1');
+if(pkg.version!=='2.5.0') fail('package version must be 2.5.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.4.1')||!html.includes('<div class="version">V2.4.1</div>')||!html.includes("appVersion:'2.4.1'")) fail('V2.4.1 UI or backup version metadata missing');
-else pass('V2.4.1 version metadata');
+if(!html.includes('Color Lab V2.5')||!html.includes('<div class="version">V2.5</div>')||!html.includes("appVersion:'2.5'")) fail('V2.5 UI or backup version metadata missing');
+else pass('V2.5 version metadata');
 
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
@@ -119,6 +119,27 @@ if(!html.includes('.library-tools .utility-btn{')||
    !html.includes('border-bottom:1px solid var(--hairline)')){
   fail('V2.4.1 library de-framing missing');
 }else pass('V2.4.1 library utilities de-framed');
+
+
+if(!html.includes('class="compose-deep-dive"')||
+   !html.includes('<details class="compose-deep-dive"')||
+   html.includes('<details class="compose-deep-dive" id="composeDeepDive" open')){
+  fail('V2.5 Compose progressive disclosure missing');
+}else pass('V2.5 Compose progressive disclosure');
+
+if(!html.includes('saved-item library-piece')||
+   !html.includes('data-load-saved=')||
+   !html.includes('YOUR COLOR ARCHIVE')){
+  fail('V2.5 Library editorial archive missing');
+}else pass('V2.5 Library editorial archive');
+
+if(!html.includes("root.classList.add('nav-scrolling')")||
+   !html.includes("setTimeout(()=>root.classList.remove('nav-scrolling'),180)")){
+  fail('V2.5 Corner Fan scroll retreat missing');
+}else pass('V2.5 Corner Fan scroll retreat');
+
+if(!fs.existsSync('scripts/visual-audit.mjs')) fail('V2.5 visual audit script missing');
+else pass('V2.5 visual audit script present');
 
 
 if(manifest.display!=='standalone') fail('manifest display must be standalone');
@@ -406,7 +427,7 @@ if(!html.includes("personal*.45")||!html.includes("reference,accessibility,perso
   fail('V2.3 personal recommendation dimension missing');
 }else pass('V2.3 personal recommendation dimension');
 
-if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.4.1'")||
+if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.5'")||
    !html.includes("preference:sanitizePreferenceModel(preferenceState)")||
    !html.includes("preferenceEnabled")){
   fail('V2.3 backup v4 personalization payload missing');
@@ -480,7 +501,7 @@ if(!html.includes("return enabled?preferenceAffinityFromModel(model,colors):0;")
   fail('disabled personalization does not force zero affinity');
 }else pass('disabled personalization forces zero affinity');
 
-if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.4.1'")){
+if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.5'")){
   fail('V2.3 personalization setting persistence or backup v4 missing');
 }else pass('V2.3 setting persistence and backup v4');
 
@@ -559,4 +580,4 @@ if(!workflows.includes('group: color-lab-codeql-')||!workflows.includes('cancel-
 }else pass('CodeQL superseded-run concurrency');
 
 if(process.exitCode) process.exit(process.exitCode);
-console.log('Color Lab V2.4.1 verification complete.');
+console.log('Color Lab V2.5 verification complete.');

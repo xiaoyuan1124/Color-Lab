@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.4.1**
+**目前版本：V2.5**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -82,6 +82,18 @@ V2.4.1 把 V2.4 的右側常駐 Edge Rail 收斂成右下角按需出現的 Corn
 
 核心原則是：**Navigation appears on demand, not as permanent chrome.**
 
+## V2.5 Editorial Hierarchy
+
+V2.5 把功能完整度轉換成更清楚的閱讀節奏：
+
+- Corner Fan 在捲動時自動退到右側並降低存在感，停止捲動後再回來
+- Compose 第一層只保留選色、75/18/7、主要預覽與角色關係
+- 明暗／色相解釋、色覺模擬與 App / Brand / Room / Outfit / Slides 收進「深入理解」
+- 深度能力沒有刪除，只在使用者需要時展開
+- Library 從 list cell 改為較大的個人色彩檔案條目
+- 收藏色塊可直接套用；Pinned palette 取得更大的展示比例
+- 新增 Visual Quality Audit Gate，專門防止 Bottom Tab 回歸、永久側欄、無理由 glass 與資訊層級 regression
+
 ## 照片分析
 
 照片功能支援：
@@ -155,7 +167,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v241-corner-fan`
+目前 cache generation：`color-lab-v25-editorial-hierarchy`
 
 ## Quality Gates
 

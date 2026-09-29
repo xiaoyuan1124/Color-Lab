@@ -1889,13 +1889,141 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
   #nav-library{--tx:-124px;--ty:-16px}
 }
 
+
+/* V2.5 EDITORIAL HIERARCHY */
+.app{padding-bottom:calc(env(safe-area-inset-bottom) + 92px)}
+.corner-nav{
+  width:48px;
+  height:48px;
+  transition:transform .16s ease,opacity .16s ease;
+}
+.corner-nav-toggle{
+  width:48px;min-width:48px;height:48px;min-height:48px;
+  box-shadow:0 6px 18px rgba(36,38,36,.085);
+}
+.corner-nav.nav-scrolling{
+  transform:translateX(30px) scale(.88);
+  opacity:.38;
+  pointer-events:none;
+}
+.corner-fan{width:208px;height:208px}
+#nav-compose{--tx:-2px;--ty:-135px}
+#nav-inspire{--tx:-51px;--ty:-112px}
+#nav-photo{--tx:-95px;--ty:-70px}
+#nav-library{--tx:-121px;--ty:-14px}
+
+.compose-deep-dive{
+  margin:30px 0 10px;
+  border-top:1px solid var(--hairline);
+  border-bottom:1px solid var(--hairline);
+}
+.compose-deep-dive>summary{
+  min-height:68px;
+  list-style:none;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  color:var(--text-1);
+}
+.compose-deep-dive>summary::-webkit-details-marker{display:none}
+.compose-deep-dive>summary span:first-child{display:grid;gap:3px}
+.compose-deep-dive>summary b{font-size:14px;font-weight:680}
+.compose-deep-dive>summary small{
+  font-size:11px;
+  line-height:1.4;
+  font-weight:500;
+  color:var(--text-3);
+}
+.deep-dive-mark{
+  font-size:22px;
+  line-height:1;
+  font-weight:300;
+  color:var(--olive-10);
+  transition:transform .16s ease;
+}
+.compose-deep-dive[open] .deep-dive-mark{transform:rotate(45deg)}
+.deep-dive-body{padding:0 0 28px}
+.deep-dive-body .relationship-explain{padding-top:18px}
+.deep-dive-body .real-preview-wrap{margin-top:26px}
+
+.saved-list{
+  display:grid;
+  gap:34px;
+}
+.saved-item.library-piece{
+  position:relative;
+  display:grid;
+  grid-template-columns:1fr auto;
+  grid-template-areas:
+    "number menu"
+    "palette palette"
+    "info info";
+  gap:10px 14px;
+  padding:0 0 28px;
+  border-bottom:1px solid var(--hairline);
+}
+.saved-item.library-piece:last-child{border-bottom:0}
+.saved-piece-no{
+  grid-area:number;
+  font-size:11px;
+  letter-spacing:.14em;
+  color:var(--text-3);
+  align-self:center;
+}
+.saved-item.library-piece .saved-menu{grid-area:menu;justify-self:end}
+.saved-palette-open{
+  grid-area:palette;
+  width:100%;
+  min-height:0;
+  border:0;
+  background:transparent;
+  padding:0;
+  text-align:left;
+}
+.saved-item.library-piece .mini3{
+  width:100%;
+  height:118px;
+  border-radius:20px;
+  box-shadow:inset 0 0 0 1px rgba(36,38,36,.05);
+}
+.saved-item.library-piece.featured .mini3{height:142px}
+.saved-item.library-piece .saved-info{grid-area:info}
+.saved-item.library-piece .saved-info b{
+  margin-top:2px;
+  font-size:17px;
+  line-height:1.25;
+  font-weight:650;
+}
+.saved-piece-meta{
+  margin-top:5px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  font-size:11px;
+  color:var(--text-3);
+}
+.library-count{
+  margin:4px 0 18px;
+  font-size:11px;
+  letter-spacing:.12em;
+  color:var(--text-3);
+}
+@media(max-width:390px){
+  .corner-nav{width:46px;height:46px}
+  .corner-nav-toggle{width:46px;min-width:46px;height:46px;min-height:46px}
+  .saved-item.library-piece .mini3{height:108px}
+  .saved-item.library-piece.featured .mini3{height:130px}
+}
+
 </style>
 </head>
 <body>
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.4.1</div>
+    <div class="version">V2.5</div>
   </div>
 
   <main class="app-main">
@@ -1953,35 +2081,43 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 
         <div class="health-strip" id="paletteHealth"></div>
 
-        <div class="relationship-explain">
-          <div class="micro-head"><span>為什麼這組成立</span><span>依目前三色關係</span></div>
-          <div class="explain-grid" id="relationshipExplain"></div>
-        </div>
-
-        <div class="vision-lab">
-          <div class="micro-head"><span>視覺模擬</span><span>近似模擬</span></div>
-          <div class="segmented" id="visionModes">
-            <button type="button" class="seg active" data-vision="normal">一般</button>
-            <button type="button" class="seg" data-vision="protan">紅色弱</button>
-            <button type="button" class="seg" data-vision="deutan">綠色弱</button>
-            <button type="button" class="seg" data-vision="tritan">藍色弱</button>
-          </div>
-          <div class="vision-preview" id="visionPreview"></div>
-        </div>
-
         <div class="relation-list" id="palette"></div>
 
-        <div class="real-preview-wrap">
-          <div class="micro-head"><span>情境預覽</span><span>75 / 18 / 7</span></div>
-          <div class="context-tabs" id="contextTabs">
-            <button type="button" class="context-tab active" data-context="app">App</button>
-            <button type="button" class="context-tab" data-context="brand">品牌</button>
-            <button type="button" class="context-tab" data-context="room">室內</button>
-            <button type="button" class="context-tab" data-context="outfit">穿搭</button>
-            <button type="button" class="context-tab" data-context="slides">簡報</button>
+        <details class="compose-deep-dive" id="composeDeepDive">
+          <summary>
+            <span><b>深入理解</b><small>明暗、色相、色覺與使用情境</small></span>
+            <span class="deep-dive-mark" aria-hidden="true">＋</span>
+          </summary>
+          <div class="deep-dive-body">
+            <div class="relationship-explain">
+              <div class="micro-head"><span>為什麼這組成立</span><span>依目前三色關係</span></div>
+              <div class="explain-grid" id="relationshipExplain"></div>
+            </div>
+
+            <div class="vision-lab">
+              <div class="micro-head"><span>視覺模擬</span><span>近似模擬</span></div>
+              <div class="segmented" id="visionModes">
+                <button type="button" class="seg active" data-vision="normal">一般</button>
+                <button type="button" class="seg" data-vision="protan">紅色弱</button>
+                <button type="button" class="seg" data-vision="deutan">綠色弱</button>
+                <button type="button" class="seg" data-vision="tritan">藍色弱</button>
+              </div>
+              <div class="vision-preview" id="visionPreview"></div>
+            </div>
+
+            <div class="real-preview-wrap">
+              <div class="micro-head"><span>情境預覽</span><span>75 / 18 / 7</span></div>
+              <div class="context-tabs" id="contextTabs">
+                <button type="button" class="context-tab active" data-context="app">App</button>
+                <button type="button" class="context-tab" data-context="brand">品牌</button>
+                <button type="button" class="context-tab" data-context="room">室內</button>
+                <button type="button" class="context-tab" data-context="outfit">穿搭</button>
+                <button type="button" class="context-tab" data-context="slides">簡報</button>
+              </div>
+              <div class="real-preview" id="uiPreview"></div>
+            </div>
           </div>
-          <div class="real-preview" id="uiPreview"></div>
-        </div>
+        </details>
 
         <div class="palette-actions palette-actions-three">
           <button type="button" class="utility-btn" id="copyPalette">複製</button>
@@ -2143,7 +2279,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.4.1</div>
+  <div class="footer app-footer">Color Lab V2.5</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2669,7 +2805,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.4.1',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.5',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -4029,13 +4165,15 @@ function renderSaved(){
   });
   if(!data.length){el.innerHTML='<div class="saved-empty">還沒有收藏。先在配色頁存下第一組。</div>';return}
   if(!rows.length){el.innerHTML='<div class="saved-empty">找不到符合的收藏。</div>';return}
-  el.innerHTML='<div class="library-count">'+rows.length+' 組配色</div><div class="saved-list"></div>';
+  el.innerHTML='<div class="library-count">'+rows.length+' 組配色 · YOUR COLOR ARCHIVE</div><div class="saved-list"></div>';
   const list=el.querySelector('.saved-list');
-  rows.forEach(({x,i})=>{
-    const d=document.createElement('div');d.className='saved-item';
+  rows.forEach(({x,i},position)=>{
+    const d=document.createElement('article');
+    d.className='saved-item library-piece'+(x.pinned?' featured':'');
     const title=(x.name&&x.name.trim())||'未命名配色';
     const tags=Array.isArray(x.tags)?x.tags:[];
-    d.innerHTML=`<div class="mini3"><i style="background:${x.palette.base}"></i><i style="background:${x.palette.structure}"></i><i style="background:${x.palette.accent}"></i></div><div class="saved-info"><b>${x.pinned?'★ ':''}${escapeHtml(title)}</b><div class="idea-meta">${x.seed}</div><div class="saved-pin-line">${x.folder?'<span class="saved-folder">'+escapeHtml(x.folder)+'</span>':''}${x.pinned?'<span class="pin">PINNED</span>':''}</div>${tags.length?'<div class="saved-tags">'+tags.map(t=>'<button type="button" class="saved-tag" data-tag-filter="'+escapeHtml(t)+'">'+escapeHtml(t)+'</button>').join('')+'</div>':''}</div><button class="saved-menu" type="button" data-saved-menu="${i}" aria-label="配色更多操作">•••</button>`;
+    const no=String(position+1).padStart(2,'0');
+    d.innerHTML=`<div class="saved-piece-no">${no}</div><button class="saved-menu" type="button" data-saved-menu="${i}" aria-label="${escapeHtml(title)} 更多操作">•••</button><button class="saved-palette-open" type="button" data-load-saved="${i}" aria-label="套用配色 ${escapeHtml(title)}"><span class="mini3"><i style="background:${x.palette.base}"></i><i style="background:${x.palette.structure}"></i><i style="background:${x.palette.accent}"></i></span></button><div class="saved-info"><b>${x.pinned?'★ ':''}${escapeHtml(title)}</b><div class="saved-piece-meta"><span>75 / 18 / 7</span><span>${x.palette.base}</span>${x.folder?'<span>'+escapeHtml(x.folder)+'</span>':''}${x.pinned?'<span>PINNED</span>':''}</div>${tags.length?'<div class="saved-tags">'+tags.map(t=>'<button type="button" class="saved-tag" data-tag-filter="'+escapeHtml(t)+'">'+escapeHtml(t)+'</button>').join('')+'</div>':''}</div>`;
     list.appendChild(d);
   })
 }
@@ -4418,6 +4556,7 @@ $('#save').onclick=save;
 document.addEventListener('click',e=>{
   const pm=e.target.closest('[data-photo-mode]');if(pm){setPhotoMode(pm.dataset.photoMode);return}
   const menu=e.target.closest('[data-saved-menu]');if(menu){openSavedActions(+menu.dataset.savedMenu);return}
+  const load=e.target.closest('[data-load-saved]');if(load){loadSaved(+load.dataset.loadSaved);return}
   const action=e.target.closest('[data-saved-action]');if(action&&savedActionIndex!==null){
     const i=savedActionIndex,kind=action.dataset.savedAction;closeSavedActions();
     if(kind==='load')loadSaved(i);
@@ -4521,6 +4660,14 @@ function setCornerNavOpen(next,focusToggle=false){
   }
 }
 function toggleCornerNav(){setCornerNavOpen(!cornerNavOpen)}
+let cornerNavScrollTimer=0;
+window.addEventListener('scroll',()=>{
+  const root=$('#cornerNav');if(!root)return;
+  if(cornerNavOpen)setCornerNavOpen(false);
+  root.classList.add('nav-scrolling');
+  clearTimeout(cornerNavScrollTimer);
+  cornerNavScrollTimer=setTimeout(()=>root.classList.remove('nav-scrolling'),180);
+},{passive:true});
 $('#cornerNavToggle').addEventListener('click',e=>{
   e.stopPropagation();
   toggleCornerNav();
