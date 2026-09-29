@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.6.2**
+**目前版本：V2.6.3**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -122,6 +122,12 @@ V2.6 把「功能」往「理解與決策」推進：
 - 切回 Compose 也只在深度區已展開時更新
 - 修正 drag note 與 eyebrow 使用透明度造成的小字對比問題
 
+## V2.6.3 Contrast Choice
+
+Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版用固定 luminance threshold 決定黑／白文字，會在部分中間色選錯。
+
+現在 textFor() 直接計算深色字與淺色字的實際 contrast ratio，永遠選兩者中較高的一個；Torture Gate 也加入中間橄欖色 regression case，以及 Photo role / recommendation direction 基本契約測試。
+
 ## 照片分析
 
 照片功能支援：
@@ -195,7 +201,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v262-deferred-depth`
+目前 cache generation：`color-lab-v263-contrast-choice`
 
 ## Quality Gates
 

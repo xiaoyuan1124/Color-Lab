@@ -44,12 +44,12 @@ function extractFunction(name){
 }
 
 const functionNames=[
-  'clamp','normHex','hexToRgb','rgbToHex','boundedCacheSet','lum','srgbToLinear','linearToSrgb',
+  'clamp','normHex','hexToRgb','rgbToHex','boundedCacheSet','lum','srgbToLinear','linearToSrgb','textFor',
   'toOKLCH','fromOKLCH','perceptualDistance','oklchLinearRgb',
   'isLinearSrgbInGamut','gamutMapOKLCH','hueDistance','signedHueDelta',
   'hueToward','contrastRatio','ensureStructureContrast','cohesionPass','qualityRefineGenerated',
   'qualityMetrics','relationVector','relationVectorDistance',
-  'photoDominanceScore','semanticRolesFromClusters','photoCompositionProfile',
+  'photoDominanceScore','semanticRolesFromClusters','photoCompositionProfile','photoPaletteFromRoles','recommendationDirection',
   'emptyPreferenceRole','emptyPreferenceRelation','emptyPreferenceModel','sanitizePreferenceRole','sanitizePreferenceRelation','preferenceRelationMetrics','sanitizePreferenceModel',
   'preferenceRoleAffinity','preferenceRelationAffinity','preferenceRoleDescriptor','preferenceSummaryFromModel','preferenceAffinityFromModel','preferenceAffinityForSetting','preferenceModelWithPalette','preferenceHueFamily'
 ];
@@ -113,6 +113,33 @@ check('gamut mapping never meaningfully increases chroma',chromaFailures===0,'fa
 
 check('contrast black white',approx(A.contrastRatio('#000000','#FFFFFF'),21,.05),A.contrastRatio('#000000','#FFFFFF'));
 check('contrast identity',approx(A.contrastRatio('#68705E','#68705E'),1,.0001),A.contrastRatio('#68705E','#68705E'));
+
+for(const bgHex of edgeHexes){
+  const chosen=A.textFor(bgHex);
+  const dark=A.contrastRatio(bgHex,'#242624'),light=A.contrastRatio(bgHex,'#FFFDF9');
+  check('textFor chooses stronger contrast '+bgHex,
+    (chosen==='#242624'||chosen==='#FFFDF9')&&A.contrastRatio(bgHex,chosen)>=Math.max(dark,light)-1e-10,
+    chosen+' '+dark+' / '+light);
+}
+const midText=A.textFor('#838A7B');
+check('textFor fixes medium olive contrast regression',
+  A.contrastRatio('#838A7B',midText)>=4.5,
+  midText+' ratio='+A.contrastRatio('#838A7B',midText));
+
+const photoTrio=A.photoPaletteFromRoles([
+  {label:'主體',hex:'#F3EFE8'},
+  {label:'鮮明',hex:'#C8433D'},
+  {label:'深色',hex:'#242624'},
+  {label:'柔和',hex:'#DCD6CE'}
+]);
+check('photo role bridge preserves semantic order',
+  Array.isArray(photoTrio)&&photoTrio.join('|')==='#F3EFE8|#242624|#C8433D',
+  JSON.stringify(photoTrio));
+
+const direction=A.recommendationDirection({base:'#F3EFE8',structure:'#242624',accent:'#C8433D'},{});
+check('recommendation direction is explanatory',
+  direction&&typeof direction.label==='string'&&direction.label.length>0&&typeof direction.reason==='string'&&direction.reason.length>8,
+  JSON.stringify(direction));
 
 for(const a of edgeHexes.slice(0,10)){
   for(const b of edgeHexes.slice(10,16)){
