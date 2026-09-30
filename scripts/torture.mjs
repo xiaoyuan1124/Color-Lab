@@ -7,7 +7,8 @@ const toneExplorer=fs.readFileSync('runtime/tone-explorer.js','utf8');
 const photoPalette=fs.readFileSync('runtime/photo-palette.js','utf8');
 const colorRelationship=fs.readFileSync('runtime/color-relationship.js','utf8');
 const roleScale=fs.readFileSync('runtime/role-scale.js','utf8');
-const appText=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale;
+const shareSnapshot=fs.readFileSync('runtime/share-snapshot.js','utf8');
+const appText=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot;
 const toneSource=fs.readFileSync('data/tone-families.js','utf8');
 const inlineScripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
 const scriptMatch=inlineScripts.at(-1);
@@ -26,6 +27,8 @@ try{new Function(colorRelationship)}
 catch(e){console.error('FAIL color relationship runtime syntax',e.message);process.exit(1)}
 try{new Function(roleScale)}
 catch(e){console.error('FAIL role scale runtime syntax',e.message);process.exit(1)}
+try{new Function(shareSnapshot)}
+catch(e){console.error('FAIL share snapshot runtime syntax',e.message);process.exit(1)}
 
 function findFunctionBodyOpen(start){
   const paramsOpen=source.indexOf('(',start);
@@ -290,6 +293,18 @@ check('V2.22 role scale never mutates source palette',
   !roleScale.includes('palette.structure=')&&
   !roleScale.includes('palette.accent='),
   'derived-only role scale');
+
+check('V2.23 share snapshot preserves semantic source order',
+  shareSnapshot.includes("colors:[palette.base,palette.structure,palette.accent].map(normHex)")&&
+  shareSnapshot.includes("selectedColors=[...snap.colors]")&&
+  shareSnapshot.includes("lockedSlots=[false,false,false]"),
+  'Base Structure Accent round trip');
+check('V2.23 share snapshot stays fragment-only and network-free',
+  shareSnapshot.includes("url.hash=shareSnapshotHash().slice(1)")&&
+  !shareSnapshot.includes('fetch(')&&
+  !shareSnapshot.includes('XMLHttpRequest')&&
+  !shareSnapshot.includes('localStorage.setItem'),
+  'URL fragment only');
 
 check('V2.19 photo palette uses perceptual dedupe',
   appText.includes('function photoDistinctClusters(')&&
