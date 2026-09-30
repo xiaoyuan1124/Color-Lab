@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.12.0**
+**目前版本：V2.13.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,19 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.13.0 Palette Validation
+
+把「這組色好看」再往「這組色真的能安全使用」推進：
+
+- Compose 首層摘要改為三組角色配對的整體可讀性，不再只檢查 Base / Structure 與 Base / Accent
+- 「深入理解」新增完整 3 × 3 三色對比矩陣，Base / Structure / Accent 都能作為文字與背景互相比較
+- WCAG 2.x 門檻分為 AAA 7:1、AA 4.5:1、大字 / UI 3:1、Accent / 裝飾四級
+- 可在「原色」與「Dark 預覽」之間切換驗證
+- Dark 驗證只使用 V2.12 的 preview-only 衍生色，不會回寫 Compose、收藏或匯出內容
+- Accent 原色在 Dark 預覽與驗證中保持不變
+- 矩陣與 Light / Dark Context Preview 使用同一套衍生邏輯，避免預覽與數值判斷不一致
+- 維持既有 235 KiB index.html Size Budget，不因新增矩陣調高門檻
 
 ## V2.12.0 Professional Handoff
 
@@ -325,7 +338,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v2120-professional-handoff`
+目前 cache generation：`color-lab-v2130-palette-validation`
 
 ## Quality Gates
 
