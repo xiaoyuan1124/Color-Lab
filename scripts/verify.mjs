@@ -92,13 +92,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2110")) fail('service worker cache version is not V2.11.0');
+if(!sw.includes("color-lab-v2111")) fail('service worker cache version is not V2.11.1');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.11.0') fail('package version must be 2.11.0');
+if(pkg.version!=='2.11.1') fail('package version must be 2.11.1');
 else pass('package version');
-if(!html.includes('Color Lab V2.11.0')||!html.includes('<div class="version">V2.11.0</div>')||!html.includes("appVersion:'2.11.0'")) fail('V2.11.0 UI or backup version metadata missing');
-else pass('V2.11.0 version metadata');
+if(!html.includes('Color Lab V2.11.1')||!html.includes('<div class="version">V2.11.1</div>')||!html.includes("appVersion:'2.11.1'")) fail('V2.11.1 UI or backup version metadata missing');
+else pass('V2.11.1 version metadata');
 
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
@@ -288,9 +288,17 @@ if(!html.includes('const recommendationBatchSize=5')||
   fail('V2.11.0 recommendation batching contract missing');
 }else pass('V2.11.0 recommendation batching contract');
 
-if(!html.includes("progress.textContent=recs.length?start+'–'+end+' / '+recs.length+' 組通過品質門檻'")){
-  fail('V2.11.0 recommendation progress missing');
-}else pass('V2.11.0 recommendation progress');
+if(!html.includes("progress.textContent=recs.length?'第 '+batchNumber+' / '+recommendationBatchCount(recs)+' 批 · '+start+'–'+end+' / '+recs.length+' 組'")){
+  fail('V2.11.1 recommendation batch progress missing');
+}else pass('V2.11.1 recommendation batch progress');
+
+if(!html.includes('id="previousRecommendations"')||
+   !html.includes('function resetRecommendationBatchSession(')||
+   !html.includes('function moveRecommendationBatch(direction=1)')||
+   !html.includes('recommendationBatchHistory=[0]')||
+   !html.includes("if(nextOffset>=recs.length){toast('已看完這輪所有候選');return}")){
+  fail('V2.11.1 Inspire history or anti-repeat contract missing');
+}else pass('V2.11.1 Inspire history and anti-repeat contract');
 
 
 if(!html.includes("base:{key:'',pool:[],index:-1,familyId:'',origin:''}")||
