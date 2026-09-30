@@ -86,7 +86,7 @@ function renderPhotoStrategyPreview(clusters=lastPhotoClusters,roles=lastPhotoRo
   host.hidden=false;
   const [base,structure,accent]=selected.colors;
   host.innerHTML='<div class="photo-palette-preview-head"><strong>'+escapeHtml(photoPaletteStyleLabel())+'</strong><span>主體 / 結構 / 焦點 · 套用前預覽</span></div>'+
-    '<div class="photo-palette-ratio" aria-label="照片三色 75 18 7 預覽"><i style="background:'+base+'"><b>75</b></i><i style="background:'+structure+'"><b>18</b></i><i style="background:'+accent+'"><b>7</b></i></div>'+
+    '<div class="photo-palette-ratio" aria-label="照片三色 75 18 7 預覽"><i style="background:'+base+';color:'+textFor(base)+'"><b>75</b></i><i style="background:'+structure+';color:'+textFor(structure)+'"><b>18</b></i><i style="background:'+accent+';color:'+textFor(accent)+'"><b>7</b></i></div>'+
     '<div class="photo-palette-role-row"><span>主體 '+base+'</span><span>結構 '+structure+'</span><span>焦點 '+accent+'</span></div>';
   const use=$('#photoUsePalette');if(use){use.hidden=false;use.textContent='使用 '+photoPaletteStyleLabel()+' 三色 →'}
 }
