@@ -198,10 +198,10 @@ check('V2.12 dark preview is preview-only',
   'derived preview does not replace palette');
 
 check('V2.12 multi-control selectors return collections',
-  html.includes("$('#contextTabs [data-context]').forEach")&&
-  html.includes("$('#contextThemeModes [data-preview-theme]').forEach")&&
-  html.includes("$('[data-preview-theme]').forEach")&&
-  html.includes("$('[data-export-format]').forEach"),
+  html.includes("$$('#contextTabs [data-context]').forEach")&&
+  html.includes("$$('#contextThemeModes [data-preview-theme]').forEach")&&
+  html.includes("$$('[data-preview-theme]').forEach")&&
+  html.includes("$$('[data-export-format]').forEach"),
   'querySelectorAll helper for preview/export controls');
 
 
