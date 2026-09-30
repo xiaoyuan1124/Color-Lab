@@ -227,3 +227,36 @@ test('V2.15 Inspire recent memory stays bounded to 24 fingerprints', async ({ pa
   expect(state.length).toBe(24);
   expect(state.stored).toBe(24);
 });
+
+test('V2.16 Aesthetic Gate accepts controlled vivid palettes without rewarding noisy saturation', async ({ page }) => {
+  const scores = await page.evaluate(() => {
+    const quiet = paletteAestheticCore(['#E9E1D2','#25313A','#4D739B']);
+    const vivid = paletteAestheticCore(['#286B69','#D0A32E','#A94B38']);
+    const noisy = paletteAestheticCore(['#FF4B55','#FF5A4D','#FF6A45']);
+    return {
+      quiet,
+      vivid,
+      noisy,
+      priors: {
+        atmospheric: laneAestheticPrior('atmospheric'),
+        expressive: laneAestheticPrior('expressive'),
+        unexpected: laneAestheticPrior('unexpected')
+      }
+    };
+  });
+
+  expect(scores.quiet.score).toBeGreaterThanOrEqual(0.48);
+  expect(scores.vivid.score).toBeGreaterThanOrEqual(0.48);
+  expect(scores.noisy.score).toBeLessThan(scores.vivid.score);
+  expect(scores.vivid.vividIntent).toBeGreaterThan(0);
+  expect(scores.vivid.energyStructure).toBeGreaterThan(0.45);
+  expect(scores.priors.expressive).toBeGreaterThanOrEqual(scores.priors.atmospheric - 0.01);
+  expect(scores.priors.unexpected).toBeGreaterThanOrEqual(0.95);
+});
+
+test('V2.16 quality practicality no longer punishes vivid Accent by absolute chroma', async ({ page }) => {
+  const source = await page.evaluate(() => paletteQualityProfile.toString());
+  expect(source).toContain('supportChroma');
+  expect(source).toContain('accentControl');
+  expect(source).not.toContain('chromaUsability');
+});
