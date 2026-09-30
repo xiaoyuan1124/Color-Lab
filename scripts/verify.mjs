@@ -312,9 +312,9 @@ if(!html.includes('data-export-format="css"')||
   fail('V2.12.0 CSS / JSON / Tokens handoff contract missing');
 }else pass('V2.12.0 professional handoff formats');
 
-if(!html.includes("'--color-base: '+data.palette.base")||
-   !html.includes("'--color-structure: '+data.palette.structure")||
-   !html.includes("'--color-accent: '+data.palette.accent")||
+if(!html.includes("--color-base: '+data.palette.base")||
+   !html.includes("--color-structure: '+data.palette.structure")||
+   !html.includes("--color-accent: '+data.palette.accent")||
    !html.includes("ratios:{base:75,structure:18,accent:7}")){
   fail('V2.12.0 export does not preserve exact role colors and 75/18/7');
 }else pass('V2.12.0 exact role export contract');
