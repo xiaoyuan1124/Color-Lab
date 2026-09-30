@@ -523,9 +523,10 @@ if(!gradientStudio.includes('const source=paletteArtifactBase()')||
   fail('V2.28.0 exact-source / preview-only / local Gradient contract missing');
 }else pass('V2.28.0 exact source gradients + preview-only CSS handoff');
 
-if(!html.includes('data-export-format="scss"')||
-   !html.includes('data-export-format="flutter"')||
-   !html.includes('data-export-format="jetpack"')||
+if(!html.includes('initCrossPlatformHandoff();')||
+   !paletteTools.includes('function initCrossPlatformHandoff(')||
+   !paletteTools.includes("[['scss','SCSS'],['flutter','Flutter'],['jetpack','Jetpack']]")||
+   !paletteTools.includes("button.dataset.exportFormat=kind")||
    !paletteTools.includes("if(kind==='scss')")||
    !paletteTools.includes("if(kind==='flutter')")||
    !paletteTools.includes("if(kind==='jetpack')")||
