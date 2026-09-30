@@ -524,7 +524,7 @@ Color.js、Color Thief、Cohesive Colors 等專案曾作為研究參考；目前
 - IndexedDB resilience snapshot
 - JSON backup / import
 
-Backup V4 可攜帶本機偏好模型與個人化開關，同時保留 V1 / V2 / V3 匯入相容性。
+Backup V5 會攜帶本機 Projects、偏好模型與個人化開關，同時保留 V1 / V2 / V3 / V4 匯入相容性。
 
 ## PWA / Offline
 
@@ -535,7 +535,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v2230-shareable-snapshot`
+目前 cache generation：`color-lab-v2260-local-projects`
 
 ## Quality Gates
 
