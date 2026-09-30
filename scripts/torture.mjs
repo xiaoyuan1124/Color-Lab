@@ -185,6 +185,19 @@ check('V2.11.1 Inspire does not wrap rejected batches',
   'stop at end instead of wrap');
 
 
+check('V2.12 professional exports keep exact palette roles',
+  html.includes("palette:{base:palette.base,structure:palette.structure,accent:palette.accent}")&&
+  html.includes("ratios:{base:75,structure:18,accent:7}")&&
+  html.includes("data-export-format=\"tokens\""),
+  'exact palette + ratios + tokens');
+check('V2.12 dark preview is preview-only',
+  html.includes("function previewThemePalette()")&&
+  html.includes("accent:palette.accent")&&
+  html.includes("function setPreviewTheme(next)")&&
+  !html.includes("palette=previewThemePalette()"),
+  'derived preview does not replace palette');
+
+
 check('V2.11 candidate session stores original color',
   html.includes("state.origin=palette[role]")&&
   html.includes("if(state.index===0){state.index=-1;return state.origin||null}"),
