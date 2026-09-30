@@ -745,3 +745,62 @@ test('V2.22 Role Scale CSS exposes exact source variables separately from derive
   expect((result.text.match(/exact source/g)||[]).length).toBe(3);
 });
 
+test('V2.23 Shareable Snapshot round-trips exact source roles without changing the current URL', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    selectedColors=['#112233','#445566','#AABBCC'];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+    previewContext='room';previewTheme='dark';
+    const beforeHash=location.hash;
+    const before=paletteArtifactBase();
+    const hash=shareSnapshotHash();
+    const url=shareSnapshotUrl();
+    const parsed=parseShareSnapshot(hash);
+    return {beforeHash,afterHash:location.hash,before,hash,url,parsed};
+  });
+  expect(result.afterHash).toBe(result.beforeHash);
+  expect(result.hash).toBe('#clv=1&cl=112233-445566-AABBCC&ctx=room&theme=dark');
+  expect(result.parsed.colors).toEqual(['#112233','#445566','#AABBCC']);
+  expect(result.parsed.context).toBe('room');
+  expect(result.parsed.theme).toBe('dark');
+  expect(result.url).toContain('#clv=1&cl=112233-445566-AABBCC&ctx=room&theme=dark');
+});
+
+test('V2.23 shared URL restores Base Structure Accent order before initial render', async ({ page }) => {
+  await page.goto('/#clv=1&cl=112233-445566-AABBCC&ctx=slides&theme=dark');
+  await expect(page.locator('.tab-view[data-view="compose"]')).toBeVisible();
+  const state=await page.evaluate(() => ({
+    selected:[...selectedColors],
+    palette:paletteArtifactBase().palette,
+    context:previewContext,
+    theme:previewTheme,
+    locks:[...lockedSlots]
+  }));
+  expect(state.selected).toEqual(['#112233','#445566','#AABBCC']);
+  expect(state.palette).toEqual({base:'#112233',structure:'#445566',accent:'#AABBCC'});
+  expect(state.context).toBe('slides');
+  expect(state.theme).toBe('dark');
+  expect(state.locks).toEqual([false,false,false]);
+});
+
+test('V2.23 share action renders a same-origin QR and restorable link locally', async ({ page }) => {
+  await page.evaluate(() => {
+    selectedColors=['#E7DCC8','#274C55','#C65338'];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+  });
+  await page.locator('#sharePalette').click();
+  await expect(page.locator('#shareSnapshotPanel')).toBeVisible();
+  await expect(page.locator('#shareSnapshotUrl')).toHaveValue(/#clv=1&cl=E7DCC8-274C55-C65338/);
+  await expect(page.locator('#shareSnapshotRatio i')).toHaveCount(3);
+  await expect(page.locator('#shareSnapshotQr').locator('canvas, img').first()).toBeVisible();
+  await expect(page.locator('script[src="./vendor/qrcode.min.js"]')).toHaveCount(1);
+});
+
+test('V2.23 snapshot parser fails closed on malformed palette payloads', async ({ page }) => {
+  const result=await page.evaluate(() => [
+    parseShareSnapshot('#clv=1&cl=123456-ABCDEF&ctx=app&theme=light'),
+    parseShareSnapshot('#clv=1&cl=GGGGGG-445566-AABBCC&ctx=app&theme=light'),
+    parseShareSnapshot('#clv=2&cl=112233-445566-AABBCC&ctx=app&theme=light')
+  ]);
+  expect(result).toEqual([null,null,null]);
+});
+
