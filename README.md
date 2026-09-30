@@ -155,6 +155,7 @@ Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前�
 - 新增 chromaIntent / vividIntent：高彩度只要有清楚結構就能得到正向分數
 - 高彩度過載現在只在「能量高但結構差」時扣分
 - expressive / unexpected reference prior 不再先天低於 atmospheric / quiet 類型
+- 下游 practicality 也改為判斷 Accent 是否相對失控，不再用 Accent 絕對 chroma 當作缺點
 - 保留最低美感門檻；不是放寬 Gate，而是讓 Gate 對 muted 與 vivid 使用同一個「關係成立」標準
 - Torture benchmark 同時驗證 quiet-good、vivid-good 與 vivid-noisy 三類 palette
 
