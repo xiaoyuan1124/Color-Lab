@@ -643,3 +643,45 @@ test('V2.18 App scene uses all three palette roles in distinct product UI respon
   await expect(page.locator('.cp2-app-cta')).toBeVisible();
   await expect(page.locator('.cp2-app-card')).toHaveCount(2);
 });
+
+test('V2.21 Color Relationship Map visualizes Hue Lightness Chroma and 75/18/7 without mutation', async ({ page }) => {
+  await page.evaluate(() => {
+    selectedColors=['#E7DCC8','#274C55','#C65338'];
+    lockedSlots=[false,false,false];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+  });
+  const before=await page.evaluate(() => paletteArtifactBase());
+  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await expect(page.locator('#colorRelationshipMap')).toBeVisible();
+  await expect(page.locator('#colorRelationshipMap .crm-point')).toHaveCount(3);
+  await expect(page.locator('#colorRelationshipMap .crm-wheel line')).toHaveCount(3);
+  await expect(page.locator('#colorRelationshipMap .crm-metric')).toHaveCount(2);
+  await expect(page.locator('#colorRelationshipMap .crm-role-weight i')).toHaveCount(3);
+  await expect(page.locator('#colorRelationshipMap')).toContainText('Lightness');
+  await expect(page.locator('#colorRelationshipMap')).toContainText('Chroma');
+  await expect(page.locator('#colorRelationshipMap')).toContainText('只讀分析');
+  const after=await page.evaluate(() => paletteArtifactBase());
+  expect(after).toEqual(before);
+});
+
+test('V2.21 relationship analysis preserves exact semantic role order', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    selectedColors=['#112233','#445566','#AABBCC'];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+    const before=paletteArtifactBase();
+    const roles=relationshipRoleData().map(x=>({key:x.key,ratio:x.ratio,hex:x.hex}));
+    const verdict=relationshipVerdict(relationshipRoleData());
+    renderColorRelationshipMap();
+    return {before,after:paletteArtifactBase(),roles,verdict};
+  });
+  expect(result.roles).toEqual([
+    {key:'base',ratio:75,hex:'#112233'},
+    {key:'structure',ratio:18,hex:'#445566'},
+    {key:'accent',ratio:7,hex:'#AABBCC'}
+  ]);
+  expect(result.after).toEqual(result.before);
+  expect(result.verdict.hueText.length).toBeGreaterThan(8);
+  expect(result.verdict.lightText.length).toBeGreaterThan(8);
+  expect(result.verdict.accentText.length).toBeGreaterThan(8);
+});
+
