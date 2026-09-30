@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="./runtime/color-relationship.css">
 <link rel="stylesheet" href="./runtime/role-scale.css">
 <link rel="stylesheet" href="./runtime/share-snapshot.css">
+<link rel="stylesheet" href="./runtime/custom-design-preview.css">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Color Lab</title>
 <style>
@@ -2213,7 +2214,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.23.0</div>
+    <div class="version">V2.24.0</div>
   </div>
 
   <main class="app-main">
@@ -2360,6 +2361,25 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
               </div>
               <div class="real-preview" id="uiPreview"></div>
             </div>
+
+            <details class="custom-design-preview" id="customDesignPreviewDetails">
+              <summary>
+                <span><b>你的 SVG 設計</b><small>把目前三個原色套進自己的 flat-color SVG</small></span>
+                <span class="cdp-mark" aria-hidden="true">＋</span>
+              </summary>
+              <div class="cdp-body">
+                <p class="cdp-note">SVG 只在此裝置解析。系統會移除 script、事件、外部資源與不安全元素，再讓你把原始 fill / stroke 對應到 Base / Structure / Accent；預覽不會修改 Compose。</p>
+                <input id="customDesignInput" type="file" accept=".svg,image/svg+xml" hidden>
+                <div class="cdp-actions">
+                  <button type="button" id="customDesignChoose">選擇 SVG</button>
+                  <button type="button" id="customDesignClear" hidden>清除</button>
+                  <button type="button" id="customDesignExport" hidden>輸出套色 SVG</button>
+                </div>
+                <div class="cdp-status" id="customDesignStatus" aria-live="polite">尚未載入 SVG · 檔案只在此裝置解析</div>
+                <div class="cdp-mappings" id="customDesignMappings"></div>
+                <div class="cdp-canvas" id="customDesignCanvas" aria-live="polite"></div>
+              </div>
+            </details>
           </div>
         </details>
 
@@ -2557,7 +2577,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.23.0</div>
+  <div class="footer app-footer">Color Lab V2.24.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2653,6 +2673,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <script src="./runtime/color-relationship.js"></script>
 <script src="./runtime/role-scale.js"></script>
 <script src="./runtime/share-snapshot.js"></script>
+<script src="./runtime/custom-design-preview.js"></script>
 <script src="./runtime/tone-explorer.js"></script>
 <script>
 const MODES={
@@ -3105,7 +3126,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.23.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.24.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -4831,7 +4852,7 @@ function render(){
   [['base','75'],['structure','18'],['accent','7']].forEach(([k,t])=>{const d=document.createElement('div');d.style.background=palette[k];d.style.color=textFor(palette[k]);d.innerHTML=`<span>${t}</span>`;pv.appendChild(d)});
   renderPaletteHealth();
   const deep=$('#composeDeepDive');
-  if(deep?.open){renderRelationshipExplanation();renderColorRelationshipMap();renderToneExplorer();renderPaletteValidation();}
+  if(deep?.open){renderRelationshipExplanation();renderColorRelationshipMap();renderToneExplorer();renderPaletteValidation();if($('#customDesignPreviewDetails')?.open)renderCustomDesignPreview();}
   if($('#roleScaleDetails')?.open)renderRoleScale();
   scheduleSecondaryRender();
 }
@@ -4842,7 +4863,7 @@ function scheduleSecondaryRender(){
     const active=document.querySelector('.tab-view.active')?.dataset.view||'compose';
     if(active==='compose'){
       const deep=$('#composeDeepDive');
-      if(deep?.open){renderVision();renderColorRelationshipMap();renderToneExplorer();renderPaletteValidation();renderContextPreview()}
+      if(deep?.open){renderVision();renderColorRelationshipMap();renderToneExplorer();renderPaletteValidation();renderContextPreview();if($('#customDesignPreviewDetails')?.open)renderCustomDesignPreview()}
     }else if(active==='inspire'){
       ensureInspirationResources().then(()=>{if(token===secondaryRenderToken){renderIdeas();renderRecommendations()}});
     }
@@ -5499,6 +5520,7 @@ function switchTab(name,scrollTop=true){
   if(name==='compose'&&$('#composeDeepDive')?.open)requestAnimationFrame(()=>{
     renderRelationshipExplanation();renderColorRelationshipMap();renderToneExplorer();renderVision();renderContextPreview();
     if($('#roleScaleDetails')?.open)renderRoleScale();
+    if($('#customDesignPreviewDetails')?.open)renderCustomDesignPreview();
   });
   setCornerNavOpen(false);
   if(scrollTop){
@@ -5607,14 +5629,16 @@ $('#librarySort').value=librarySort;
 $('#librarySort').addEventListener('change',e=>{librarySort=e.target.value;localStorage.setItem('colorlab.librarySort',librarySort);renderSaved()});
 $('#libraryFolderFilter').addEventListener('change',e=>{libraryFolderFilter=e.target.value;renderSaved()});
 $('#comboName').addEventListener('input',e=>{currentComboName=e.target.value;persistDraft()});
+$('#customDesignPreviewDetails').addEventListener('toggle',e=>{if(e.currentTarget.open)renderCustomDesignPreview()});
 $('#composeDeepDive').addEventListener('toggle',e=>{
   if(e.currentTarget.open)requestAnimationFrame(()=>{
     renderRelationshipExplanation();renderColorRelationshipMap();renderToneExplorer();renderPaletteValidation();renderVision();renderContextPreview();
     if($('#roleScaleDetails')?.open)renderRoleScale();
+    if($('#customDesignPreviewDetails')?.open)renderCustomDesignPreview();
   });
 });
 renderModes();palette=fastInitialPalette();renderComboSlots();render();updateLockToggle();
-historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();installShareSnapshotHashListener();
+historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();installShareSnapshotHashListener();initCustomDesignPreview();
 setCornerNavOpen(false);
 switchTab(localStorage.getItem('colorlab.tab')||'compose',false);updatePhotoTarget();
 scheduleNonCriticalStartup();
