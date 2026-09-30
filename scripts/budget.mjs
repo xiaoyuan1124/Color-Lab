@@ -26,6 +26,8 @@ function pass(label,value,limit){
 }
 
 const sizes=Object.fromEntries(Object.entries(files).map(([k,p])=>[k,size(p)]));
+const runtimeFiles=fs.readdirSync('runtime').filter(name=>/\.(?:js|css)$/.test(name)).map(name=>'runtime/'+name);
+const runtimeModules=runtimeFiles.reduce((sum,path)=>sum+size(path),0);
 const eager=0;
 const lazyIntelligence=sizes.poline+sizes.fashion+sizes.ig+sizes.atlas+sizes.tones;
 const lazyInteraction=sizes.iro+sizes.sortable+sizes.qr;
@@ -36,6 +38,7 @@ pass('eager intelligence budget',eager,1*KB);
 pass('lazy intelligence budget',lazyIntelligence,112*KB);
 pass('lazy interaction tools budget',lazyInteraction,110*KB);
 pass('core runtime budget',core,440*KB);
+pass('runtime modules budget',runtimeModules,140*KB);
 
 if(sizes.fashion<4*KB||sizes.ig<2*KB||sizes.atlas<5*KB||sizes.tones<2*KB){
   console.error('FAIL reference color libraries unexpectedly small');
@@ -49,6 +52,7 @@ console.log('Color Lab size budget',{
   eager,
   lazyIntelligence,
   lazyInteraction,
-  core
+  core,
+  runtimeModules
 });
 if(process.exitCode)process.exit(process.exitCode);
