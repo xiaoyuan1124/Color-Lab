@@ -8,8 +8,8 @@ const GRADIENT_STUDIO_PAIRS={
   'system':{label:'三角色',keys:['base','structure','accent']}
 };
 const GRADIENT_STUDIO_ANGLES=[0,45,90,135];
-let gradientStudioPair=localStorage.getItem('colorlab.gradientPair')||'base-accent';
-let gradientStudioAngle=Number(localStorage.getItem('colorlab.gradientAngle')||135);
+let gradientStudioPair=storageReadRaw('colorlab.gradientPair','base-accent');
+let gradientStudioAngle=Number(storageReadRaw('colorlab.gradientAngle','135'));
 let gradientStudioBound=false;
 
 if(!GRADIENT_STUDIO_PAIRS[gradientStudioPair])gradientStudioPair='base-accent';
@@ -78,13 +78,13 @@ function renderGradientStudio(){
 function setGradientStudioPair(next){
   if(!GRADIENT_STUDIO_PAIRS[next])return;
   gradientStudioPair=next;
-  try{localStorage.setItem('colorlab.gradientPair',next)}catch(_){}
+  storageWriteRaw('colorlab.gradientPair',next,{silent:true})
   renderGradientStudio();
 }
 function setGradientStudioAngle(next){
   const angle=Number(next);if(!GRADIENT_STUDIO_ANGLES.includes(angle))return;
   gradientStudioAngle=angle;
-  try{localStorage.setItem('colorlab.gradientAngle',String(angle))}catch(_){}
+  storageWriteRaw('colorlab.gradientAngle',String(angle),{silent:true})
   renderGradientStudio();
 }
 async function copyGradientStudioCss(){
