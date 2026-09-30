@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.26.0**
+**目前版本：V2.27.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,20 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.27.0 Reference / Moodboard Export
+
+把 Color Lab 的照片、三色關係與 Tone Family 整理成可以直接交付或放進提案的 Reference Board：
+
+- 「更多格式」新增 Reference Board，不增加主導航或 Compose 首屏資訊密度
+- 輸出為 1600 × 1200 PNG，適合品牌、室內、穿搭與簡報 moodboard / reference handoff
+- Board 永遠從 `paletteArtifactBase()` 讀取 exact Base / Structure / Accent，不使用 Dark、色覺模擬、Tone Explorer 或 Accessibility preview
+- 三色以 75 / 18 / 7 比例與 Base / Structure / Accent 語意呈現，並標示 exact HEX
+- 自動判斷目前 Tone Family，輸出前按需載入既有本機 Tone Family 資料，不新增網路 API
+- 如果目前 session 已載入照片，Board 會直接從本機 `photoCanvas` 取用照片；沒有照片時改用大型 75 / 18 / 7 composition
+- 照片只作為輸出參考，不會被上傳、保存到專案或寫進 palette source
+- 支援 Web Share file；不支援時回退下載 PNG
+- runtime 完全本機並加入 Service Worker offline cache
 
 ## V2.26.0 Local Projects / Collections
 
