@@ -177,6 +177,7 @@ if(!html.includes('id="toneExplorer"')||
    !html.includes('<script src="./runtime/tone-explorer.js"></script>')||
    !sw.includes('./runtime/tone-explorer.js')||
    !appSource.includes('function toneExplorerToneCandidate(')||
+   !appSource.includes('Object.values(toneFamilies()).map')||
    !appSource.includes('function toneExplorerHueCandidate(')||
    !appSource.includes('function previewToneExplorer(')||
    !appSource.includes('function applyToneExplorer(')){
