@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="./runtime/share-snapshot.css">
 <link rel="stylesheet" href="./runtime/custom-design-preview.css">
 <link rel="stylesheet" href="./runtime/vision-accessibility.css">
+<link rel="stylesheet" href="./runtime/ux-cleanup.css">
 <link rel="stylesheet" href="./runtime/gradient-studio.css">
 <link rel="stylesheet" href="./runtime/local-projects.css">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -2217,7 +2218,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.30.0</div>
+    <div class="version">V2.31.0</div>
   </div>
 
   <main class="app-main">
@@ -2292,80 +2293,108 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
             <span class="deep-dive-mark" aria-hidden="true">＋</span>
           </summary>
           <div class="deep-dive-body">
-            <div class="relationship-explain">
-              <div class="micro-head"><span>為什麼這組成立</span><span>依目前三色關係</span></div>
-              <div class="explain-grid" id="relationshipExplain"></div>
-              <div class="learning-note" id="learningNote" hidden aria-live="polite">
-                <strong id="learningTitle"></strong>
-                <p id="learningText"></p>
-              </div>
-            </div>
-
-            <div class="color-relationship-lab">
-              <div class="micro-head"><span>Color Relationship Map</span><span>只讀 · 原色</span></div>
-              <div class="color-relationship-map" id="colorRelationshipMap" aria-live="polite"></div>
-            </div>
-
-            <details class="role-scale-lab" id="roleScaleDetails">
+            <details class="deep-section" id="deepUnderstanding" open>
               <summary>
-                <span><b>Role Scale / 延伸色階</b><small>原色作為 anchor · 衍生 hover / text / border</small></span>
-                <span class="rscale-mark" aria-hidden="true">＋</span>
+                <span class="deep-section-index">01</span>
+                <span class="deep-section-copy"><b>理解配色</b><small>關係 · Tone · Role Scale</small></span>
+                <span class="deep-section-mark" aria-hidden="true">＋</span>
               </summary>
-              <div class="role-scale-body">
-                <div id="roleScale"></div>
-                <div class="rscale-actions"><button type="button" class="rscale-copy" id="copyRoleScaleCss">複製色階 CSS</button></div>
+              <div class="deep-section-body">
+                <div class="relationship-explain">
+                  <div class="micro-head"><span>為什麼這組成立</span><span>依目前三色關係</span></div>
+                  <div class="explain-grid" id="relationshipExplain"></div>
+                  <div class="learning-note" id="learningNote" hidden aria-live="polite">
+                    <strong id="learningTitle"></strong>
+                    <p id="learningText"></p>
+                  </div>
+                </div>
+
+                <div class="color-relationship-lab">
+                  <div class="micro-head"><span>Color Relationship Map</span><span>只讀 · 原色</span></div>
+                  <div class="color-relationship-map" id="colorRelationshipMap" aria-live="polite"></div>
+                </div>
+
+                <div class="tone-explorer">
+                  <div class="micro-head"><span>Tone Explorer</span><span>只比較，不偷改原色</span></div>
+                  <div class="tone-explorer-modes" id="toneExplorerModes" role="group" aria-label="色調探索模式">
+                    <button type="button" data-tone-mode="tone" aria-pressed="true">固定 Hue · 換 Tone</button>
+                    <button type="button" data-tone-mode="hue" aria-pressed="false">固定 Tone · 換 Hue</button>
+                  </div>
+                  <div id="toneExplorer"></div>
+                </div>
+
+                <details class="role-scale-lab" id="roleScaleDetails">
+                  <summary>
+                    <span><b>Role Scale / 延伸色階</b><small>原色作為 anchor · 衍生 hover / text / border</small></span>
+                    <span class="rscale-mark" aria-hidden="true">＋</span>
+                  </summary>
+                  <div class="role-scale-body">
+                    <div id="roleScale"></div>
+                    <div class="rscale-actions"><button type="button" class="rscale-copy" id="copyRoleScaleCss">複製色階 CSS</button></div>
+                  </div>
+                </details>
               </div>
             </details>
 
-            <div class="tone-explorer">
-              <div class="micro-head"><span>Tone Explorer</span><span>只比較，不偷改原色</span></div>
-              <div class="tone-explorer-modes" id="toneExplorerModes" role="group" aria-label="色調探索模式">
-                <button type="button" data-tone-mode="tone" aria-pressed="true">固定 Hue · 換 Tone</button>
-                <button type="button" data-tone-mode="hue" aria-pressed="false">固定 Tone · 換 Hue</button>
-              </div>
-              <div id="toneExplorer"></div>
-            </div>
+            <details class="deep-section" id="deepValidation">
+              <summary>
+                <span class="deep-section-index">02</span>
+                <span class="deep-section-copy"><b>驗證可用性</b><small>WCAG · 色覺模擬 · 修正建議</small></span>
+                <span class="deep-section-mark" aria-hidden="true">＋</span>
+              </summary>
+              <div class="deep-section-body">
+                <div class="validation-lab">
+                  <div class="micro-head"><span>可讀性矩陣</span><span>WCAG 2.x · 不改原色</span></div>
+                  <div class="context-theme-modes validation-theme-modes" id="validationThemeModes" role="group" aria-label="可讀性驗證模式">
+                    <button type="button" data-validation-theme="original" aria-pressed="true">Light / 原色</button>
+                    <button type="button" data-validation-theme="dark" aria-pressed="false">Dark 預覽</button>
+                  </div>
+                  <div class="validation-summary" id="validationSummary"></div>
+                  <div class="validation-table-wrap" id="accessibilityMatrix"></div>
+                  <div class="accessibility-fixes" id="accessibilityFixes" aria-live="polite"></div>
+                </div>
 
-            <div class="validation-lab">
-              <div class="micro-head"><span>可讀性矩陣</span><span>WCAG 2.x · 不改原色</span></div>
-              <div class="context-theme-modes validation-theme-modes" id="validationThemeModes" role="group" aria-label="可讀性驗證模式">
-                <button type="button" data-validation-theme="original" aria-pressed="true">Light / 原色</button>
-                <button type="button" data-validation-theme="dark" aria-pressed="false">Dark 預覽</button>
+                <div class="vision-lab">
+                  <div class="micro-head"><span>Accessibility Vision</span><span>近似模擬 · 原色不變</span></div>
+                  <div class="segmented" id="visionModes" role="group" aria-label="色覺近似模擬模式">
+                    <button type="button" class="seg active" data-vision="normal">一般</button>
+                    <button type="button" class="seg" data-vision="protan">紅色弱</button>
+                    <button type="button" class="seg" data-vision="deutan">綠色弱</button>
+                    <button type="button" class="seg" data-vision="tritan">藍色弱</button>
+                  </div>
+                  <div class="vision-preview" id="visionPreview"></div>
+                </div>
               </div>
-              <div class="validation-summary" id="validationSummary"></div>
-              <div class="validation-table-wrap" id="accessibilityMatrix"></div>
-              <div class="accessibility-fixes" id="accessibilityFixes" aria-live="polite"></div>
-            </div>
+            </details>
 
-            <div class="vision-lab">
-              <div class="micro-head"><span>Accessibility Vision</span><span>近似模擬 · 原色不變</span></div>
-              <div class="segmented" id="visionModes" role="group" aria-label="色覺近似模擬模式">
-                <button type="button" class="seg active" data-vision="normal">一般</button>
-                <button type="button" class="seg" data-vision="protan">紅色弱</button>
-                <button type="button" class="seg" data-vision="deutan">綠色弱</button>
-                <button type="button" class="seg" data-vision="tritan">藍色弱</button>
-              </div>
-              <div class="vision-preview" id="visionPreview"></div>
-            </div>
+            <details class="deep-section" id="deepApplication">
+              <summary>
+                <span class="deep-section-index">03</span>
+                <span class="deep-section-copy"><b>套用情境</b><small>App · Brand · Room · Gradient · SVG</small></span>
+                <span class="deep-section-mark" aria-hidden="true">＋</span>
+              </summary>
+              <div class="deep-section-body">
+                <div class="real-preview-wrap">
+                  <div class="micro-head"><span>情境預覽</span><span>75 / 18 / 7</span></div>
+                  <div class="context-tabs" id="contextTabs">
+                    <button type="button" class="context-tab active" data-context="app">App</button>
+                    <button type="button" class="context-tab" data-context="brand">品牌</button>
+                    <button type="button" class="context-tab" data-context="room">室內</button>
+                    <button type="button" class="context-tab" data-context="outfit">穿搭</button>
+                    <button type="button" class="context-tab" data-context="slides">簡報</button>
+                  </div>
+                  <div class="context-theme-modes" id="contextThemeModes" role="group" aria-label="情境預覽明暗模式">
+                    <button type="button" data-preview-theme="light" aria-pressed="true">Light</button>
+                    <button type="button" data-preview-theme="dark" aria-pressed="false">Dark</button>
+                    <span id="contextThemeNote">使用目前三色</span>
+                  </div>
+                  <div class="real-preview" id="uiPreview"></div>
+                </div>
 
-            <div class="real-preview-wrap">
-              <div class="micro-head"><span>情境預覽</span><span>75 / 18 / 7</span></div>
-              <div class="context-tabs" id="contextTabs">
-                <button type="button" class="context-tab active" data-context="app">App</button>
-                <button type="button" class="context-tab" data-context="brand">品牌</button>
-                <button type="button" class="context-tab" data-context="room">室內</button>
-                <button type="button" class="context-tab" data-context="outfit">穿搭</button>
-                <button type="button" class="context-tab" data-context="slides">簡報</button>
+                <div id="gradientStudioMount"></div>
+                <div id="customDesignMount"></div>
               </div>
-              <div class="context-theme-modes" id="contextThemeModes" role="group" aria-label="情境預覽明暗模式">
-                <button type="button" data-preview-theme="light" aria-pressed="true">Light</button>
-                <button type="button" data-preview-theme="dark" aria-pressed="false">Dark</button>
-                <span id="contextThemeNote">使用目前三色</span>
-              </div>
-              <div class="real-preview" id="uiPreview"></div>
-            </div>
-
-            <div id="gradientStudioMount"></div><div id="customDesignMount"></div>
+            </details>
 
           </div>
         </details>
@@ -2564,7 +2593,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.30.0</div>
+  <div class="footer app-footer">Color Lab V2.31.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2667,6 +2696,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <script src="./runtime/share-snapshot.js"></script>
 <script src="./runtime/custom-design-preview.js"></script>
 <script src="./runtime/tone-explorer.js"></script>
+<script src="./runtime/ux-cleanup.js"></script>
 <script>
 const MODES={
   quiet:{label:'安靜',baseL:.93,structureL:.27,accentShift:22,sat:.26},
@@ -3119,7 +3149,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v5',appVersion:'2.30.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.31.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -4786,8 +4816,7 @@ function render(){
   [['base','75'],['structure','18'],['accent','7']].forEach(([k,t])=>{const d=document.createElement('div');d.style.background=palette[k];d.style.color=textFor(palette[k]);d.innerHTML=`<span>${t}</span>`;pv.appendChild(d)});
   renderPaletteHealth();
   const deep=$('#composeDeepDive');
-  if(deep?.open){renderRelationshipExplanation();renderColorRelationshipMap();renderToneExplorer();renderPaletteValidation();if($('#gradientStudioDetails')?.open)renderGradientStudio();if($('#customDesignPreviewDetails')?.open)renderCustomDesignPreview();}
-  if($('#roleScaleDetails')?.open)renderRoleScale();
+  if(deep?.open)renderDeepDiveVisible();
   scheduleSecondaryRender();
 }
 function scheduleSecondaryRender(){
@@ -4797,7 +4826,7 @@ function scheduleSecondaryRender(){
     const active=document.querySelector('.tab-view.active')?.dataset.view||'compose';
     if(active==='compose'){
       const deep=$('#composeDeepDive');
-      if(deep?.open){renderVision();renderColorRelationshipMap();renderToneExplorer();renderPaletteValidation();renderContextPreview();if($('#customDesignPreviewDetails')?.open)renderCustomDesignPreview()}
+      if(deep?.open)renderDeepDiveVisible()
     }else if(active==='inspire'){
       ensureInspirationResources().then(()=>{if(token===secondaryRenderToken){renderIdeas();renderRecommendations()}});
     }
@@ -5439,12 +5468,7 @@ function switchTab(name,scrollTop=true){
     renderCompare();
     ensureInspirationResources().then(()=>requestAnimationFrame(()=>{renderIdeas();renderRecommendations()}));
   }
-  if(name==='compose'&&$('#composeDeepDive')?.open)requestAnimationFrame(()=>{
-    renderRelationshipExplanation();renderColorRelationshipMap();renderToneExplorer();renderVision();renderContextPreview();
-    if($('#roleScaleDetails')?.open)renderRoleScale();
-    if($('#gradientStudioDetails')?.open)renderGradientStudio();
-    if($('#customDesignPreviewDetails')?.open)renderCustomDesignPreview();
-  });
+  if(name==='compose'&&$('#composeDeepDive')?.open)requestAnimationFrame(renderDeepDiveVisible);
   setCornerNavOpen(false);
   if(scrollTop){
     const targetY=tabScroll[name]??0;
@@ -5554,16 +5578,8 @@ $('#librarySort').value=librarySort;
 $('#librarySort').addEventListener('change',e=>{librarySort=e.target.value;storageWriteRaw('colorlab.librarySort',librarySort,{silent:true});renderSaved()});
 $('#libraryFolderFilter').addEventListener('change',e=>{libraryFolderFilter=e.target.value;renderSaved()});
 $('#comboName').addEventListener('input',e=>{currentComboName=e.target.value;persistDraft()});
-$('#composeDeepDive').addEventListener('toggle',e=>{
-  if(e.currentTarget.open)requestAnimationFrame(()=>{
-    renderRelationshipExplanation();renderColorRelationshipMap();renderToneExplorer();renderPaletteValidation();renderVision();renderContextPreview();
-    if($('#roleScaleDetails')?.open)renderRoleScale();
-    if($('#gradientStudioDetails')?.open)renderGradientStudio();
-    if($('#customDesignPreviewDetails')?.open)renderCustomDesignPreview();
-  });
-});
 renderModes();palette=fastInitialPalette();renderComboSlots();render();updateLockToggle();
-historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();installShareSnapshotHashListener();initCustomDesignPreview();initLocalProjects();initReferenceBoardExport();initGradientStudio();
+historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();installShareSnapshotHashListener();initCustomDesignPreview();initLocalProjects();initReferenceBoardExport();initGradientStudio();initDeepDiveUx();
 setCornerNavOpen(false);
 switchTab(storageReadRaw('colorlab.tab','compose'),false);updatePhotoTarget();
 scheduleNonCriticalStartup();
