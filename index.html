@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="./runtime/photo-palette.css">
 <link rel="stylesheet" href="./runtime/color-relationship.css">
 <link rel="stylesheet" href="./runtime/role-scale.css">
+<link rel="stylesheet" href="./runtime/share-snapshot.css">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Color Lab</title>
 <style>
@@ -2212,7 +2213,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.22.0</div>
+    <div class="version">V2.23.0</div>
   </div>
 
   <main class="app-main">
@@ -2556,7 +2557,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.22.0</div>
+  <div class="footer app-footer">Color Lab V2.23.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2651,6 +2652,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <script src="./runtime/palette-tools.js"></script>
 <script src="./runtime/color-relationship.js"></script>
 <script src="./runtime/role-scale.js"></script>
+<script src="./runtime/share-snapshot.js"></script>
 <script src="./runtime/tone-explorer.js"></script>
 <script>
 const MODES={
@@ -2966,16 +2968,6 @@ function contrastRatio(a,b){
   const L1=lum(a),L2=lum(b),hi=Math.max(L1,L2),lo=Math.min(L1,L2);
   return (hi+.05)/(lo+.05);
 }
-const LEARNING_CONCEPTS={
-  hierarchy:{title:'Hierarchy｜層級',text:'明暗差不是越大越好。它的作用是讓視線知道誰是背景、誰負責結構。75% 與 18% 有足夠差異時，畫面會更容易閱讀。'},
-  hue:{title:'Hue Distance｜色相距離',text:'接近的色相帶來連續感，距離拉開則增加辨識與張力。7% Accent 可以離主體更遠，因為它只負責少量注意力。'},
-  focus:{title:'Focus｜焦點',text:'焦點通常來自彩度、明暗或色相中的一到兩種差異，而不是全部一起拉滿。克制能讓 7% 真正有力量。'}
-};
-function showLearningConcept(key){
-  const note=$('#learningNote'),title=$('#learningTitle'),text=$('#learningText'),item=LEARNING_CONCEPTS[key];
-  if(!note||!title||!text||!item)return;
-  note.hidden=false;title.textContent=item.title;text.textContent=item.text;
-}
 function renderRelationshipExplanation(){
   const host=$('#relationshipExplain');if(!host)return;
   const b=toOKLCH(palette.base),s=toOKLCH(palette.structure),a=toOKLCH(palette.accent);
@@ -3113,7 +3105,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.22.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.23.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -5572,7 +5564,7 @@ function scheduleNonCriticalStartup(){
 
 preferenceState=sanitizePreferenceModel(safeJsonRead('colorlab.preferenceV1',null));
 preferenceEnabled=readPreferenceEnabled();
-restoreDraft();
+restoreDraft();applyShareSnapshotFromLocation();
 $('#comboName').value=currentComboName||'';
 updatePreferenceStatus(false);
 $('#undoBtn').onclick=undoState;
@@ -5606,7 +5598,7 @@ $('#togglePreference').onclick=togglePreferenceModel;
 $('#backupInput').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(file)importBackupFile(file);e.target.value=''});
 $('#clearRecent').onclick=()=>{recentColors=[];localStorage.removeItem('colorlab.recent');renderRecentColors();toast('已清除最近用色')};
 $('#copyPalette').onclick=()=>{navigator.clipboard?.writeText(paletteText()).then(()=>toast('已複製三色')).catch(()=>toast('無法複製'))};
-$('#sharePalette').onclick=sharePalette;
+$('#sharePalette').onclick=openShareSnapshot;
 $$('[data-preview-theme]').forEach(b=>b.addEventListener('click',()=>setPreviewTheme(b.dataset.previewTheme)));
 $$('[data-validation-theme]').forEach(b=>b.addEventListener('click',()=>setValidationTheme(b.dataset.validationTheme)));
 $$('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
