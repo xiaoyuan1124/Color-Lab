@@ -176,27 +176,49 @@ function renderContextPreview(){
   const themed=['app','brand','slides'].includes(previewContext);
   const p=themed?previewThemePalette():{...palette,derived:false};
   const note=$('#contextThemeNote');
-  if(note)note.textContent=!themed?'此情境維持原色':p.derived?'Dark 預覽變體 · 不改原色':'使用目前三色';
+  if(note)note.textContent=!themed?'原色情境 · 75 / 18 / 7':p.derived?'Dark 預覽變體 · 不改原色':'使用目前三色 · 75 / 18 / 7';
+  const labels={app:'App / Web',brand:'品牌',room:'室內',outfit:'穿搭',slides:'簡報'};
   host.className='real-preview';
   host.removeAttribute('style');
+  host.setAttribute('role','img');
+  host.setAttribute('aria-label',(labels[previewContext]||'配色')+'情境預覽，依 75 / 18 / 7 使用目前配色');
+
   if(previewContext==='app'){
-    host.style.background=p.base;host.style.color=p.structure;
-    host.innerHTML='<div class="preview-app-shell"><div class="preview-app-nav"><span>COLOR LAB / UI</span><i style="background:'+p.accent+'"></i></div><div class="preview-app-hero"><div class="mock-kicker">PRODUCT PREVIEW</div><div class="mock-title">讓顏色真的進入介面</div><div class="mock-copy">檢查背景、文字、卡片與主要動作，而不只看色票。</div></div><div class="preview-app-grid"><div class="preview-app-card"><b>Structure</b><span>層級與閱讀</span></div><div class="preview-app-card"><b>Accent</b><button class="mock-cta" type="button" style="margin-top:4px;background:'+p.accent+';color:'+textFor(p.accent)+'">主要動作</button></div></div></div>';
+    const baseText=textFor(p.base),structureText=textFor(p.structure),accentText=textFor(p.accent);
+    host.style.background=p.base;host.style.color=baseText;
+    host.innerHTML='<div class="cp2 cp2-app" aria-hidden="true" style="background:'+p.base+';color:'+baseText+'">'+
+      '<aside class="cp2-app-rail" style="background:'+p.structure+';color:'+structureText+'"><div class="cp2-app-logo" style="background:'+p.accent+';color:'+accentText+'">CL</div><div class="cp2-app-navline" style="background:'+structureText+'"></div><div class="cp2-app-navline short" style="background:'+structureText+'"></div><div class="cp2-app-navline" style="background:'+structureText+'"></div><div class="cp2-app-navline short" style="background:'+structureText+'"></div></aside>'+
+      '<div class="cp2-app-main"><div class="cp2-app-top"><small>Workspace / Overview</small><div class="cp2-app-user" style="background:'+p.structure+';color:'+structureText+'">SY</div></div>'+
+      '<section class="cp2-app-hero" style="border:1px solid '+p.structure+'33"><div><small class="muted">PRODUCT SYSTEM</small><h4>顏色進入真實介面後，層級才看得出來。</h4><p class="muted">Base 承載空間，Structure 建立閱讀秩序，Accent 只負責主要動作。</p></div><span class="cp2-app-cta" style="background:'+p.accent+';color:'+accentText+'">Create report</span></section>'+
+      '<div class="cp2-app-grid"><div class="cp2-app-card" style="background:'+p.structure+';color:'+structureText+'"><small>Monthly usage</small><strong>72%</strong><span class="muted" style="font-size:9px">Structure 承擔資訊密度</span></div>'+
+      '<div class="cp2-app-card" style="border:1px solid '+p.structure+'33"><small>Recent activity</small><div class="cp2-task" style="border-color:'+p.structure+'22"><i style="background:'+p.accent+'"></i><span>Palette approved</span><b>Now</b></div><div class="cp2-task" style="border-color:'+p.structure+'22"><i style="background:'+p.structure+'"></i><span>Tokens exported</span><b>8m</b></div></div></div></div></div>';
   }else if(previewContext==='brand'){
-    host.style.background=p.base;host.style.color=p.structure;
-    host.innerHTML='<div><div class="preview-brand-logo">STUDIO / 01</div><div class="preview-brand-name">Quiet Objects</div></div><div class="mock-row"><div class="mock-copy">Brand system</div><div class="mock-dot" style="background:'+p.accent+'"></div></div>';
+    const baseText=textFor(p.base),structureText=textFor(p.structure),accentText=textFor(p.accent);
+    host.style.background=p.base;host.style.color=baseText;
+    host.innerHTML='<div class="cp2 cp2-brand" aria-hidden="true" style="background:'+p.base+';color:'+baseText+'">'+
+      '<div class="cp2-brand-left"><div class="cp2-brand-poster" style="background:'+p.base+';border:1px solid '+p.structure+'33"><div class="cp2-brand-mark" style="color:'+p.structure+'">Q/O</div><div><small>OBJECTS FOR DAILY LIFE</small><h4>Quiet Objects</h4><p class="muted">一個品牌不只需要 Logo 色，而需要可以維持比例與層級的色彩系統。</p></div></div><div class="cp2-brand-strip"><i style="background:'+p.base+'"></i><i style="background:'+p.structure+'"></i><i style="background:'+p.accent+'"></i></div></div>'+
+      '<div class="cp2-brand-right"><div class="cp2-brand-pack" style="background:'+p.structure+';color:'+structureText+'"><strong>Q/O — 01</strong><span>Packaging / 250 ml</span><span style="display:inline-block;margin-top:12px;padding:5px 7px;border-radius:999px;background:'+p.accent+';color:'+accentText+'">SIGNATURE</span></div>'+
+      '<div class="cp2-brand-card" style="background:'+p.accent+';color:'+accentText+'"><span>Social / Campaign</span><b>MAKE<br>LESS<br>MATTER</b><span>75 / 18 / 7 system</span></div></div></div>';
   }else if(previewContext==='room'){
     host.style.background='transparent';host.style.padding='0';
-    host.innerHTML='<div class="preview-room"><div class="room-wall" style="background:'+p.base+'"></div><div class="room-floor" style="background:'+p.structure+'"></div><div class="room-sofa" style="background:'+p.structure+'"></div><div class="room-art" style="background:'+p.accent+'"></div></div>';
+    host.innerHTML='<div class="cp2 cp2-room" aria-hidden="true">'+
+      '<div class="cp2-room-wall" style="background:'+p.base+'"></div><div class="cp2-room-floor" style="background:'+p.structure+'"></div>'+
+      '<div class="cp2-room-window"></div><div class="cp2-room-sofa" style="background:'+p.structure+'"></div><div class="cp2-room-art" style="background:'+p.accent+'"></div>'+
+      '<div class="cp2-room-table"></div><div class="cp2-room-vase" style="background:'+p.accent+'"></div><span class="cp2-room-note">牆 75 · 家具 18 · 點綴 7</span></div>';
   }else if(previewContext==='outfit'){
-    host.style.background=p.base;host.style.color=p.structure;
-    host.innerHTML='<div class="preview-outfit"><div class="outfit-body"><div class="outfit-top" style="background:'+p.base+';box-shadow:0 0 0 1px '+p.structure+'33"></div><div class="outfit-bottom" style="background:'+p.structure+'"></div></div><div class="outfit-accent" style="background:'+p.accent+'"></div></div>';
+    const baseText=textFor(p.base);
+    host.style.background=p.base;host.style.color=baseText;
+    host.innerHTML='<div class="cp2 cp2-outfit" aria-hidden="true" style="background:'+p.base+';color:'+baseText+'">'+
+      '<div class="cp2-outfit-copy"><div><small>LOOK / 01</small><h4>比例比單色更接近穿搭。</h4><p class="muted">主體色形成整體印象，Structure 負責輪廓，Accent 留給包袋與小面積焦點。</p></div><div class="cp2-outfit-ratio"><i style="background:'+p.base+'"></i><i style="background:'+p.structure+'"></i><i style="background:'+p.accent+'"></i></div></div>'+
+      '<div class="cp2-look"><div class="cp2-look-head"></div><div class="cp2-look-top" style="background:'+p.base+';box-shadow:inset 0 0 0 1px '+p.structure+'44"></div><div class="cp2-look-bottom" style="background:'+p.structure+'"></div><div class="cp2-look-bag" style="background:'+p.accent+';color:'+p.accent+'"></div><div class="cp2-look-shoe" style="background:'+p.structure+'"></div></div></div>';
   }else{
-    host.style.background=p.structure;host.style.color=textFor(p.structure);
-    host.innerHTML='<div class="preview-slide" style="background:'+p.base+';color:'+p.structure+'"><div><div class="slide-title">色彩讓重點被看見</div><div class="slide-line" style="background:'+p.structure+'"></div><div class="slide-line short" style="background:'+p.structure+'"></div></div><div class="mock-row"><span class="mock-kicker">PRESENTATION</span><div class="mock-dot" style="background:'+p.accent+'"></div></div></div>';
+    const baseText=textFor(p.base),structureText=textFor(p.structure),accentText=textFor(p.accent);
+    host.style.background=p.structure;host.style.color=structureText;
+    host.innerHTML='<div class="cp2 cp2-slide" aria-hidden="true" style="background:'+p.structure+';color:'+structureText+'">'+
+      '<section class="cp2-slide-main" style="background:'+p.base+';color:'+baseText+'"><div><small>STRATEGY / 2027</small><h4>Color creates hierarchy before decoration.</h4><p class="muted">標題、圖表、註解與留白共同建立簡報節奏。</p></div><div class="cp2-slide-bars"><i style="height:36%;background:'+p.structure+'"></i><i style="height:58%;background:'+p.structure+'"></i><i style="height:86%;background:'+p.accent+'"></i><i style="height:64%;background:'+p.structure+'"></i></div></section>'+
+      '<aside class="cp2-slide-side" style="background:'+p.structure+';color:'+structureText+'"><div><small>PAGE</small><div class="cp2-slide-num">07</div></div><div><b>Key signal</b><span class="muted">Accent 只標示需要被記住的資訊。</span><span style="display:block;width:20px;height:20px;border-radius:50%;margin-top:9px;background:'+p.accent+';color:'+accentText+'"></span></div></aside></div>';
   }
 }
-
 document.addEventListener('click',event=>{
   const preview=event.target.closest?.('[data-accessibility-preview]');
   if(preview){previewAccessibilitySuggestion(preview.dataset.accessibilityPreview,preview.dataset.accessibilityColor);return}

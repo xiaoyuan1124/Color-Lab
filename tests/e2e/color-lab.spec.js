@@ -361,3 +361,66 @@ test('V2.17 Tone Explorer explicit apply respects locked roles and stale preview
   expect(result.structureChanged).toBe(true);
   expect(result.accentChanged).toBe(true);
 });
+
+test('V2.18 Context Preview 2.0 renders all five real-world scenes without mutating palette', async ({ page }) => {
+  await page.evaluate(() => {
+    selectedColors=['#F2EDE4','#292B29','#C8433D'];
+    lockedSlots=[false,false,false];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+  });
+  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  const before=await page.evaluate(() => paletteArtifactBase());
+
+  const scenes=[
+    ['app','.cp2-app','App / Web'],
+    ['brand','.cp2-brand','品牌'],
+    ['room','.cp2-room','室內'],
+    ['outfit','.cp2-outfit','穿搭'],
+    ['slides','.cp2-slide','簡報']
+  ];
+  for(const [context,selector,label] of scenes){
+    await page.locator('[data-context="'+context+'"]').click();
+    await expect(page.locator('#uiPreview '+selector)).toBeVisible();
+    await expect(page.locator('#uiPreview')).toHaveAttribute('aria-label',new RegExp(label));
+    const current=await page.evaluate(() => paletteArtifactBase());
+    expect(current.palette).toEqual(before.palette);
+  }
+});
+
+test('V2.18 Dark preview only derives UI-like contexts while room and outfit stay exact', async ({ page }) => {
+  await page.evaluate(() => {
+    selectedColors=['#FFFFFF','#222222','#E24A3B'];
+    lockedSlots=[false,false,false];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+  });
+  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  const before=await page.evaluate(() => paletteArtifactBase());
+
+  await page.locator('[data-context="app"]').click();
+  await page.locator('[data-preview-theme="dark"]').click();
+  await expect(page.locator('#contextThemeNote')).toContainText('Dark 預覽變體');
+  const appBg=await page.locator('.cp2-app').evaluate(el => el.style.background);
+  const darkBase=await page.evaluate(() => previewThemePalette('dark').base);
+  expect(appBg.toUpperCase().replace(/\s/g,'')).not.toContain('FFFFFF');
+  expect(darkBase).not.toBe(before.palette.base);
+
+  await page.locator('[data-context="room"]').click();
+  await expect(page.locator('#contextThemeNote')).toContainText('原色情境');
+  const roomWall=await page.locator('.cp2-room-wall').getAttribute('style');
+  expect(roomWall).toContain(before.palette.base);
+
+  await page.locator('[data-context="outfit"]').click();
+  await expect(page.locator('#contextThemeNote')).toContainText('原色情境');
+  const after=await page.evaluate(() => paletteArtifactBase());
+  expect(after.palette).toEqual(before.palette);
+});
+
+test('V2.18 context preview stylesheet is local and loaded', async ({ page }) => {
+  await expect(page.locator('link[href="./runtime/context-preview.css"]')).toHaveCount(1);
+  const style=await page.evaluate(() => {
+    const sheet=[...document.styleSheets].find(x => x.href?.includes('/runtime/context-preview.css'));
+    return {loaded:!!sheet, rules:sheet?.cssRules?.length||0};
+  });
+  expect(style.loaded).toBe(true);
+  expect(style.rules).toBeGreaterThan(20);
+});
