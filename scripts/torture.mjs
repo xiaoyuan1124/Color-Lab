@@ -235,6 +235,7 @@ check('V2.17 Tone Explorer keeps preview separate from palette',
   !appText.includes("palette=toneExplorerPreview"),
   'preview state only');
 check('V2.17 fixed-Hue path keeps original hue input',
+  appText.includes("Object.values(toneFamilies()).map")&&
   appText.includes("gamutMapOKLCH(L,C,o.h)")&&
   appText.includes("family.light?.[i]")&&appText.includes("family.chroma?.[i]"),
   'tone family changes L/C while preserving H');
