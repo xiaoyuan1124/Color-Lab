@@ -1,4 +1,14 @@
 /* Color Lab V2.21 Color Relationship Map — read-only analysis */
+const LEARNING_CONCEPTS={
+  hierarchy:{title:'Hierarchy｜層級',text:'明暗差不是越大越好。它的作用是讓視線知道誰是背景、誰負責結構。75% 與 18% 有足夠差異時，畫面會更容易閱讀。'},
+  hue:{title:'Hue Distance｜色相距離',text:'接近的色相帶來連續感，距離拉開則增加辨識與張力。7% Accent 可以離主體更遠，因為它只負責少量注意力。'},
+  focus:{title:'Focus｜焦點',text:'焦點通常來自彩度、明暗或色相中的一到兩種差異，而不是全部一起拉滿。克制能讓 7% 真正有力量。'}
+};
+function showLearningConcept(key){
+  const note=$('#learningNote'),title=$('#learningTitle'),text=$('#learningText'),item=LEARNING_CONCEPTS[key];
+  if(!note||!title||!text||!item)return;
+  note.hidden=false;title.textContent=item.title;text.textContent=item.text;
+}
 function relationshipRoleData(){
   const items=[
     {key:'base',label:'Base',ratio:75,hex:palette.base},
