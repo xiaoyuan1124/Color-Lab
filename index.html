@@ -4947,14 +4947,6 @@ function loadSaved(index){
   learnPalettePreference(x.palette,.35);
   syncEditor();renderModes();render();pushHistory();switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'});
 }
-function librarySearchText(x){
-  const tags=Array.isArray(x.tags)?x.tags:[];
-  return [
-    (x.name&&x.name.trim())||'未命名配色',
-    x.seed,x.palette?.base,x.palette?.structure,x.palette?.accent,
-    ...(x.selectedColors||[]),...tags,x.folder||'',localProjectSearchText(x)
-  ].filter(Boolean).join(' ').toLowerCase();
-}
 function renderSaved(){
   const el=$('#saved'),data=readSavedData();
   renderLibraryFilters(data);renderFolderFilter(data);renderLocalProjects(data);
