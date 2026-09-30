@@ -2123,7 +2123,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.10</div>
+    <div class="version">V2.10.1</div>
   </div>
 
   <main class="app-main">
@@ -2392,7 +2392,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.10</div>
+  <div class="footer app-footer">Color Lab V2.10.1</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2520,9 +2520,9 @@ let recommendationCacheKey='',recommendationCacheValue=[];
 let recommendationBatchOffset=0;
 const recommendationBatchSize=5;
 const roleShuffleState={
-  base:{key:'',seen:[],familyId:''},
-  structure:{key:'',seen:[],familyId:''},
-  accent:{key:'',seen:[],familyId:''}
+  base:{key:'',pool:[],index:-1,familyId:''},
+  structure:{key:'',pool:[],index:-1,familyId:''},
+  accent:{key:'',pool:[],index:-1,familyId:''}
 };
 let igRelationCache=null;
 let preferenceState=null,preferenceEnabled=true;
@@ -2953,7 +2953,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.10.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.10.1',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -4520,17 +4520,11 @@ function roleAlternativePool(role,limit=36,familyId=''){
   }
   return out;
 }
-function nextRoleAlternative(role,pool){
+function nextRoleAlternative(role){
   const state=roleShuffleState[role];
-  if(!state||!pool.length)return null;
-  let next=pool.find(hex=>!state.seen.includes(hex)&&hex!==palette[role]);
-  if(!next){
-    state.seen=[];
-    next=pool.find(hex=>hex!==palette[role])||pool[0];
-  }
-  state.seen.push(next);
-  if(state.seen.length>pool.length)state.seen=state.seen.slice(-pool.length);
-  return next;
+  if(!state||!state.pool.length)return null;
+  state.index=(state.index+1)%state.pool.length;
+  return state.pool[state.index];
 }
 function fastInitialPalette(){
   const inputs=chosenColors();
@@ -4545,17 +4539,17 @@ async function shuffle(role){
   await ensureToneFamilies();
   const state=roleShuffleState[role];
   const key=roleAlternativeContext(role);
-  if(state.key!==key){
-    state.key=key;state.seen=[];
+  if(state.key!==key||!state.pool.length){
+    state.key=key;
+    state.index=-1;
     state.familyId=inferToneFamilyId([palette.base,palette.structure,palette.accent],role==='accent'?'expressive':'editorial');
+    state.pool=roleAlternativePool(role,36,state.familyId);
   }
-  const pool=roleAlternativePool(role,36,state.familyId);
-  const next=nextRoleAlternative(role,pool);
+  const next=nextRoleAlternative(role);
   if(!next){toast('這個色調世界暫時沒有更多合適選項');return}
   palette[role]=next;
   render();
-  const remaining=Math.max(0,pool.length-state.seen.length);
-  toast(remaining>0?'已換色 · 還有 '+remaining+' 個候選':'已看完這輪候選 · 下次重新循環');
+  toast('第 '+(state.index+1)+' / '+state.pool.length+' 個候選');
 }
 function render(){
   const p=$('#palette');p.innerHTML='';

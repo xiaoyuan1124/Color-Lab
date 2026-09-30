@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.10**
+**目前版本：V2.10.1**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -144,6 +144,17 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
 
+## V2.10.1 Stable Candidate Session
+
+修正「換一個」候選編號 6 → 4 → 11 → 2 亂跳：
+
+- 第一次按某角色的「換一個」時，建立並凍結該輪候選池
+- 同一輪不會因為剛換出的顏色再次重算、重排候選
+- 游標固定依序前進：第 1 / N → 第 2 / N → 第 3 / N
+- 走到第 N 個後才回到第 1 個
+- 只有其他角色、使用者自選色或整組條件改變時，才建立新的候選 session
+- Tone Family、Aesthetic Gate 與 Tonal Cohesion 規則完全保留
+
 ## V2.10 Exploration Depth
 
 V2.10 解決「和諧了，但可選顏色太少」：
@@ -275,7 +286,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v210-exploration-depth`
+目前 cache generation：`color-lab-v2101-stable-candidate-session`
 
 ## Quality Gates
 

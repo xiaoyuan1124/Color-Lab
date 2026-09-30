@@ -173,6 +173,19 @@ check('V2.10 legacy random five-option shuffle removed',
   !html.includes('Math.floor(Math.random()*Math.min(5,opts.length))'),
   'legacy cap removed');
 
+
+check('V2.10.1 shuffle uses a frozen candidate pool',
+  html.includes("state.pool=roleAlternativePool(role,36,state.familyId)")&&
+  html.includes("state.index=(state.index+1)%state.pool.length"),
+  'frozen pool + sequential cursor');
+check('V2.10.1 candidate progress is monotonic within a session',
+  html.includes("toast('第 '+(state.index+1)+' / '+state.pool.length+' 個候選')")&&
+  !html.includes("toast(remaining>0?'已換色 · 還有 '"),
+  '1 / N, 2 / N, 3 / N');
+check('V2.10.1 shuffle no longer rebuilds the pool after every color',
+  !html.includes('const pool=roleAlternativePool(role,36,state.familyId);'),
+  'pool built only when context changes');
+
 const tonalRaw=['#C84335','#315EAA','#5E6648'];
 const tonalMorandi=A.tonalHarmonizeGenerated(tonalRaw,0,'morandi');
 check('tonal harmonizer emits valid Morandi trio',
