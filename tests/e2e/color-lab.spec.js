@@ -143,3 +143,54 @@ test('V2.13.1 local palette runtime is loaded and callable', async ({ page }) =>
   expect(api.context).toBe('function');
   expect(api.dark.derived).toBe(true);
 });
+
+test('V2.14 suggests the smallest AA fix, previews without mutation, and applies only on request', async ({ page }) => {
+  const algorithm = await page.evaluate(() => {
+    const suggestion = nearestAccessibleColor('#777777', '#FFFFFF', 4.5);
+    return {
+      suggestion,
+      ratio: contrastRatio(suggestion.color, '#FFFFFF'),
+      baseStructure: accessibilityChangeRole('base', 'structure'),
+      baseAccent: accessibilityChangeRole('base', 'accent')
+    };
+  });
+  expect(algorithm.suggestion.color).not.toBe('#777777');
+  expect(algorithm.ratio).toBeGreaterThanOrEqual(4.5);
+  expect(algorithm.baseStructure).toBe('structure');
+  expect(algorithm.baseAccent).toBe('accent');
+
+  await page.evaluate(() => {
+    selectedColors = ['#FFFFFF', '#777777', '#999999'];
+    lockedSlots = [false, false, false];
+    activeSlot = 0;
+    seed = selectedColors[0];
+    generate(false);
+  });
+  await page.locator('#composeDeepDive').evaluate(el => { el.open = true; el.dispatchEvent(new Event('toggle')); });
+
+  const before = await page.evaluate(() => paletteArtifactBase());
+  const previewButton = page.locator('[data-accessibility-preview="structure"]').first();
+  await expect(previewButton).toBeVisible();
+  const suggestionColor = await previewButton.getAttribute('data-accessibility-color');
+  expect(suggestionColor).toMatch(/^#[0-9A-F]{6}$/);
+
+  await previewButton.click();
+  await expect(page.locator('.accessibility-preview')).toBeVisible();
+  await expect(page.locator('.accessibility-preview')).toContainText('只比較，不改原色');
+  const afterPreview = await page.evaluate(() => paletteArtifactBase());
+  expect(afterPreview.palette).toEqual(before.palette);
+
+  const applyButton = page.locator('[data-accessibility-apply="structure"]').first();
+  await applyButton.click();
+  const afterApply = await page.evaluate(() => paletteArtifactBase());
+  expect(afterApply.palette.structure).toBe(suggestionColor);
+  expect(afterApply.palette.base).toBe(before.palette.base);
+  expect(await page.evaluate(() => contrastRatio(palette.structure, palette.base))).toBeGreaterThanOrEqual(4.5);
+});
+
+test('V2.14 Dark validation never offers source-color apply actions', async ({ page }) => {
+  await page.locator('#composeDeepDive').evaluate(el => { el.open = true; el.dispatchEvent(new Event('toggle')); });
+  await page.locator('[data-validation-theme="dark"]').click();
+  await expect(page.locator('#accessibilityFixes')).toContainText('Dark 為衍生預覽');
+  await expect(page.locator('[data-accessibility-apply]')).toHaveCount(0);
+});
