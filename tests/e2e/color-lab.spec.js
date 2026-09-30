@@ -572,7 +572,7 @@ test('V2.20 keeps advanced handoff formats behind compact disclosure', async ({ 
   await expect(page.locator('[data-export-format="tailwind"]')).toBeVisible();
   await expect(page.locator('[data-export-format="swiftui"]')).toBeVisible();
   await expect(page.locator('[data-export-format="svg"]')).toBeVisible();
-  await expect(page.locator('.handoff-more-actions .utility-btn')).toHaveCount(4);
+  await expect(page.locator('.handoff-more-actions .utility-btn')).toHaveCount(7);
   await expect(page.locator('#exportReferenceBoard')).toBeVisible();
 });
 
@@ -1195,4 +1195,50 @@ test('V2.28 three-role gradient preserves exact Base Structure Accent order and 
   expect(result.pair).toBe('system');
   expect(result.angle).toBe(45);
   expect(result.after).toEqual(result.before);
+});
+
+
+test('V2.29 exports SCSS Flutter and Jetpack from exact source colors', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    selectedColors=['#112233','#445566','#AABBCC'];
+    lockedSlots=[false,false,false];activeSlot=0;seed=selectedColors[0];generate(false);
+    const before=paletteArtifactBase();
+    setPreviewTheme('dark');
+    setVisionMode('deutan');
+    setGradientStudioPair('system');
+    setGradientStudioAngle(45);
+    const scss=paletteArtifact('scss');
+    const flutter=paletteArtifact('flutter');
+    const jetpack=paletteArtifact('jetpack');
+    return {before,after:paletteArtifactBase(),scss,flutter,jetpack};
+  });
+
+  expect(result.scss.name).toMatch(/\.scss$/);
+  expect(result.scss.text).toContain('$color-base: #112233;');
+  expect(result.scss.text).toContain('$color-structure: #445566;');
+  expect(result.scss.text).toContain('$color-accent: #AABBCC;');
+
+  expect(result.flutter.name).toMatch(/\.dart$/);
+  expect(result.flutter.text).toContain('Color(0xFF112233)');
+  expect(result.flutter.text).toContain('Color(0xFF445566)');
+  expect(result.flutter.text).toContain('Color(0xFFAABBCC)');
+
+  expect(result.jetpack.name).toMatch(/\.kt$/);
+  expect(result.jetpack.text).toContain('Color(0xFF112233)');
+  expect(result.jetpack.text).toContain('Color(0xFF445566)');
+  expect(result.jetpack.text).toContain('Color(0xFFAABBCC)');
+  expect(result.after).toEqual(result.before);
+});
+
+test('V2.29 framework formats remain inside the existing compact handoff disclosure', async ({ page }) => {
+  await expect(page.locator('[data-export-format="scss"]')).not.toBeVisible();
+  await expect(page.locator('[data-export-format="flutter"]')).not.toBeVisible();
+  await expect(page.locator('[data-export-format="jetpack"]')).not.toBeVisible();
+
+  await page.locator('#handoffMore summary').click();
+
+  await expect(page.locator('[data-export-format="scss"]')).toBeVisible();
+  await expect(page.locator('[data-export-format="flutter"]')).toBeVisible();
+  await expect(page.locator('[data-export-format="jetpack"]')).toBeVisible();
+  await expect(page.locator('#handoffMore .handoff-more-actions .utility-btn')).toHaveCount(7);
 });
