@@ -129,7 +129,7 @@ if(!appSource.includes("validationTheme!=='original'")||
    !appSource.includes("data-accessibility-apply")||
    !appSource.includes("data-accessibility-preview")){
   fail('V2.14.0 preview-only before explicit apply contract missing');
-}else pass('V2.16.0 preview before explicit apply');
+}else pass('V2.14.0 preview before explicit apply');
 
 
 if(!appSource.includes("recommendationRecentLimit=24")||
@@ -160,6 +160,12 @@ if(!appSource.includes("penalty+=clamp((averageChroma-.21)/.12)*(1-energyStructu
    !appSource.includes("vividIntent*.04")){
   fail('V2.16.0 vivid-overload guard missing');
 }else pass('V2.16.0 vivid palettes judged by structure, not saturation alone');
+
+if(!appSource.includes("const supportChroma=Math.max(baseO.c,structureO.c)")||
+   !appSource.includes("const accentControl=")||
+   appSource.includes("const chromaUsability=")){
+  fail('V2.16.0 role-aware practicality contract missing');
+}else pass('V2.16.0 vivid Accent practicality is role-aware');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
