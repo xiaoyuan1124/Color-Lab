@@ -1,5 +1,5 @@
-const CACHE='color-lab-v2180-context-preview-2';
-const ASSETS=['./','./index.html','./manifest.json','./apple-touch-icon.png','./icon-192.png','./icon-512.png','./vendor/poline.umd.js','./vendor/iro.min.js','./vendor/Sortable.min.js','./data/fashion-palettes.js','./data/ig-style-patterns.js','./data/inspiration-atlas.js','./data/tone-families.js','./runtime/palette-tools.js','./runtime/tone-explorer.js','./runtime/context-preview.css'];
+const CACHE='color-lab-v2190-photo-palette-2';
+const ASSETS=['./','./index.html','./manifest.json','./apple-touch-icon.png','./icon-192.png','./icon-512.png','./vendor/poline.umd.js','./vendor/iro.min.js','./vendor/Sortable.min.js','./data/fashion-palettes.js','./data/ig-style-patterns.js','./data/inspiration-atlas.js','./data/tone-families.js','./runtime/palette-tools.js','./runtime/tone-explorer.js','./runtime/context-preview.css','./runtime/photo-palette.js','./runtime/photo-palette.css'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(
