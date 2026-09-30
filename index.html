@@ -15,7 +15,6 @@
 <link rel="stylesheet" href="./runtime/share-snapshot.css">
 <link rel="stylesheet" href="./runtime/custom-design-preview.css">
 <link rel="stylesheet" href="./runtime/vision-accessibility.css">
-<link rel="stylesheet" href="./runtime/library-projects.css">
 <link rel="stylesheet" href="./runtime/local-projects.css">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Color Lab</title>
@@ -2521,7 +2520,6 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
         <div class="library-search-wrap">
           <input id="librarySearch" class="library-search" type="search" placeholder="搜尋名稱 HEX 或標籤" autocomplete="off" aria-label="搜尋收藏配色">
         </div>
-        <div class="library-projects" id="libraryProjectsMount"></div>
         <div class="tag-filters" id="libraryFilters"></div>
         <div class="library-organize">
           <label class="select-wrap"><span>排序</span><select id="librarySort">
@@ -2530,8 +2528,8 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
             <option value="name">名稱</option>
             <option value="oldest">最早加入</option>
           </select></label>
-          <label class="select-wrap"><span>專案</span><select id="libraryFolderFilter">
-            <option value="">全部專案</option>
+          <label class="select-wrap"><span>分類</span><select id="libraryFolderFilter">
+            <option value="">全部分類</option>
           </select></label>
         </div>
         <div class="preference-strip" id="preferencePanel">
@@ -2615,7 +2613,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
       <button type="button" class="action-row" data-saved-action="pin"><span id="savedPinActionLabel">置頂</span><span>☆</span></button>
       <button type="button" class="action-row" data-saved-action="rename"><span>重新命名</span><span>Aa</span></button>
       <button type="button" class="action-row" data-saved-action="tags"><span>編輯標籤</span><span>#</span></button>
-      <button type="button" class="action-row" data-saved-action="folder"><span>移動專案</span><span>⌁</span></button>
+      <button type="button" class="action-row" data-saved-action="folder"><span>移動分類</span><span>⌁</span></button>
       <button type="button" class="action-row danger" data-saved-action="delete"><span>刪除配色</span><span>×</span></button>
     </div>
   </section>
@@ -2659,7 +2657,6 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 
 <script src="./runtime/palette-tools.js"></script>
 <script src="./runtime/vision-accessibility.js"></script>
-<script src="./runtime/library-projects.js"></script>
 <script src="./runtime/local-projects.js"></script>
 <script src="./runtime/color-relationship.js"></script>
 <script src="./runtime/role-scale.js"></script>
@@ -4921,10 +4918,22 @@ function save(){
   toast('已收藏 '+currentComboName);
 }
 
+function renderFolderFilter(data){
+  const select=$('#libraryFolderFilter');if(!select)return;
+  const folders=[...new Set(data.map(x=>(x.folder||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'zh-Hant'));
+  const current=libraryFolderFilter;
+  select.innerHTML='<option value="">全部分類</option>'+folders.map(f=>'<option value="'+escapeHtml(f)+'">'+escapeHtml(f)+'</option>').join('');
+  if(folders.includes(current))select.value=current;else{libraryFolderFilter='';select.value=''}
+}
 function toggleSavedPin(index){
   const data=readSavedData(),item=data[index];if(!item)return;
   item.pinned=!item.pinned;localStorage.setItem('colorlab.saved',JSON.stringify(data));scheduleResilienceBackup();renderSaved();
   toast(item.pinned?'已置頂':'已取消置頂');
+}
+function editSavedFolder(index){
+  const data=readSavedData(),item=data[index];if(!item)return;
+  const next=prompt('分類名稱 留空代表未分類',item.folder||'');if(next===null)return;
+  item.folder=next.trim().slice(0,20);localStorage.setItem('colorlab.saved',JSON.stringify(data));scheduleResilienceBackup();renderSaved();toast(item.folder?'已移到 '+item.folder:'已移出分類');
 }
 function openSavedActions(index){
   const data=readSavedData(),item=data[index];if(!item)return;
@@ -4955,7 +4964,7 @@ function librarySearchText(x){
 }
 function renderSaved(){
   const el=$('#saved'),data=readSavedData();
-  renderLibraryFilters(data);renderFolderFilter(data);renderLibraryProjects(data);renderLocalProjects(data);
+  renderLibraryFilters(data);renderFolderFilter(data);renderLocalProjects(data);
   const q=($('#librarySearch')?.value||'').trim().toLowerCase();
   let rows=data.map((x,i)=>({x,i})).filter(({x})=>{
     const tags=Array.isArray(x.tags)?x.tags:[];
