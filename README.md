@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.20.0**
+**目前版本：V2.21.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,19 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.21.0 Color Relationship Map
+
+把既有推薦引擎已經理解、但過去只以文字呈現的三色關係直接視覺化：
+
+- 在「深入理解」加入 read-only Color Relationship Map，不增加主導航或首屏資訊密度
+- Hue 使用色環位置顯示 Base / Structure / Accent 三個角色，並以三條關係線呈現三色幾何距離
+- Lightness 與 Chroma 各自用三角色條帶呈現，不再只靠一句摘要判斷
+- 75 / 18 / 7 role weight 直接與目前三個 exact source colors 並列，維持 Color 1 → Base、Color 2 → Structure、Color 3 → Accent
+- Relationship verdict 分開解釋 Hue continuity、Base / Structure 明暗節奏與 Accent chroma lift
+- 分析完全只讀，不寫入 selectedColors、palette、收藏或匯出，也不重新排序使用者原色
+- 只有 Compose「深入理解」展開時才 render，不增加首屏 startup 工作
+- runtime 與 stylesheet 都是本地檔案並加入 Service Worker offline cache
 
 ## V2.20.0 Professional Export 2.0
 
@@ -451,7 +464,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v2200-professional-export-2`
+目前 cache generation：`color-lab-v2210-color-relationship-map`
 
 ## Quality Gates
 
