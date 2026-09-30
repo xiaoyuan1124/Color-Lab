@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 const html=fs.readFileSync('index.html','utf8');
+const storageHardening=fs.readFileSync('runtime/storage-hardening.js','utf8');
 const paletteTools=fs.readFileSync('runtime/palette-tools.js','utf8');
 const toneExplorer=fs.readFileSync('runtime/tone-explorer.js','utf8');
 const photoPalette=fs.readFileSync('runtime/photo-palette.js','utf8');
@@ -12,7 +13,7 @@ const visionAccessibility=fs.readFileSync('runtime/vision-accessibility.js','utf
 const localProjects=fs.readFileSync('runtime/local-projects.js','utf8');
 const referenceBoard=fs.readFileSync('runtime/reference-board.js','utf8');
 const gradientStudio=fs.readFileSync('runtime/gradient-studio.js','utf8');
-const appText=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio;
+const appText=html+'\n'+storageHardening+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio;
 const toneSource=fs.readFileSync('data/tone-families.js','utf8');
 const inlineScripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
 const scriptMatch=inlineScripts.at(-1);
@@ -21,6 +22,8 @@ if(!scriptMatch){
   process.exit(1);
 }
 const source=scriptMatch[1];
+try{new Function(storageHardening)}
+catch(e){console.error('FAIL storage hardening runtime syntax',e.message);process.exit(1)}
 try{new Function(paletteTools)}
 catch(e){console.error('FAIL palette tools runtime syntax',e.message);process.exit(1)}
 try{new Function(toneExplorer)}
@@ -428,6 +431,21 @@ check('V2.29 framework handoff stays exact-source',
   paletteTools.includes("'  static const Color base = Color(0xFF'+data.palette.base.slice(1)")&&
   paletteTools.includes("'val ColorLabBase = Color(0xFF'+data.palette.base.slice(1)"),
   'framework formats read the source handoff directly');
+check('V2.30 storage writes fail closed instead of throwing through UI paths',
+  storageHardening.includes('function storageWriteRaw(')&&
+  storageHardening.includes('catch(_){if(!silent)storageNotifyFailure(message);return false}')&&
+  appText.includes("if(!storageWriteJson('colorlab.saved',data))return"),
+  'critical saved-palette writes stop before success UI when storage fails');
+check('V2.30 intentional empty saved library is not treated as missing',
+  appText.includes("const savedState=storageJsonState('colorlab.saved',Array.isArray)")&&
+  appText.includes("const needsSaved=savedState.status!=='valid'")&&
+  !appText.includes('const needsSaved=currentSaved.length===0'),
+  'valid [] remains authoritative and stale shadow data cannot resurrect it');
+check('V2.30 backup and project multi-key writes have rollback boundaries',
+  storageHardening.includes('function storageTransaction(keys,fn)')&&
+  appText.includes("storageTransaction(keys,()=>")&&
+  localProjects.includes("storageTransaction(['colorlab.saved',LOCAL_PROJECTS_KEY]"),
+  'multi-key writes restore captured local state on failure');
 
 check('V2.18 context preview ships five realistic scene contracts',
   appText.includes('class="cp2 cp2-app"')&&
