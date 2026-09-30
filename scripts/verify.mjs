@@ -276,8 +276,8 @@ if(html.includes("Math.floor(Math.random()*Math.min(5,opts.length))")){
   fail('V2.10.1 legacy five-color shuffle cap still active');
 }else pass('V2.10.1 role shuffle five-color cap removed');
 
-if(!html.includes('roleAlternativePool(role,36,state.familyId)')||
-   !html.includes("toast(remaining>0?'已換色 · 還有 '")){
+if(!html.includes('state.pool=roleAlternativePool(role,36,state.familyId)')||
+   !html.includes("toast('第 '+(state.index+1)+' / '+state.pool.length+' 個候選')")){
   fail('V2.10.1 deep role alternative pool missing');
 }else pass('V2.10.1 deep role alternative pool');
 
