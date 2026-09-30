@@ -46,6 +46,13 @@ function localProjectName(id){
   if(!id)return'';
   return readLocalProjects().find(x=>x.id===id)?.name||'';
 }
+function renderFolderFilter(data){
+  const select=$('#libraryFolderFilter');if(!select)return;
+  const folders=[...new Set(data.map(x=>(x.folder||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'zh-Hant'));
+  const current=libraryFolderFilter;
+  select.innerHTML='<option value="">全部分類</option>'+folders.map(f=>'<option value="'+escapeHtml(f)+'">'+escapeHtml(f)+'</option>').join('');
+  if(folders.includes(current))select.value=current;else{libraryFolderFilter='';select.value=''}
+}
 function localProjectCountMap(data=readSavedData()){
   const counts=new Map();
   data.forEach(item=>{const id=sanitizeProjectId(item.projectId);if(id)counts.set(id,(counts.get(id)||0)+1)});
