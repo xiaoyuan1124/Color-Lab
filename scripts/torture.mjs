@@ -437,8 +437,8 @@ check('V2.30 storage writes fail closed instead of throwing through UI paths',
   appText.includes("if(!storageWriteJson('colorlab.saved',data))return"),
   'critical saved-palette writes stop before success UI when storage fails');
 check('V2.30 intentional empty saved library is not treated as missing',
-  appText.includes("const savedState=storageJsonState('colorlab.saved',Array.isArray)")&&
-  appText.includes("const needsSaved=savedState.status!=='valid'")&&
+  storageHardening.includes('function storageNeedsRecovery(')&&
+  appText.includes("const needsSaved=storageNeedsRecovery('colorlab.saved',Array.isArray)")&&
   !appText.includes('const needsSaved=currentSaved.length===0'),
   'valid [] remains authoritative and stale shadow data cannot resurrect it');
 check('V2.30 backup and project multi-key writes have rollback boundaries',
