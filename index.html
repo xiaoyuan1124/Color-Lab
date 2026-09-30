@@ -636,6 +636,13 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 .health-item span{font-size:var(--text-xs);color:var(--text-2)}
 .health-item.good strong{color:var(--olive-11)}
 .health-item.warn strong{color:#875F43}
+.validation-lab{padding:24px 0;border-block:1px solid var(--border-subtle)}
+.validation-summary{display:flex;gap:8px 16px;flex-wrap:wrap;margin-bottom:12px;font-size:11px;color:var(--text-2)}
+.validation-table-wrap{overflow-x:auto;border-block:1px solid var(--hairline)}
+.validation-table{width:100%;min-width:330px;border-collapse:collapse;table-layout:fixed;font-size:10px}
+.validation-table :is(th,td){padding:9px 4px;text-align:center;border:1px solid var(--hairline)}
+.validation-cell strong,.validation-cell span{display:block}.validation-cell span{margin-top:2px;color:var(--text-3)}
+.validation-cell:is(.aaa,.aa) span{color:var(--olive-11)}.validation-cell.large span{color:#875F43}.validation-cell.fail span{color:#8A5C52}
 .real-preview-wrap{
   margin-top:var(--space-6);
   padding-top:var(--space-5);
@@ -2167,7 +2174,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.12.0</div>
+    <div class="version">V2.13.0</div>
   </div>
 
   <main class="app-main">
@@ -2249,6 +2256,16 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
                 <strong id="learningTitle"></strong>
                 <p id="learningText"></p>
               </div>
+            </div>
+
+            <div class="validation-lab">
+              <div class="micro-head"><span>可讀性矩陣</span><span>WCAG 2.x · 不改原色</span></div>
+              <div class="context-theme-modes validation-theme-modes" id="validationThemeModes" role="group" aria-label="可讀性驗證模式">
+                <button type="button" data-validation-theme="original" aria-pressed="true">Light / 原色</button>
+                <button type="button" data-validation-theme="dark" aria-pressed="false">Dark 預覽</button>
+              </div>
+              <div class="validation-summary" id="validationSummary"></div>
+              <div class="validation-table-wrap" id="accessibilityMatrix"></div>
             </div>
 
             <div class="vision-lab">
@@ -2461,7 +2478,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.12.0</div>
+  <div class="footer app-footer">Color Lab V2.13.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2578,7 +2595,7 @@ let selectedColors=['#68705E',null,null],activeSlot=0,currentComboName='';
 let lockedSlots=[false,false,false];
 let compareA=sanitizeCompareRecord(safeJsonRead('colorlab.compareA',null));
 let compareB=sanitizeCompareRecord(safeJsonRead('colorlab.compareB',null));
-let visionMode='normal',previewContext='app',previewTheme=localStorage.getItem('colorlab.previewTheme')||'light',libraryTagFilter='';
+let visionMode='normal',previewContext='app',previewTheme=localStorage.getItem('colorlab.previewTheme')||'light',validationTheme='original',libraryTagFilter='';
 if(!['light','dark'].includes(previewTheme))previewTheme='light';
 let librarySort=localStorage.getItem('colorlab.librarySort')||'recent',libraryFolderFilter='';
 let savedActionIndex=null,deferredInstallPrompt=null;
@@ -2866,6 +2883,24 @@ function contrastRatio(a,b){
   const L1=lum(a),L2=lum(b),hi=Math.max(L1,L2),lo=Math.min(L1,L2);
   return (hi+.05)/(lo+.05);
 }
+const VALIDATION_ROLES=[['base','Base'],['structure','Structure'],['accent','Accent']];
+function contrastGrade(r){return r>=7?['aaa','AAA']:r>=4.5?['aa','AA']:r>=3?['large','大字/UI']:['fail','Accent/裝飾']}
+function paletteValidationData(theme='original'){
+  const colors=theme==='dark'?previewThemePalette('dark'):{...palette,derived:false};
+  const pairs=[['base','structure'],['base','accent'],['structure','accent']].map(([a,b])=>({a,b,ratio:contrastRatio(colors[a],colors[b])}));
+  return{pairs,normal:pairs.filter(x=>x.ratio>=4.5).length,large:pairs.filter(x=>x.ratio>=3).length};
+}
+function validationPair(d,a,b){return d.pairs.find(x=>(x.a===a&&x.b===b)||(x.a===b&&x.b===a))}
+function setValidationTheme(next){if(['original','dark'].includes(next)){validationTheme=next;renderPaletteValidation()}}
+function renderPaletteValidation(){
+  const host=$('#accessibilityMatrix'),summary=$('#validationSummary');if(!host||!summary)return;
+  const d=paletteValidationData(validationTheme);
+  $$('#validationThemeModes [data-validation-theme]').forEach(b=>{const on=b.dataset.validationTheme===validationTheme;b.classList.toggle('active',on);b.setAttribute('aria-pressed',on?'true':'false')});
+  summary.innerHTML='<span><strong>'+d.normal+' / 3</strong> 組可作一般文字</span><span><strong>'+d.large+' / 3</strong> 組達 3:1</span>';
+  const head='<thead><tr><th scope="col">文字 ↓ / 背景 →</th>'+VALIDATION_ROLES.map(x=>'<th scope="col">'+x[1]+'</th>').join('')+'</tr></thead>';
+  const body='<tbody>'+VALIDATION_ROLES.map(row=>'<tr><th scope="row" class="row-head">'+row[1]+'</th>'+VALIDATION_ROLES.map(col=>{if(row[0]===col[0])return'<td>—</td>';const p=validationPair(d,row[0],col[0]),g=contrastGrade(p.ratio);return'<td class="validation-cell '+g[0]+'"><strong>'+p.ratio.toFixed(1)+':1</strong><span>'+g[1]+'</span></td>'}).join('')+'</tr>').join('')+'</tbody>';
+  host.innerHTML='<table class="validation-table" aria-label="三色對比矩陣">'+head+body+'</table>';
+}
 
 const LEARNING_CONCEPTS={
   hierarchy:{title:'Hierarchy｜層級',text:'明暗差不是越大越好。它的作用是讓視線知道誰是背景、誰負責結構。75% 與 18% 有足夠差異時，畫面會更容易閱讀。'},
@@ -2898,11 +2933,10 @@ function renderRelationshipExplanation(){
 }
 function renderPaletteHealth(){
   const host=$('#paletteHealth');if(!host)return;
-  const bs=contrastRatio(palette.base,palette.structure);
-  const ba=contrastRatio(palette.base,palette.accent);
+  const data=paletteValidationData('original');
   host.innerHTML=
-    '<div class="health-item '+(bs>=4.5?'good':'warn')+'"><strong>'+(bs>=4.5?'文字對比清楚':'文字對比偏低')+'</strong><span>Base / Structure '+bs.toFixed(1)+':1</span></div>'+
-    '<div class="health-item '+(ba>=3?'good':'warn')+'"><strong>'+(ba>=3?'點綴辨識清楚':'點綴較接近背景')+'</strong><span>Base / Accent '+ba.toFixed(1)+':1</span></div>';
+    '<div class="health-item '+(data.normal===3?'good':'warn')+'"><strong>'+data.normal+' / 3 組可作一般文字</strong><span>WCAG AA 4.5:1</span></div>'+
+    '<div class="health-item '+(data.large===3?'good':'warn')+'"><strong>'+data.large+' / 3 組達 UI 對比</strong><span>大字 / 非文字元件 3:1</span></div>';
 }
 function renderUIPreview(){renderContextPreview()}
 function paletteText(){
@@ -3058,7 +3092,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.12.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.13.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -3181,8 +3215,8 @@ function renderVision(){
   [palette.base,palette.structure,palette.accent].forEach(hex=>{const d=document.createElement('div');d.style.background=transformVision(hex,visionMode);host.appendChild(d)});
   $$('#visionModes [data-vision]').forEach(b=>b.classList.toggle('active',b.dataset.vision===visionMode));
 }
-function previewThemePalette(){
-  if(previewTheme!=='dark')return{...palette,derived:false};
+function previewThemePalette(theme=previewTheme){
+  if(theme!=='dark')return{...palette,derived:false};
   const b=toOKLCH(palette.base),s=toOKLCH(palette.structure);
   return{
     base:gamutMapOKLCH(clamp(Math.min(.22,b.l*.28),.08,.22),Math.min(b.c*.62,.08),b.h),
@@ -4798,7 +4832,7 @@ function render(){
   [['base','75'],['structure','18'],['accent','7']].forEach(([k,t])=>{const d=document.createElement('div');d.style.background=palette[k];d.style.color=textFor(palette[k]);d.innerHTML=`<span>${t}</span>`;pv.appendChild(d)});
   renderPaletteHealth();
   const deep=$('#composeDeepDive');
-  if(deep?.open)renderRelationshipExplanation();
+  if(deep?.open){renderRelationshipExplanation();renderPaletteValidation();}
   scheduleSecondaryRender();
 }
 function scheduleSecondaryRender(){
@@ -4808,7 +4842,7 @@ function scheduleSecondaryRender(){
     const active=document.querySelector('.tab-view.active')?.dataset.view||'compose';
     if(active==='compose'){
       const deep=$('#composeDeepDive');
-      if(deep?.open){renderVision();renderContextPreview()}
+      if(deep?.open){renderVision();renderPaletteValidation();renderContextPreview()}
     }else if(active==='inspire'){
       ensureInspirationResources().then(()=>{if(token===secondaryRenderToken){renderIdeas();renderRecommendations()}});
     }
@@ -5559,6 +5593,7 @@ $('#clearRecent').onclick=()=>{recentColors=[];localStorage.removeItem('colorlab
 $('#copyPalette').onclick=()=>{navigator.clipboard?.writeText(paletteText()).then(()=>toast('已複製三色')).catch(()=>toast('無法複製'))};
 $('#sharePalette').onclick=sharePalette;
 $$('[data-preview-theme]').forEach(b=>b.addEventListener('click',()=>setPreviewTheme(b.dataset.previewTheme)));
+$$('[data-validation-theme]').forEach(b=>b.addEventListener('click',()=>setValidationTheme(b.dataset.validationTheme)));
 $$('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
 $('#librarySearch').addEventListener('input',renderSaved);
 $('#librarySort').value=librarySort;
@@ -5567,7 +5602,7 @@ $('#libraryFolderFilter').addEventListener('change',e=>{libraryFolderFilter=e.ta
 $('#comboName').addEventListener('input',e=>{currentComboName=e.target.value;persistDraft()});
 $('#composeDeepDive').addEventListener('toggle',e=>{
   if(e.currentTarget.open)requestAnimationFrame(()=>{
-    renderRelationshipExplanation();renderVision();renderContextPreview();
+    renderRelationshipExplanation();renderPaletteValidation();renderVision();renderContextPreview();
   });
 });
 renderModes();palette=fastInitialPalette();renderComboSlots();render();updateLockToggle();
