@@ -237,7 +237,7 @@ check('V2.19 photo palette uses perceptual dedupe',
   appText.includes('perceptualDistance(x.hex,item.hex)>=threshold'),
   'perceptual duplicate threshold');
 check('V2.19 photo palette keeps three explicit strategies',
-  appText.includes("photoPaletteStyle='balanced'")&&
+  appText.includes("localStorage.getItem('colorlab.photoPaletteStyle')||'balanced'")&&
   appText.includes("style==='muted'")&&
   appText.includes("style==='vivid'"),
   'balanced muted vivid');
