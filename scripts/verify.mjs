@@ -92,13 +92,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2111")) fail('service worker cache version is not V2.11.1');
+if(!sw.includes("color-lab-v2120")) fail('service worker cache version is not V2.12.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.11.1') fail('package version must be 2.11.1');
+if(pkg.version!=='2.12.0') fail('package version must be 2.12.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.11.1')||!html.includes('<div class="version">V2.11.1</div>')||!html.includes("appVersion:'2.11.1'")) fail('V2.11.1 UI or backup version metadata missing');
-else pass('V2.11.1 version metadata');
+if(!html.includes('Color Lab V2.12.0')||!html.includes('<div class="version">V2.12.0</div>')||!html.includes("appVersion:'2.12.0'")) fail('V2.12.0 UI or backup version metadata missing');
+else pass('V2.12.0 version metadata');
 
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
@@ -299,6 +299,33 @@ if(!html.includes('id="previousRecommendations"')||
    !html.includes("if(nextOffset>=recs.length){toast('已看完這輪所有候選');return}")){
   fail('V2.11.1 Inspire history or anti-repeat contract missing');
 }else pass('V2.11.1 Inspire history and anti-repeat contract');
+
+
+for(const fn of ['paletteArtifactBase','paletteArtifact','exportPaletteArtifact','previewThemePalette','setPreviewTheme']){
+  if(!html.includes('function '+fn+'(')) fail('V2.12.0 professional handoff function missing: '+fn);
+}
+if(!html.includes('data-export-format="css"')||
+   !html.includes('data-export-format="json"')||
+   !html.includes('data-export-format="tokens"')||
+   !html.includes("format:'color-lab-design-tokens-v1'")||
+   !html.includes("schema:'color-lab-palette-v1'")){
+  fail('V2.12.0 CSS / JSON / Tokens handoff contract missing');
+}else pass('V2.12.0 professional handoff formats');
+
+if(!html.includes("'--color-base: '+data.palette.base")||
+   !html.includes("'--color-structure: '+data.palette.structure")||
+   !html.includes("'--color-accent: '+data.palette.accent")||
+   !html.includes("ratios:{base:75,structure:18,accent:7}")){
+  fail('V2.12.0 export does not preserve exact role colors and 75/18/7');
+}else pass('V2.12.0 exact role export contract');
+
+if(!html.includes('id="contextThemeModes"')||
+   !html.includes('data-preview-theme="light"')||
+   !html.includes('data-preview-theme="dark"')||
+   !html.includes("accent:palette.accent")||
+   !html.includes("Dark 預覽變體 · 不改原色")){
+  fail('V2.12.0 Light / Dark preview contract missing');
+}else pass('V2.12.0 Light / Dark preview contract');
 
 
 if(!html.includes("base:{key:'',pool:[],index:-1,familyId:'',origin:''}")||
