@@ -192,6 +192,14 @@ function paletteArtifact(kind){
   const payload={schema:'color-lab-palette-v1',...data};
   return{name:safe+'.json',type:'application/json',text:JSON.stringify(payload,null,2)+'\n'};
 }
+function initCrossPlatformHandoff(){
+  const host=document.querySelector('#handoffMore .handoff-more-actions');if(!host)return;
+  [['scss','SCSS'],['flutter','Flutter'],['jetpack','Jetpack']].forEach(([kind,label])=>{
+    if(host.querySelector('[data-export-format="'+kind+'"]'))return;
+    const button=document.createElement('button');button.type='button';button.className='utility-btn';
+    button.dataset.exportFormat=kind;button.textContent=label;host.appendChild(button);
+  });
+}
 async function exportPaletteArtifact(kind){
   const artifact=paletteArtifact(kind);
   const file=new File([artifact.text],artifact.name,{type:artifact.type});
