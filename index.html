@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="./runtime/share-snapshot.css">
 <link rel="stylesheet" href="./runtime/custom-design-preview.css">
 <link rel="stylesheet" href="./runtime/vision-accessibility.css">
+<link rel="stylesheet" href="./runtime/local-projects.css">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Color Lab</title>
 <style>
@@ -2215,7 +2216,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.25.0</div>
+    <div class="version">V2.26.0</div>
   </div>
 
   <main class="app-main">
@@ -2511,8 +2512,8 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     <section class="tab-view" data-view="library" aria-labelledby="nav-library" hidden>
       <header class="screen-head compact">
         <div class="eyebrow">LIBRARY</div>
-        <h1>我的收藏</h1>
-        <p>只留下你真的想再用一次的組合</p>
+        <h1>我的色彩專案</h1>
+        <p>把真的會再用的配色，依專案留在同一個地方</p>
       </header>
 
       <section class="app-section first">
@@ -2562,7 +2563,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.25.0</div>
+  <div class="footer app-footer">Color Lab V2.26.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2656,6 +2657,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 
 <script src="./runtime/palette-tools.js"></script>
 <script src="./runtime/vision-accessibility.js"></script>
+<script src="./runtime/local-projects.js"></script>
 <script src="./runtime/color-relationship.js"></script>
 <script src="./runtime/role-scale.js"></script>
 <script src="./runtime/share-snapshot.js"></script>
@@ -2792,8 +2794,9 @@ async function writeResilienceSnapshot(){
   try{
     const db=await openResilienceDB();
     const payload={
-      schema:'color-lab-shadow-v3',updatedAt:Date.now(),
+      schema:'color-lab-shadow-v4',updatedAt:Date.now(),
       saved:readSavedData(),
+      projects:readLocalProjects(),
       preference:sanitizePreferenceModel(preferenceState),
       preferenceEnabled,
       recent:readRecentColors(),
@@ -2822,11 +2825,12 @@ async function restoreResilienceIfNeeded(){
     const currentSaved=readSavedData();
     const rawPreference=safeJsonRead('colorlab.preferenceV1',null);
     const rawPreferenceEnabled=localStorage.getItem('colorlab.preferenceEnabled');
+    const needsProjects=localStorage.getItem(LOCAL_PROJECTS_KEY)===null;
     const needsSaved=currentSaved.length===0;
     const needsPreference=rawPreference===null;
     const needsPreferenceEnabled=rawPreferenceEnabled===null;
 
-    if(!needsSaved&&!needsPreference&&!needsPreferenceEnabled){
+    if(!needsSaved&&!needsPreference&&!needsPreferenceEnabled&&!needsProjects){
       resilienceReady=true;scheduleResilienceBackup();updatePreferenceStatus(false);return;
     }
 
@@ -2841,7 +2845,11 @@ async function restoreResilienceIfNeeded(){
       resilienceReady=true;scheduleResilienceBackup();updatePreferenceStatus(false);return;
     }
 
-    let restoredSaved=false,restoredPreference=false;
+    let restoredSaved=false,restoredPreference=false,restoredProjects=false;
+
+    if(needsProjects&&Array.isArray(snap.projects)){
+      writeLocalProjects(snap.projects);restoredProjects=true;
+    }
 
     if(needsPreference&&snap.preference){
       preferenceState=sanitizePreferenceModel(snap.preference);
@@ -2887,9 +2895,9 @@ async function restoreResilienceIfNeeded(){
       }
     }
 
-    if(restoredSaved){renderSaved();renderRecentColors();renderCompare()}
-    resilienceReady=true;scheduleResilienceBackup();updatePreferenceStatus(restoredSaved||restoredPreference);
-    if(restoredSaved||restoredPreference)toast('已從本機備份恢復資料');
+    if(restoredSaved||restoredProjects){renderSaved();renderRecentColors();renderCompare()}
+    resilienceReady=true;scheduleResilienceBackup();updatePreferenceStatus(restoredSaved||restoredPreference||restoredProjects);
+    if(restoredSaved||restoredPreference||restoredProjects)toast('已從本機備份恢復資料');
   }catch(_){
     resilienceReady=true;updatePreferenceStatus(false);
   }
@@ -3112,7 +3120,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.25.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.26.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -3153,6 +3161,7 @@ function sanitizeSavedRecord(x){
     name:typeof x.name==='string'?(x.name.trim().slice(0,24)||'未命名配色'):'未命名配色',
     tags,
     folder:typeof x.folder==='string'?x.folder.trim().slice(0,20):'',
+    projectId:sanitizeProjectId(x.projectId),
     pinned:!!x.pinned,
     seed:sanitizeBackupHex(x.seed)||selected.find(Boolean)||accent,
     selectedColors:selected,
@@ -3183,15 +3192,17 @@ function importBackupFile(file){
   reader.onload=()=>{
     try{
       const data=JSON.parse(String(reader.result||''));
-      if(!['color-lab-backup-v1','color-lab-backup-v2','color-lab-backup-v3','color-lab-backup-v4'].includes(data.schema)||!Array.isArray(data.saved)||data.saved.length>1000)throw new Error('invalid');
-      if(['color-lab-backup-v3','color-lab-backup-v4'].includes(data.schema)&&(!data.preference||Number(data.preference.version)!==1))throw new Error('invalid');
-      if(data.schema==='color-lab-backup-v4'&&typeof data.preferenceEnabled!=='boolean')throw new Error('invalid');
+      if(!['color-lab-backup-v1','color-lab-backup-v2','color-lab-backup-v3','color-lab-backup-v4','color-lab-backup-v5'].includes(data.schema)||!Array.isArray(data.saved)||data.saved.length>1000)throw new Error('invalid');
+      if(['color-lab-backup-v3','color-lab-backup-v4','color-lab-backup-v5'].includes(data.schema)&&(!data.preference||Number(data.preference.version)!==1))throw new Error('invalid');
+      if(['color-lab-backup-v4','color-lab-backup-v5'].includes(data.schema)&&typeof data.preferenceEnabled!=='boolean')throw new Error('invalid');
+      if(data.schema==='color-lab-backup-v5'&&(!Array.isArray(data.projects)||data.projects.length>60))throw new Error('invalid');
       const currentRaw=readSavedData();
       const current=currentRaw.map(sanitizeSavedRecord).filter(Boolean);
       const importedSaved=data.saved.map(sanitizeSavedRecord).filter(Boolean);
-      const sig=x=>[x.name,x.palette.base,x.palette.structure,x.palette.accent].join('|');
-      const seen=new Set(current.map(sig)),merged=[...current];
-      importedSaved.forEach(x=>{if(!seen.has(sig(x))){merged.push(x);seen.add(sig(x))}});
+      const projectMerge=data.schema==='color-lab-backup-v5'?mergeImportedProjectData(data.projects,importedSaved,readLocalProjects()):{projects:readLocalProjects(),saved:importedSaved};
+      if(data.schema==='color-lab-backup-v5')writeLocalProjects(projectMerge.projects);
+      const importedForMerge=projectMerge.saved;
+      const merged=mergeSavedPaletteRecords(current,importedForMerge);
       localStorage.setItem('colorlab.saved',JSON.stringify(merged.slice(0,300)));
       if(Array.isArray(data.recent)){const imported=data.recent.filter(x=>typeof x==='string'&&normHex(x)).map(x=>normHex(x));recentColors=[...new Set([...recentColors,...imported])].slice(0,20);localStorage.setItem('colorlab.recent',JSON.stringify(recentColors))}
       if(data.compareA){const safeA=sanitizeCompareRecord(data.compareA);if(safeA){compareA=safeA;localStorage.setItem('colorlab.compareA',JSON.stringify(compareA))}}
@@ -4888,10 +4899,10 @@ function save(){
   currentComboName=inputName||'未命名配色';
   const data=readSavedData();
   const sig=paletteSignature(palette),existing=data.findIndex(x=>paletteSignature(x)===sig);
-  const record={name:currentComboName,tags:[],folder:'',pinned:false,seed,selectedColors:[...selectedColors],lockedSlots:[...lockedSlots],mode,palette:{...palette},date:Date.now()};
+  const record={name:currentComboName,tags:[],folder:'',projectId:'',pinned:false,seed,selectedColors:[...selectedColors],lockedSlots:[...lockedSlots],mode,palette:{...palette},date:Date.now()};
   if(existing>=0){
     const old=data.splice(existing,1)[0];
-    data.unshift({...old,...record,tags:Array.isArray(old.tags)?old.tags:[],folder:old.folder||'',pinned:!!old.pinned});
+    data.unshift({...old,...record,tags:Array.isArray(old.tags)?old.tags:[],folder:old.folder||'',projectId:sanitizeProjectId(old.projectId),pinned:!!old.pinned});
     localStorage.setItem('colorlab.saved',JSON.stringify(data.slice(0,300)));
     learnPalettePreference(palette,.35);
     renderSaved();persistDraft();scheduleResilienceBackup();toast('這組配色已收藏 已移到最上方');return;
@@ -4905,13 +4916,6 @@ function save(){
   toast('已收藏 '+currentComboName);
 }
 
-function renderFolderFilter(data){
-  const select=$('#libraryFolderFilter');if(!select)return;
-  const folders=[...new Set(data.map(x=>(x.folder||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'zh-Hant'));
-  const current=libraryFolderFilter;
-  select.innerHTML='<option value="">全部分類</option>'+folders.map(f=>'<option value="'+escapeHtml(f)+'">'+escapeHtml(f)+'</option>').join('');
-  if(folders.includes(current))select.value=current;else{libraryFolderFilter='';select.value=''}
-}
 function toggleSavedPin(index){
   const data=readSavedData(),item=data[index];if(!item)return;
   item.pinned=!item.pinned;localStorage.setItem('colorlab.saved',JSON.stringify(data));scheduleResilienceBackup();renderSaved();
@@ -4941,21 +4945,14 @@ function loadSaved(index){
   learnPalettePreference(x.palette,.35);
   syncEditor();renderModes();render();pushHistory();switchTab('compose',false);$('#result').scrollIntoView({behavior:'smooth',block:'start'});
 }
-function librarySearchText(x){
-  const tags=Array.isArray(x.tags)?x.tags:[];
-  return [
-    (x.name&&x.name.trim())||'未命名配色',
-    x.seed,x.palette?.base,x.palette?.structure,x.palette?.accent,
-    ...(x.selectedColors||[]),...tags,x.folder||''
-  ].filter(Boolean).join(' ').toLowerCase();
-}
 function renderSaved(){
   const el=$('#saved'),data=readSavedData();
-  renderLibraryFilters(data);renderFolderFilter(data);
+  renderLibraryFilters(data);renderFolderFilter(data);renderLocalProjects(data);
   const q=($('#librarySearch')?.value||'').trim().toLowerCase();
   let rows=data.map((x,i)=>({x,i})).filter(({x})=>{
     const tags=Array.isArray(x.tags)?x.tags:[];
     if(libraryTagFilter&&!tags.includes(libraryTagFilter))return false;
+    if(!localProjectMatches(x))return false;
     if(libraryFolderFilter&&(x.folder||'')!==libraryFolderFilter)return false;
     if(!q)return true;
     return librarySearchText(x).includes(q);
@@ -4975,8 +4972,9 @@ function renderSaved(){
     d.className='saved-item library-piece'+(x.pinned?' featured':'');
     const title=(x.name&&x.name.trim())||'未命名配色';
     const tags=Array.isArray(x.tags)?x.tags:[];
+    const projectName=localProjectName(sanitizeProjectId(x.projectId));
     const no=String(position+1).padStart(2,'0');
-    d.innerHTML=`<div class="saved-piece-no">${no}</div><button class="saved-menu" type="button" data-saved-menu="${i}" aria-label="${escapeHtml(title)} 更多操作"></button><button class="saved-palette-open" type="button" data-load-saved="${i}" aria-label="套用配色 ${escapeHtml(title)}"><span class="mini3"><i style="background:${x.palette.base}"></i><i style="background:${x.palette.structure}"></i><i style="background:${x.palette.accent}"></i></span></button><div class="saved-info"><b>${x.pinned?'★ ':''}${escapeHtml(title)}</b><div class="saved-piece-meta"><span>75 / 18 / 7</span><span>${x.palette.base}</span>${x.folder?'<span>'+escapeHtml(x.folder)+'</span>':''}${x.pinned?'<span>PINNED</span>':''}</div>${tags.length?'<div class="saved-tags">'+tags.map(t=>'<button type="button" class="saved-tag" data-tag-filter="'+escapeHtml(t)+'">'+escapeHtml(t)+'</button>').join('')+'</div>':''}</div>`;
+    d.innerHTML=`<div class="saved-piece-no">${no}</div><button class="saved-menu" type="button" data-saved-menu="${i}" aria-label="${escapeHtml(title)} 更多操作"></button><button class="saved-palette-open" type="button" data-load-saved="${i}" aria-label="套用配色 ${escapeHtml(title)}"><span class="mini3"><i style="background:${x.palette.base}"></i><i style="background:${x.palette.structure}"></i><i style="background:${x.palette.accent}"></i></span></button><div class="saved-info"><b>${x.pinned?'★ ':''}${escapeHtml(title)}</b><div class="saved-piece-meta"><span>75 / 18 / 7</span><span>${x.palette.base}</span>${projectName?'<span class="saved-project-label">'+escapeHtml(projectName)+'</span>':''}${x.folder?'<span>'+escapeHtml(x.folder)+'</span>':''}${x.pinned?'<span>PINNED</span>':''}</div>${tags.length?'<div class="saved-tags">'+tags.map(t=>'<button type="button" class="saved-tag" data-tag-filter="'+escapeHtml(t)+'">'+escapeHtml(t)+'</button>').join('')+'</div>':''}</div>`;
     list.appendChild(d);
   })
 }
@@ -5413,6 +5411,7 @@ document.addEventListener('click',e=>{
     else if(kind==='rename')renameSaved(i);
     else if(kind==='tags')editSavedTags(i);
     else if(kind==='folder')editSavedFolder(i);
+    else if(kind==='project')openProjectPicker(i);
     else if(kind==='delete')deleteSaved(i);
     return;
   }
@@ -5576,6 +5575,7 @@ document.addEventListener('keydown',e=>{
   if(!$('#pickerBackdrop').hidden)closeStudioPicker();
   else if(!$('#savedActionBackdrop').hidden)closeSavedActions();
   else if(!$('#installBackdrop').hidden)closeInstallGuide();
+  else if(!document.getElementById('projectPickerBackdrop')?.hidden)closeProjectPicker();
 });
 window.addEventListener('pagehide',()=>{persistDraft();writeResilienceSnapshot()});
 $('#setCompareA').onclick=()=>saveCompare('A');
@@ -5605,7 +5605,7 @@ $('#composeDeepDive').addEventListener('toggle',e=>{
   });
 });
 renderModes();palette=fastInitialPalette();renderComboSlots();render();updateLockToggle();
-historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();installShareSnapshotHashListener();initCustomDesignPreview();
+historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();installShareSnapshotHashListener();initCustomDesignPreview();initLocalProjects();
 setCornerNavOpen(false);
 switchTab(localStorage.getItem('colorlab.tab')||'compose',false);updatePhotoTarget();
 scheduleNonCriticalStartup();

@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.25.0**
+**目前版本：V2.26.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,21 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.26.0 Local Projects / Collections
+
+Library 從單純收藏清單升級成可對應真實工作的本機專案層，同時保留原本 tags / folder：
+
+- 新增 Project chips：全部、未歸類與各本機專案，直接顯示各自配色數量
+- 可建立、重新命名、刪除專案；刪除專案只會解除配色歸屬，不會刪除任何收藏
+- 收藏的「更多操作」新增「移動專案」，使用本機 action sheet 選擇專案，不需要帳號或雲端
+- projectId 與 palette 分離；Base / Structure / Accent、75 / 18 / 7、排序與原色契約完全不變
+- 既有 folder 繼續作為專案內次級分類，tags 繼續作為跨專案標籤，不強迫舊資料遷移
+- Library 搜尋同時支援專案名稱，Project / folder / tag 三層可以交叉篩選
+- Backup 升級為 V5，會攜帶 local projects；仍相容 V1–V4 匯入
+- Backup 匯入遇到 project ID 衝突時會安全 remap，不會把配色錯放到另一個同 ID 專案
+- IndexedDB resilience shadow 同步保存 project metadata，localStorage 意外清空時可一起恢復
+- 完全 Local-first：專案資料只存在 localStorage / IndexedDB，不新增後端、登入或付費 API
 
 ## V2.25.0 Accessibility Vision 2.0
 
@@ -509,7 +524,7 @@ Color.js、Color Thief、Cohesive Colors 等專案曾作為研究參考；目前
 - IndexedDB resilience snapshot
 - JSON backup / import
 
-Backup V4 可攜帶本機偏好模型與個人化開關，同時保留 V1 / V2 / V3 匯入相容性。
+Backup V5 會攜帶本機 Projects、偏好模型與個人化開關，同時保留 V1 / V2 / V3 / V4 匯入相容性。
 
 ## PWA / Offline
 
@@ -520,7 +535,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v2230-shareable-snapshot`
+目前 cache generation：`color-lab-v2260-local-projects`
 
 ## Quality Gates
 

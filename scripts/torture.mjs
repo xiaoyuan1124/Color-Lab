@@ -9,7 +9,8 @@ const colorRelationship=fs.readFileSync('runtime/color-relationship.js','utf8');
 const roleScale=fs.readFileSync('runtime/role-scale.js','utf8');
 const shareSnapshot=fs.readFileSync('runtime/share-snapshot.js','utf8');
 const visionAccessibility=fs.readFileSync('runtime/vision-accessibility.js','utf8');
-const appText=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+visionAccessibility;
+const localProjects=fs.readFileSync('runtime/local-projects.js','utf8');
+const appText=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+visionAccessibility+'\n'+localProjects;
 const toneSource=fs.readFileSync('data/tone-families.js','utf8');
 const inlineScripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
 const scriptMatch=inlineScripts.at(-1);
@@ -32,6 +33,8 @@ try{new Function(shareSnapshot)}
 catch(e){console.error('FAIL share snapshot runtime syntax',e.message);process.exit(1)}
 try{new Function(visionAccessibility)}
 catch(e){console.error('FAIL vision accessibility runtime syntax',e.message);process.exit(1)}
+try{new Function(localProjects)}
+catch(e){console.error('FAIL local projects runtime syntax',e.message);process.exit(1)}
 
 function findFunctionBodyOpen(start){
   const paramsOpen=source.indexOf('(',start);
@@ -341,6 +344,27 @@ check('V2.25 vision thresholds remain explicit and bounded',
   visionAccessibility.includes('VISION_WATCH_LIMIT=.09')&&
   visionAccessibility.includes('VISION_FIX_TARGET=.095'),
   'CVD separation thresholds stay explicit');
+
+check('V2.26 local projects stay separate from palette source colors',
+  localProjects.includes("LOCAL_PROJECTS_KEY='colorlab.projectsV1'")&&
+  localProjects.includes('function assignSavedProject(')&&
+  localProjects.includes('item.projectId=id')&&
+  !localProjects.includes('palette.base=')&&
+  !localProjects.includes('palette.structure=')&&
+  !localProjects.includes('palette.accent='),
+  'project assignment only changes projectId');
+check('V2.26 project deletion is non-destructive',
+  localProjects.includes("配色不會被刪除，只會變成未歸類")&&
+  localProjects.includes("{...item,projectId:''}")&&
+  !localProjects.includes("splice(index,1)"),
+  'deleting a project unassigns palettes instead of deleting them');
+check('V2.26 project backup and resilience stay local',
+  appText.includes("schema:'color-lab-backup-v5'")&&
+  appText.includes("schema:'color-lab-shadow-v4'")&&
+  appText.includes("projects:readLocalProjects()")&&
+  !localProjects.includes('fetch(')&&
+  !localProjects.includes('XMLHttpRequest'),
+  'projects are persisted in local backup paths without network IO');
 
 check('V2.18 context preview ships five realistic scene contracts',
   appText.includes('class="cp2 cp2-app"')&&
