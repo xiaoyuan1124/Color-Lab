@@ -1344,3 +1344,55 @@ test('V2.30 safe storage read falls back when browser storage access throws', as
   });
   expect(result).toEqual({value:'light',threw:false});
 });
+
+
+test('V2.30 backup import rolls back all keys when a later storage write fails', async ({ page }) => {
+  await page.evaluate(() => {
+    const baseline=sanitizeSavedRecord({
+      name:'Baseline',
+      palette:{base:'#112233',structure:'#445566',accent:'#AABBCC'},
+      selectedColors:['#112233','#445566','#AABBCC'],mode:'quiet',date:1
+    });
+    localStorage.setItem('colorlab.saved',JSON.stringify([baseline]));
+    localStorage.setItem('colorlab.recent',JSON.stringify(['#010101']));
+
+    const proto=Storage.prototype;
+    window.__colorLabOriginalSetItem=proto.setItem;
+    proto.setItem=function(key,value){
+      if(key==='colorlab.recent'&&String(value).includes('#ABCDEF')){
+        throw new DOMException('quota','QuotaExceededError');
+      }
+      return window.__colorLabOriginalSetItem.call(this,key,value);
+    };
+  });
+
+  const backup={
+    schema:'color-lab-backup-v1',
+    saved:[{
+      name:'Incoming',
+      palette:{base:'#F4EFE6',structure:'#28343A',accent:'#D4513D'},
+      selectedColors:['#F4EFE6','#28343A','#D4513D'],
+      lockedSlots:[false,false,false],mode:'quiet',date:2
+    }],
+    recent:['#ABCDEF']
+  };
+  await page.locator('#backupInput').setInputFiles({
+    name:'rollback-test.json',
+    mimeType:'application/json',
+    buffer:Buffer.from(JSON.stringify(backup))
+  });
+  await expect(page.locator('#toast')).toContainText('變更已取消');
+
+  const result=await page.evaluate(() => {
+    Storage.prototype.setItem=window.__colorLabOriginalSetItem;
+    delete window.__colorLabOriginalSetItem;
+    return{
+      saved:JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),
+      recent:JSON.parse(localStorage.getItem('colorlab.recent')||'[]')
+    };
+  });
+  expect(result.saved).toHaveLength(1);
+  expect(result.saved[0].name).toBe('Baseline');
+  expect(result.saved[0].palette).toEqual({base:'#112233',structure:'#445566',accent:'#AABBCC'});
+  expect(result.recent).toEqual(['#010101']);
+});
