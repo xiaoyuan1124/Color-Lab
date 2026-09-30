@@ -10,7 +10,8 @@ const roleScale=fs.readFileSync('runtime/role-scale.js','utf8');
 const shareSnapshot=fs.readFileSync('runtime/share-snapshot.js','utf8');
 const visionAccessibility=fs.readFileSync('runtime/vision-accessibility.js','utf8');
 const localProjects=fs.readFileSync('runtime/local-projects.js','utf8');
-const appText=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+visionAccessibility+'\n'+localProjects;
+const referenceBoard=fs.readFileSync('runtime/reference-board.js','utf8');
+const appText=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard;
 const toneSource=fs.readFileSync('data/tone-families.js','utf8');
 const inlineScripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
 const scriptMatch=inlineScripts.at(-1);
@@ -35,6 +36,8 @@ try{new Function(visionAccessibility)}
 catch(e){console.error('FAIL vision accessibility runtime syntax',e.message);process.exit(1)}
 try{new Function(localProjects)}
 catch(e){console.error('FAIL local projects runtime syntax',e.message);process.exit(1)}
+try{new Function(referenceBoard)}
+catch(e){console.error('FAIL reference board runtime syntax',e.message);process.exit(1)}
 
 function findFunctionBodyOpen(start){
   const paramsOpen=source.indexOf('(',start);
@@ -365,6 +368,28 @@ check('V2.26 project backup and resilience stay local',
   !localProjects.includes('fetch(')&&
   !localProjects.includes('XMLHttpRequest'),
   'projects are persisted in local backup paths without network IO');
+
+check('V2.27 reference board exports exact source palette only',
+  referenceBoard.includes('const source=paletteArtifactBase()')&&
+  referenceBoard.includes("ratios:{...source.ratios}")&&
+  referenceBoard.includes("canvas.width=1600")&&referenceBoard.includes("canvas.height=1200")&&
+  !referenceBoard.includes('previewThemePalette(')&&
+  !referenceBoard.includes('visionPalette(')&&
+  !referenceBoard.includes('toneExplorerPreview')&&
+  !referenceBoard.includes('accessibilityPreview'),
+  'reference board reads the exact source handoff and excludes preview transforms');
+check('V2.27 optional photo reference remains local',
+  referenceBoard.includes("typeof photoObjectURL!=='undefined'")&&
+  referenceBoard.includes("referenceBoardDrawPhoto(x,photoCanvas")&&
+  !referenceBoard.includes('fetch(')&&
+  !referenceBoard.includes('XMLHttpRequest'),
+  'loaded photo is drawn from local photoCanvas without network IO');
+check('V2.27 export cannot mutate source palette',
+  !referenceBoard.includes('selectedColors=')&&
+  !referenceBoard.includes('palette.base=')&&
+  !referenceBoard.includes('palette.structure=')&&
+  !referenceBoard.includes('palette.accent='),
+  'reference board export is read-only');
 
 check('V2.18 context preview ships five realistic scene contracts',
   appText.includes('class="cp2 cp2-app"')&&
