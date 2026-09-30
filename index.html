@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="./runtime/role-scale.css">
 <link rel="stylesheet" href="./runtime/share-snapshot.css">
 <link rel="stylesheet" href="./runtime/custom-design-preview.css">
+<link rel="stylesheet" href="./runtime/vision-accessibility.css">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Color Lab</title>
 <style>
@@ -2214,7 +2215,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.24.0</div>
+    <div class="version">V2.25.0</div>
   </div>
 
   <main class="app-main">
@@ -2335,8 +2336,8 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
             </div>
 
             <div class="vision-lab">
-              <div class="micro-head"><span>視覺模擬</span><span>近似模擬</span></div>
-              <div class="segmented" id="visionModes">
+              <div class="micro-head"><span>Accessibility Vision</span><span>近似模擬 · 原色不變</span></div>
+              <div class="segmented" id="visionModes" role="group" aria-label="色覺近似模擬模式">
                 <button type="button" class="seg active" data-vision="normal">一般</button>
                 <button type="button" class="seg" data-vision="protan">紅色弱</button>
                 <button type="button" class="seg" data-vision="deutan">綠色弱</button>
@@ -2561,7 +2562,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.24.0</div>
+  <div class="footer app-footer">Color Lab V2.25.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2654,6 +2655,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true">已複製</div>
 
 <script src="./runtime/palette-tools.js"></script>
+<script src="./runtime/vision-accessibility.js"></script>
 <script src="./runtime/color-relationship.js"></script>
 <script src="./runtime/role-scale.js"></script>
 <script src="./runtime/share-snapshot.js"></script>
@@ -3110,7 +3112,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.24.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.25.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -3215,24 +3217,6 @@ function importBackupFile(file){
   reader.readAsText(file);
 }
 
-function transformVision(hex,mode){
-  if(mode==='normal')return hex;
-  const matrices={
-    protan:[[.152286,1.052583,-.204868],[.114503,.786281,.099216],[-.003882,-.048116,1.051998]],
-    deutan:[[.367322,.860646,-.227968],[.280085,.672501,.047413],[-.01182,.04294,.968881]],
-    tritan:[[1.255528,-.076749,-.178779],[-.078411,.930809,.147602],[.004733,.691367,.3039]]
-  };
-  const M=matrices[mode];if(!M)return hex;
-  const rgb=hexToRgb(hex).map(srgbToLinear);
-  const out=M.map(row=>row[0]*rgb[0]+row[1]*rgb[1]+row[2]*rgb[2]).map(linearToSrgb);
-  return rgbToHex(...out);
-}
-function renderVision(){
-  const host=$('#visionPreview');if(!host)return;
-  host.innerHTML='';
-  [palette.base,palette.structure,palette.accent].forEach(hex=>{const d=document.createElement('div');d.style.background=transformVision(hex,visionMode);host.appendChild(d)});
-  $$('#visionModes [data-vision]').forEach(b=>b.classList.toggle('active',b.dataset.vision===visionMode));
-}
 async function openStudioPicker(){
   if(lockedSlots[activeSlot]){toast('先解除鎖定');return}
   pickerReturnFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;
@@ -5432,7 +5416,7 @@ document.addEventListener('click',e=>{
     else if(kind==='delete')deleteSaved(i);
     return;
   }
-  const vf=e.target.closest('[data-vision]');if(vf){visionMode=vf.dataset.vision;renderVision();return}
+  const vf=e.target.closest('[data-vision]');if(vf){setVisionMode(vf.dataset.vision);return}
   const ctx=e.target.closest('[data-context]');if(ctx){previewContext=ctx.dataset.context;renderContextPreview();return}
   const tf=e.target.closest('[data-tag-filter]');if(tf){libraryTagFilter=tf.dataset.tagFilter||'';renderSaved();return}
   const et=e.target.closest('[data-edit-tags]');if(et){editSavedTags(+et.dataset.editTags);return}

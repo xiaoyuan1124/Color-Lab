@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.24.0**
+**目前版本：V2.25.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,20 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.25.0 Accessibility Vision 2.0
+
+把既有紅色弱 / 綠色弱 / 藍色弱近似模擬從「只看三個轉換後色塊」提升成可用的設計判斷工具：
+
+- 保留既有 Protan / Deutan / Tritan 近似矩陣，明確標示為設計模擬，不宣稱醫療或臨床診斷
+- 每個模式會分析 Base ↔ Structure、Base ↔ Accent、Structure ↔ Accent 三組角色的 OKLCH 感知分離
+- 以 Color Lab 內部門檻分成「可辨識 / 差異偏低 / 容易混淆」，並直接顯示每組 Δ 值與門檻說明
+- 色覺模式同步套用到 App / Brand / Room / Outfit / Slides 五種 Context Preview；只改預覽，不改來源 HEX
+- Light / Dark Context Preview 仍先依原邏輯衍生，再套色覺模擬；Dark 變體與色覺模擬都不會寫回 Compose
+- 對「差異偏低 / 容易混淆」關係提供最小修正方向，優先修改較小比例角色並只搜尋 OKLCH Lightness
+- 若只調 Lightness 仍無法建立足夠分離，才使用受控的小幅 Hue / Chroma 搜尋
+- 修正先顯示 preview-only 75 / 18 / 7 模擬結果；只有明確按「套用建議」才更新 Compose，且鎖定角色仍受保護
+- runtime / stylesheet 完全本機並加入 PWA offline cache，不新增外部服務
 
 ## V2.24.0 Custom Design Preview
 

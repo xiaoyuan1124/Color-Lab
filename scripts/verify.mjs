@@ -13,9 +13,11 @@ const shareSnapshot=fs.readFileSync('runtime/share-snapshot.js','utf8');
 const shareSnapshotCss=fs.readFileSync('runtime/share-snapshot.css','utf8');
 const customDesignPreview=fs.readFileSync('runtime/custom-design-preview.js','utf8');
 const customDesignPreviewCss=fs.readFileSync('runtime/custom-design-preview.css','utf8');
+const visionAccessibility=fs.readFileSync('runtime/vision-accessibility.js','utf8');
+const visionAccessibilityCss=fs.readFileSync('runtime/vision-accessibility.css','utf8');
 const qrVendor=fs.readFileSync('vendor/qrcode.min.js','utf8');
 const qrLicense=fs.readFileSync('vendor/qrcode.LICENSE.txt','utf8');
-const appSource=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview;
+const appSource=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility;
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -48,6 +50,8 @@ try { new Function(shareSnapshot); pass('share snapshot runtime syntax'); }
 catch(e){ fail('share snapshot runtime syntax: '+e.message); }
 try { new Function(customDesignPreview); pass('custom design preview runtime syntax'); }
 catch(e){ fail('custom design preview runtime syntax: '+e.message); }
+try { new Function(visionAccessibility); pass('vision accessibility runtime syntax'); }
+catch(e){ fail('vision accessibility runtime syntax: '+e.message); }
 try { new Function(qrVendor); pass('local QR vendor syntax'); }
 catch(e){ fail('local QR vendor syntax: '+e.message); }
 
@@ -124,13 +128,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2240")) fail('service worker cache version is not V2.24.0');
+if(!sw.includes("color-lab-v2250")) fail('service worker cache version is not V2.25.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.24.0') fail('package version must be 2.24.0');
+if(pkg.version!=='2.25.0') fail('package version must be 2.25.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.24.0')||!html.includes('<div class="version">V2.24.0</div>')||!html.includes("appVersion:'2.24.0'")) fail('V2.24.0 UI or backup version metadata missing');
-else pass('V2.24.0 version metadata');
+if(!html.includes('Color Lab V2.25.0')||!html.includes('<div class="version">V2.25.0</div>')||!html.includes("appVersion:'2.25.0'")) fail('V2.25.0 UI or backup version metadata missing');
+else pass('V2.25.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -388,6 +392,41 @@ if(!customDesignPreview.includes("CUSTOM_SVG_MAX_BYTES=1024*1024")||
    customDesignPreview.includes('palette.accent=')){
   fail('V2.24.0 safe local SVG or preview-only source-color contract missing');
 }else pass('V2.24.0 sanitized local SVG + exact source-color preview-only contract');
+
+if(!html.includes('<script src="./runtime/vision-accessibility.js"></script>')||
+   !html.includes('<link rel="stylesheet" href="./runtime/vision-accessibility.css">')||
+   !sw.includes('./runtime/vision-accessibility.js')||!sw.includes('./runtime/vision-accessibility.css')||
+   !visionAccessibility.includes('function transformVision(')||
+   !visionAccessibility.includes('function visionAnalysis(')||
+   !visionAccessibility.includes('function visionMinimalFix(')||
+   !visionAccessibility.includes('function setVisionMode(')||
+   !visionAccessibility.includes('function renderVision(')||
+   !visionAccessibilityCss.includes('.vision-v2-pair{')){
+  fail('V2.25.0 Accessibility Vision runtime + UI contract missing');
+}else pass('V2.25.0 Accessibility Vision runtime + UI');
+
+if(!visionAccessibility.includes('VISION_CONFLICT_LIMIT=.055')||
+   !visionAccessibility.includes('VISION_WATCH_LIMIT=.09')||
+   !visionAccessibility.includes('VISION_FIX_TARGET=.095')||
+   !visionAccessibility.includes("role=visionChangeRole(pair.a,pair.b)")||
+   !visionAccessibility.includes("gamutMapOKLCH(o.l+(endpoint-o.l)*t,o.c,o.h)")||
+   !visionAccessibility.includes("selectedColors=next")||
+   !visionAccessibility.includes("if(lockedSlots[idx]&&selectedColors[idx]")||
+   !paletteTools.includes("visionContextPalette(sourceP,visionMode)")||
+   !paletteTools.includes("近似模擬 · ")||
+   html.includes('function transformVision(')||
+   html.includes('function renderVision()')){
+  fail('V2.25.0 conflict detection, minimal-fix, context-sync or modularization contract missing');
+}else pass('V2.25.0 CVD conflict detection + preview-first minimal fixes + context sync');
+
+if(!visionAccessibility.includes("mode==='normal'")||
+   !visionAccessibility.includes("這不是醫療診斷")||
+   !visionAccessibility.includes("僅供設計比較，不代表臨床色覺測試")||
+   !visionAccessibility.includes("visionFixPreview=null")||
+   !visionAccessibility.includes("previewVisionSuggestion(")||
+   !visionAccessibility.includes("applyVisionSuggestion(")){
+  fail('V2.25.0 approximate-simulation disclosure or explicit-apply contract missing');
+}else pass('V2.25.0 approximation disclosure + explicit apply');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||

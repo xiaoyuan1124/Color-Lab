@@ -212,14 +212,23 @@ function renderContextPreview(){
     b.classList.toggle('active',active);b.setAttribute('aria-pressed',active?'true':'false');
   });
   const themed=['app','brand','slides'].includes(previewContext);
-  const p=themed?previewThemePalette():{...palette,derived:false};
+  const sourceP=themed?previewThemePalette():{...palette,derived:false};
+  const p=typeof visionContextPalette==='function'?visionContextPalette(sourceP,visionMode):sourceP;
   const note=$('#contextThemeNote');
-  if(note)note.textContent=!themed?'原色情境 · 75 / 18 / 7':p.derived?'Dark 預覽變體 · 不改原色':'使用目前三色 · 75 / 18 / 7';
+  const visionActive=typeof VISION_MODE_META!=='undefined'&&visionMode!=='normal';
+  if(note){
+    if(visionActive){
+      const visionLabel=VISION_MODE_META[visionMode]?.short||'色覺';
+      note.textContent=visionLabel+'近似模擬 · '+(sourceP.derived?'Dark 預覽 · ':'')+'原色不變';
+    }else{
+      note.textContent=!themed?'原色情境 · 75 / 18 / 7':sourceP.derived?'Dark 預覽變體 · 不改原色':'使用目前三色 · 75 / 18 / 7';
+    }
+  }
   const labels={app:'App / Web',brand:'品牌',room:'室內',outfit:'穿搭',slides:'簡報'};
   host.className='real-preview';
   host.removeAttribute('style');
   host.setAttribute('role','img');
-  host.setAttribute('aria-label',(labels[previewContext]||'配色')+'情境預覽，依 75 / 18 / 7 使用目前配色');
+  host.setAttribute('aria-label',(labels[previewContext]||'配色')+'情境預覽，依 75 / 18 / 7 '+(visionActive?'顯示'+(VISION_MODE_META[visionMode]?.short||'色覺')+'近似模擬':'使用目前配色'));
 
   if(previewContext==='app'){
     const baseText=textFor(p.base),structureText=textFor(p.structure),accentText=textFor(p.accent);
