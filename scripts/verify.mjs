@@ -99,13 +99,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2170")) fail('service worker cache version is not V2.17.0');
+if(!sw.includes("color-lab-v2180")) fail('service worker cache version is not V2.18.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.17.0') fail('package version must be 2.17.0');
+if(pkg.version!=='2.18.0') fail('package version must be 2.18.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.17.0')||!html.includes('<div class="version">V2.17.0</div>')||!html.includes("appVersion:'2.17.0'")) fail('V2.17.0 UI or backup version metadata missing');
-else pass('V2.17.0 version metadata');
+if(!html.includes('Color Lab V2.18.0')||!html.includes('<div class="version">V2.18.0</div>')||!html.includes("appVersion:'2.18.0'")) fail('V2.18.0 UI or backup version metadata missing');
+else pass('V2.18.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -197,6 +197,28 @@ if(!appSource.includes('toneExplorerSignature(toneExplorerPreview.origin)!==tone
    !appSource.includes('toneExplorerPreview=null')){
   fail('V2.17.0 stale preview guard missing');
 }else pass('V2.17.0 stale preview guard');
+
+const contextPreviewCss=fs.readFileSync('runtime/context-preview.css','utf8');
+if(!html.includes('<link rel="stylesheet" href="./runtime/context-preview.css">')||
+   !sw.includes('./runtime/context-preview.css')||
+   !contextPreviewCss.includes('.cp2-app{')||
+   !contextPreviewCss.includes('.cp2-brand{')||
+   !contextPreviewCss.includes('.cp2-room{')||
+   !contextPreviewCss.includes('.cp2-outfit{')||
+   !contextPreviewCss.includes('.cp2-slide{')){
+  fail('V2.18.0 Context Preview 2.0 stylesheet contract missing');
+}else pass('V2.18.0 Context Preview 2.0 stylesheet + offline cache');
+
+if(!appSource.includes("labels={app:'App / Web',brand:'品牌',room:'室內',outfit:'穿搭',slides:'簡報'}")||
+   !appSource.includes("class=\"cp2 cp2-app\"")||
+   !appSource.includes("class=\"cp2 cp2-brand\"")||
+   !appSource.includes("class=\"cp2 cp2-room\"")||
+   !appSource.includes("class=\"cp2 cp2-outfit\"")||
+   !appSource.includes("class=\"cp2 cp2-slide\"")||
+   !appSource.includes("原色情境 · 75 / 18 / 7")||
+   !appSource.includes("Dark 預覽變體 · 不改原色")){
+  fail('V2.18.0 realistic context scene contract missing');
+}else pass('V2.18.0 five realistic 75/18/7 contexts');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
