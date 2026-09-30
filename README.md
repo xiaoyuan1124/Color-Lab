@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.23.0**
+**目前版本：V2.24.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,21 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.24.0 Custom Design Preview
+
+把固定情境預覽再往使用者自己的作品推進，同時維持 Local-first 與來源色不被偷偷修改：
+
+- Compose「深入理解」新增「你的 SVG 設計」，接受本機 flat-color SVG，不新增主導航
+- SVG 完全在瀏覽器本機解析；檔案大小上限 1 MB、元件上限 2,500，避免大型檔案拖垮手機
+- 載入時會移除 script、事件 handler、外部資源、style 中的不安全宣告與非白名單 SVG 元素
+- 只辨識可安全處理的 flat fill / stroke；gradient、外部 image、filter 等複雜內容不會被當作可換色來源
+- 依出現次數列出來源色，預設把前三個 flat colors 對應 Base / Structure / Accent，其餘維持原色
+- 每個來源色都可手動切換為「保留原色 / Base 75% / Structure 18% / Accent 7%」
+- 套色預覽永遠讀取目前 Compose exact source colors，不使用 Dark Preview、Role Scale derived colors 或 Accessibility 建議色
+- 上傳、切換 mapping、預覽與輸出都不會回寫 Compose、收藏、Photo 或偏好模型
+- 可輸出安全清洗後、已套用目前三色的 SVG；不支援 Web Share 時回退本機下載
+- runtime / stylesheet 都是本機檔案並加入 Service Worker offline cache，沒有後端或第三方 SVG 服務
 
 ## V2.23.0 Shareable Snapshot
 
