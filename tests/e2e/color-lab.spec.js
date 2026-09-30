@@ -1129,3 +1129,70 @@ test('V2.27 Reference Board export stays behind the existing handoff disclosure'
   await expect(page.locator('#exportReferenceBoard')).toBeVisible();
   await expect(page.locator('#handoffMore .handoff-more-actions .utility-btn')).toHaveCount(4);
 });
+
+
+test('V2.28 Gradient Studio uses exact source colors despite Dark and CVD previews', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    selectedColors=['#112233','#445566','#AABBCC'];
+    lockedSlots=[false,false,false];activeSlot=0;seed=selectedColors[0];generate(false);
+    const before=paletteArtifactBase();
+    setPreviewTheme('dark');
+    setVisionMode('deutan');
+    const source=gradientStudioSource();
+    const css=gradientStudioCss('base-accent',135);
+    const after=paletteArtifactBase();
+    return {before,source,css,after,theme:previewTheme,vision:visionMode};
+  });
+  expect(result.theme).toBe('dark');
+  expect(result.vision).toBe('deutan');
+  expect(result.source.palette).toEqual({base:'#112233',structure:'#445566',accent:'#AABBCC'});
+  expect(result.css).toBe('background: linear-gradient(135deg, #112233 0%, #AABBCC 100%);');
+  expect(result.after).toEqual(result.before);
+});
+
+test('V2.28 Gradient Studio renders four role paths and four controlled angles without mutating Compose', async ({ page }) => {
+  await page.evaluate(() => {
+    selectedColors=['#E7DCC8','#274C55','#C65338'];
+    lockedSlots=[false,false,false];activeSlot=0;seed=selectedColors[0];generate(false);
+  });
+  const before=await page.evaluate(() => paletteArtifactBase());
+  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await page.locator('#gradientStudioDetails').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+
+  await expect(page.locator('#gradientStudioPreview')).toBeVisible();
+  await expect(page.locator('#gradientStudioPairs [data-gradient-pair]')).toHaveCount(4);
+  await expect(page.locator('#gradientStudioAngles [data-gradient-angle]')).toHaveCount(4);
+  await expect(page.locator('#gradientStudioCode')).toContainText('#E7DCC8');
+  await expect(page.locator('#gradientStudioCode')).toContainText('#C65338');
+
+  await page.locator('[data-gradient-pair="structure-accent"]').click();
+  await page.locator('[data-gradient-angle="90"]').click();
+  await expect(page.locator('#gradientStudioCode')).toHaveText('background: linear-gradient(90deg, #274C55 0%, #C65338 100%);');
+  await expect(page.locator('[data-gradient-pair="structure-accent"]')).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('[data-gradient-angle="90"]')).toHaveAttribute('aria-pressed','true');
+
+  const after=await page.evaluate(() => paletteArtifactBase());
+  expect(after).toEqual(before);
+});
+
+test('V2.28 three-role gradient preserves exact Base Structure Accent order and stays derivative-only', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    selectedColors=['#F4EFE6','#28343A','#D4513D'];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+    const before=paletteArtifactBase();
+    const stops=gradientStudioStops('system').map(x=>({role:x.role,hex:x.hex,stop:x.stop}));
+    const gradient=gradientStudioGradient('system',45);
+    setGradientStudioPair('system');
+    setGradientStudioAngle(45);
+    return {before,stops,gradient,after:paletteArtifactBase(),pair:gradientStudioPair,angle:gradientStudioAngle};
+  });
+  expect(result.stops).toEqual([
+    {role:'base',hex:'#F4EFE6',stop:0},
+    {role:'structure',hex:'#28343A',stop:50},
+    {role:'accent',hex:'#D4513D',stop:100}
+  ]);
+  expect(result.gradient).toBe('linear-gradient(45deg, #F4EFE6 0%, #28343A 50%, #D4513D 100%)');
+  expect(result.pair).toBe('system');
+  expect(result.angle).toBe(45);
+  expect(result.after).toEqual(result.before);
+});
