@@ -18,9 +18,11 @@ const visionAccessibilityCss=fs.readFileSync('runtime/vision-accessibility.css',
 const localProjects=fs.readFileSync('runtime/local-projects.js','utf8');
 const localProjectsCss=fs.readFileSync('runtime/local-projects.css','utf8');
 const referenceBoard=fs.readFileSync('runtime/reference-board.js','utf8');
+const gradientStudio=fs.readFileSync('runtime/gradient-studio.js','utf8');
+const gradientStudioCss=fs.readFileSync('runtime/gradient-studio.css','utf8');
 const qrVendor=fs.readFileSync('vendor/qrcode.min.js','utf8');
 const qrLicense=fs.readFileSync('vendor/qrcode.LICENSE.txt','utf8');
-const appSource=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard;
+const appSource=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio;
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -59,6 +61,8 @@ try { new Function(localProjects); pass('local projects runtime syntax'); }
 catch(e){ fail('local projects runtime syntax: '+e.message); }
 try { new Function(referenceBoard); pass('reference board runtime syntax'); }
 catch(e){ fail('reference board runtime syntax: '+e.message); }
+try { new Function(gradientStudio); pass('gradient studio runtime syntax'); }
+catch(e){ fail('gradient studio runtime syntax: '+e.message); }
 try { new Function(qrVendor); pass('local QR vendor syntax'); }
 catch(e){ fail('local QR vendor syntax: '+e.message); }
 
@@ -135,13 +139,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2270")) fail('service worker cache version is not V2.27.0');
+if(!sw.includes("color-lab-v2280")) fail('service worker cache version is not V2.28.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.27.0') fail('package version must be 2.27.0');
+if(pkg.version!=='2.28.0') fail('package version must be 2.28.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.27.0')||!html.includes('<div class="version">V2.27.0</div>')||!html.includes("appVersion:'2.27.0'")) fail('V2.27.0 UI or backup version metadata missing');
-else pass('V2.27.0 version metadata');
+if(!html.includes('Color Lab V2.28.0')||!html.includes('<div class="version">V2.28.0</div>')||!html.includes("appVersion:'2.28.0'")) fail('V2.28.0 UI or backup version metadata missing');
+else pass('V2.28.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -488,6 +492,36 @@ if(!referenceBoard.includes('const source=paletteArtifactBase()')||
    referenceBoard.includes('palette.accent=')){
   fail('V2.27.0 exact-source / local-photo / preview-isolation contract missing');
 }else pass('V2.27.0 exact source + local photo + preview isolation');
+
+if(!html.includes('id="gradientStudioMount"')||
+   !html.includes('<script src="./runtime/gradient-studio.js"></script>')||
+   !html.includes('<link rel="stylesheet" href="./runtime/gradient-studio.css">')||
+   !html.includes('initGradientStudio()')||
+   !sw.includes('./runtime/gradient-studio.js')||!sw.includes('./runtime/gradient-studio.css')||
+   !gradientStudio.includes('function gradientStudioSource(')||
+   !gradientStudio.includes('function gradientStudioGradient(')||
+   !gradientStudio.includes('function gradientStudioCss(')||
+   !gradientStudio.includes('function renderGradientStudio(')||
+   !gradientStudio.includes('function initGradientStudio(')||
+   !gradientStudioCss.includes('.gst-preview{')){
+  fail('V2.28.0 Gradient Studio runtime + UI contract missing');
+}else pass('V2.28.0 Gradient Studio runtime + UI');
+
+if(!gradientStudio.includes('const source=paletteArtifactBase()')||
+   !gradientStudio.includes("'base-structure'")||
+   !gradientStudio.includes("'base-accent'")||
+   !gradientStudio.includes("'structure-accent'")||
+   !gradientStudio.includes("'system'")||
+   !gradientStudio.includes('GRADIENT_STUDIO_ANGLES=[0,45,90,135]')||
+   !gradientStudio.includes("return 'background: '+gradientStudioGradient(pair,angle)+';'")||
+   !gradientStudio.includes('Gradient 是衍生預覽，不代表 75 / 18 / 7 面積比例')||
+   gradientStudio.includes('selectedColors=')||
+   gradientStudio.includes('palette.base=')||
+   gradientStudio.includes('palette.structure=')||
+   gradientStudio.includes('palette.accent=')||
+   gradientStudio.includes('fetch(')||gradientStudio.includes('XMLHttpRequest')){
+  fail('V2.28.0 exact-source / preview-only / local Gradient contract missing');
+}else pass('V2.28.0 exact source gradients + preview-only CSS handoff');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
