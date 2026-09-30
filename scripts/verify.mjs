@@ -560,7 +560,7 @@ if(!storageHardening.includes('function storageNeedsRecovery(')||
    !html.includes("const needsProjects=storageNeedsRecovery(LOCAL_PROJECTS_KEY,Array.isArray)")||
    !html.includes("const needsSaved=storageNeedsRecovery('colorlab.saved',Array.isArray)")||
    html.includes('const needsSaved=currentSaved.length===0')||
-   !html.includes("storageTransaction(keys,()=>")||
+   !storageHardening.includes("storageTransaction(keys,()=>")||
    !localProjects.includes("storageTransaction(['colorlab.saved',LOCAL_PROJECTS_KEY]")||
    !localProjects.includes("if(!storageWriteJson('colorlab.saved',data))return")){
   fail('V2.30.0 resilience tombstone or rollback-safe write contract missing');
@@ -892,7 +892,7 @@ const requiredMarkers=[
   'touch-action:none'
 ];
 for(const marker of requiredMarkers){
-  if(!html.includes(marker)) fail('feature marker missing: '+marker);
+  if(!appSource.includes(marker)) fail('feature marker missing: '+marker);
 }
 pass('V1.1 feature markers');
 
@@ -1005,7 +1005,7 @@ if(!html.includes("dh>38&&before.c>.035")){
   fail('generated accent chroma guard missing');
 }else pass('generated accent chroma guard');
 
-if(!html.includes("data.saved.length>1000")||!html.includes("color-lab-backup-v2")){
+if(!storageHardening.includes("data.saved.length>1000")||!storageHardening.includes("color-lab-backup-v2")){
   fail('backup v2 validation missing');
 }else pass('backup v2 validation');
 
@@ -1045,7 +1045,7 @@ if(startupWindow.includes("JSON.parse(localStorage.getItem('colorlab.compareA')"
   fail('unsafe startup localStorage JSON parse returned');
 }else pass('startup storage parsing hardened');
 
-if(!html.includes("reader.onerror=()=>toast('備份檔讀取失敗')")){
+if(!storageHardening.includes("reader.onerror=()=>toast('備份檔讀取失敗')")){
   fail('backup FileReader error handling missing');
 }else pass('backup FileReader error handling');
 
@@ -1167,7 +1167,7 @@ if(!html.includes("color-lab-backup-v5")||!html.includes("appVersion:'"+pkg.vers
 }else pass('personalization backup payload');
 
 for(const schema of ['color-lab-backup-v1','color-lab-backup-v2','color-lab-backup-v3','color-lab-backup-v4','color-lab-backup-v5']){
-  if(!html.includes(schema)) fail('backup compatibility missing: '+schema);
+  if(!appSource.includes(schema)) fail('backup compatibility missing: '+schema);
 }
 pass('backup v1/v2/v3/v4/v5 compatibility');
 
@@ -1242,7 +1242,7 @@ if(!html.includes("schema:'color-lab-shadow-v4'")||!html.includes("preferenceEna
   fail('V2.3 resilience shadow does not include personalization setting');
 }else pass('V2.3 resilience shadow includes personalization setting');
 
-if(!html.includes("typeof data.preferenceEnabled==='boolean'")){
+if(!storageHardening.includes("typeof data.preferenceEnabled==='boolean'")){
   fail('backup v4 personalization setting validation missing');
 }else pass('backup v4 personalization setting validation');
 
