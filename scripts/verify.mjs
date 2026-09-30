@@ -96,13 +96,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2150")) fail('service worker cache version is not V2.15.0');
+if(!sw.includes("color-lab-v2160")) fail('service worker cache version is not V2.16.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.15.0') fail('package version must be 2.15.0');
+if(pkg.version!=='2.16.0') fail('package version must be 2.16.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.15.0')||!html.includes('<div class="version">V2.15.0</div>')||!html.includes("appVersion:'2.15.0'")) fail('V2.15.0 UI or backup version metadata missing');
-else pass('V2.15.0 version metadata');
+if(!html.includes('Color Lab V2.16.0')||!html.includes('<div class="version">V2.16.0</div>')||!html.includes("appVersion:'2.16.0'")) fail('V2.16.0 UI or backup version metadata missing');
+else pass('V2.16.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -129,7 +129,7 @@ if(!appSource.includes("validationTheme!=='original'")||
    !appSource.includes("data-accessibility-apply")||
    !appSource.includes("data-accessibility-preview")){
   fail('V2.14.0 preview-only before explicit apply contract missing');
-}else pass('V2.15.0 preview before explicit apply');
+}else pass('V2.14.0 preview before explicit apply');
 
 
 if(!appSource.includes("recommendationRecentLimit=24")||
@@ -141,6 +141,31 @@ if(!appSource.includes("recommendationRecentLimit=24")||
    !appSource.includes("prioritizeUnseenRecommendations(selectDiverseRecommendations(candidates,30))")){
   fail('V2.15.0 Inspire recent-memory contract missing');
 }else pass('V2.15.0 Inspire recent-memory anti-repeat');
+
+if(!appSource.includes("function paletteAestheticCore(")||
+   !appSource.includes("const chromaIntent=")||
+   !appSource.includes("const roleClarity=")||
+   !appSource.includes("const energyStructure=")||
+   !appSource.includes("const vividIntent=")||
+   !appSource.includes("expressive:.98")||
+   !appSource.includes("unexpected:.96")||
+   appSource.includes("const chromaDiscipline=")||
+   appSource.includes("const supportCalm=")||
+   appSource.includes("const highChroma=")){
+  fail('V2.16.0 energy-aware Aesthetic Gate contract missing');
+}else pass('V2.16.0 energy-aware Aesthetic Gate');
+
+if(!appSource.includes("penalty+=clamp((averageChroma-.21)/.12)*(1-energyStructure)*.14")||
+   !appSource.includes("if(roleClarity<.20)")||
+   !appSource.includes("vividIntent*.04")){
+  fail('V2.16.0 vivid-overload guard missing');
+}else pass('V2.16.0 vivid palettes judged by structure, not saturation alone');
+
+if(!appSource.includes("const supportChroma=Math.max(baseO.c,structureO.c)")||
+   !appSource.includes("const accentControl=")||
+   appSource.includes("const chromaUsability=")){
+  fail('V2.16.0 role-aware practicality contract missing');
+}else pass('V2.16.0 vivid Accent practicality is role-aware');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||

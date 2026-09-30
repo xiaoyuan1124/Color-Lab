@@ -223,6 +223,22 @@ check('V2.13 dark validation is derived only',
   !appText.includes("palette=paletteValidationData("),
   'dark matrix never overwrites palette');
 
+const quietAesthetic=A.paletteAestheticCore(['#E9E1D2','#25313A','#4D739B']);
+const vividAesthetic=A.paletteAestheticCore(['#286B69','#D0A32E','#A94B38']);
+const noisyAesthetic=A.paletteAestheticCore(['#FF4B55','#FF5A4D','#FF6A45']);
+check('V2.16 quiet and vivid palettes can both clear the beauty gate',
+  quietAesthetic.score>=.48&&vividAesthetic.score>=.48,
+  'quiet='+quietAesthetic.score+' vivid='+vividAesthetic.score);
+check('V2.16 vivid intent rewards controlled energy',
+  vividAesthetic.vividIntent>0&&vividAesthetic.energyStructure>.45,
+  JSON.stringify(vividAesthetic));
+check('V2.16 uncontrolled high-energy palette scores below structured vivid palette',
+  noisyAesthetic.score<vividAesthetic.score,
+  'noisy='+noisyAesthetic.score+' vivid='+vividAesthetic.score);
+check('V2.16 no absolute high-chroma punishment remains',
+  !appText.includes('const highChroma=')&&!appText.includes('const supportCalm=')&&!appText.includes('const chromaDiscipline='),
+  'energy-aware scoring only');
+
 check('V2.15 Inspire recent memory is bounded and non-destructive',
   appText.includes("recommendationRecentLimit=24")&&
   appText.includes("slice(-recommendationRecentLimit)")&&
