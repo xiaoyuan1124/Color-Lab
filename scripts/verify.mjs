@@ -96,13 +96,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2140")) fail('service worker cache version is not V2.14.0');
+if(!sw.includes("color-lab-v2150")) fail('service worker cache version is not V2.15.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.14.0') fail('package version must be 2.14.0');
+if(pkg.version!=='2.15.0') fail('package version must be 2.15.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.14.0')||!html.includes('<div class="version">V2.14.0</div>')||!html.includes("appVersion:'2.14.0'")) fail('V2.14.0 UI or backup version metadata missing');
-else pass('V2.14.0 version metadata');
+if(!html.includes('Color Lab V2.15.0')||!html.includes('<div class="version">V2.15.0</div>')||!html.includes("appVersion:'2.15.0'")) fail('V2.15.0 UI or backup version metadata missing');
+else pass('V2.15.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -129,8 +129,18 @@ if(!appSource.includes("validationTheme!=='original'")||
    !appSource.includes("data-accessibility-apply")||
    !appSource.includes("data-accessibility-preview")){
   fail('V2.14.0 preview-only before explicit apply contract missing');
-}else pass('V2.14.0 preview before explicit apply');
+}else pass('V2.15.0 preview before explicit apply');
 
+
+if(!appSource.includes("recommendationRecentLimit=24")||
+   !appSource.includes("function recommendationFingerprint(")||
+   !appSource.includes("function readRecommendationRecent(")||
+   !appSource.includes("function rememberRecommendationBatch(")||
+   !appSource.includes("function prioritizeUnseenRecommendations(")||
+   !appSource.includes("colorlab.inspireRecentV1")||
+   !appSource.includes("prioritizeUnseenRecommendations(selectDiverseRecommendations(candidates,30))")){
+  fail('V2.15.0 Inspire recent-memory contract missing');
+}else pass('V2.15.0 Inspire recent-memory anti-repeat');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
