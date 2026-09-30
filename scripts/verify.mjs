@@ -342,8 +342,8 @@ if(!html.includes('id="accessibilityMatrix"')||
 
 if(!html.includes("function previewThemePalette(theme=previewTheme)")||
    !html.includes("previewThemePalette('dark')")||
-   !html.includes("$('#validationThemeModes [data-validation-theme]').forEach")||
-   !html.includes("$('[data-validation-theme]').forEach")){
+   !html.includes("$$('#validationThemeModes [data-validation-theme]').forEach")||
+   !html.includes("$$('[data-validation-theme]').forEach")){
   fail('V2.13.0 validation theme integration missing');
 }else pass('V2.13.0 original / dark validation integration');
 
