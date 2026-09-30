@@ -572,7 +572,8 @@ test('V2.20 keeps advanced handoff formats behind compact disclosure', async ({ 
   await expect(page.locator('[data-export-format="tailwind"]')).toBeVisible();
   await expect(page.locator('[data-export-format="swiftui"]')).toBeVisible();
   await expect(page.locator('[data-export-format="svg"]')).toBeVisible();
-  await expect(page.locator('.handoff-more-actions .utility-btn')).toHaveCount(3);
+  await expect(page.locator('.handoff-more-actions .utility-btn')).toHaveCount(4);
+  await expect(page.locator('#exportReferenceBoard')).toBeVisible();
 });
 
 test('V2.18 renders all five realistic 75/18/7 context scenes', async ({ page }) => {
@@ -1114,7 +1115,7 @@ test('V2.27 Reference Board can include the current local photo without changing
     const pixel=board.canvas.getContext('2d').getImageData(300,400,1,1).data;
     const hex='#'+[pixel[0],pixel[1],pixel[2]].map(v=>v.toString(16).padStart(2,'0')).join('').toUpperCase();
     photoObjectURL=null;
-    return {hasPhoto:board.data.hasPhoto,pixel,before,after:paletteArtifactBase()};
+    return {hasPhoto:board.data.hasPhoto,pixel:hex,before,after:paletteArtifactBase()};
   });
   expect(result.hasPhoto).toBe(true);
   expect(result.pixel).toBe('#00CC66');
