@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.9**
+**目前版本：V2.10**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -144,6 +144,18 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
 
+## V2.10 Exploration Depth
+
+V2.10 解決「和諧了，但可選顏色太少」：
+
+- Compose 的「換一個」不再只從前 5 個 alternatives 隨機抽取
+- 每個推薦角色依目前 Tone Family 建立最多 36 個候選，再以 Aesthetic + Tonal Cohesion + perceptual distance 篩選
+- 同一個配色上下文會記住已看過的顏色，優先顯示尚未出現的候選；走完整輪才循環
+- Inspire 的智慧推薦由固定 5 組擴為最多 30 組合格候選
+- 畫面一次仍只顯示 5 組，新增「換一批」逐批探索，避免一次塞 30 張卡片
+- 會顯示目前看到第幾組以及總共有幾組通過品質門檻
+- 數量擴充不降低 V2.9 的 Aesthetic / Tonal Gate；如果某個條件只有 13 組夠好，就只提供 13 組
+
 ## V2.9 Tonal Cohesion Engine
 
 V2.9 解決「Hue 關係合理，但三個色調不像同一個世界」的問題。
@@ -263,7 +275,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v29-tonal-cohesion`
+目前 cache generation：`color-lab-v210-exploration-depth`
 
 ## Quality Gates
 

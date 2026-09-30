@@ -81,24 +81,24 @@ for(const [src] of lazyScripts){
 }
 if(!html.includes('function ensureRecommendationReferences(')||
    !html.includes('function ensureInspirationResources(')){
-  fail('V2.9 lazy intelligence orchestration missing');
-}else pass('V2.9 lazy intelligence orchestration');
+  fail('V2.10 lazy intelligence orchestration missing');
+}else pass('V2.10 lazy intelligence orchestration');
 
 if(!html.includes('function fastInitialPalette(')||
    html.includes('renderModes();renderComboSlots();renderRecentColors();generate(false);')){
-  fail('V2.9 fast startup path missing');
-}else pass('V2.9 fast startup path');
+  fail('V2.10 fast startup path missing');
+}else pass('V2.10 fast startup path');
 
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v29")) fail('service worker cache version is not V2.9');
+if(!sw.includes("color-lab-v210")) fail('service worker cache version is not V2.10');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.9.0') fail('package version must be 2.9.0');
+if(pkg.version!=='2.10.0') fail('package version must be 2.10.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.9')||!html.includes('<div class="version">V2.9</div>')||!html.includes("appVersion:'2.9.0'")) fail('V2.9 UI or backup version metadata missing');
-else pass('V2.9 version metadata');
+if(!html.includes('Color Lab V2.10')||!html.includes('<div class="version">V2.10</div>')||!html.includes("appVersion:'2.10.0'")) fail('V2.10 UI or backup version metadata missing');
+else pass('V2.10 version metadata');
 
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
@@ -209,13 +209,13 @@ if(atlasCount<40) fail('inspiration atlas too small: '+atlasCount);
 else pass('inspiration atlas size '+atlasCount);
 
 for(const fn of ['inspirationRefineGenerated','paletteSurpriseScore','paletteAestheticCore','paletteAestheticScore','laneAestheticFloor','archetypeCombos','inspirationUtility','inspirationVariations']){
-  if(!html.includes('function '+fn+'(')) fail('V2.9 inspiration function missing: '+fn);
+  if(!html.includes('function '+fn+'(')) fail('V2.10 inspiration function missing: '+fn);
 }
 if(html.includes("const lanes=['editorial','atmospheric','fashion','expressive','unexpected']")){
-  fail('V2.9 still forces one recommendation per lane');
+  fail('V2.10 still forces one recommendation per lane');
 }else if(!html.includes("item.aesthetic>=laneAestheticFloor(recommendationLane(item))")){
-  fail('V2.9 aesthetic eligibility gate missing');
-}else pass('V2.9 beauty-first diversity gate');
+  fail('V2.10 aesthetic eligibility gate missing');
+}else pass('V2.10 beauty-first diversity gate');
 if(!html.includes('...archetypeCombos(inputs)')||!html.includes('inspirationRefineGenerated(x.colors,inputs.length)')){
   fail('V2.7 relation-first recommendation sources missing');
 }else pass('V2.7 relation-first recommendation sources');
@@ -229,44 +229,67 @@ if(!html.includes('function scheduleNonCriticalStartup(')||
    !html.includes("requestIdleCallback(run,{timeout:1400})")||
    html.includes('renderModes();renderRecentColors();palette=fastInitialPalette()')||
    html.includes('renderCompare();updateLockToggle();setPhotoMode')){
-  fail('V2.9 non-critical startup deferral missing');
-}else pass('V2.9 non-critical startup deferral');
+  fail('V2.10 non-critical startup deferral missing');
+}else pass('V2.10 non-critical startup deferral');
 
 const startupRenderStart=html.indexOf('function render(){');
 const startupRenderEnd=html.indexOf('function scheduleSecondaryRender()',startupRenderStart);
 const startupRenderBlock=startupRenderStart>=0&&startupRenderEnd>startupRenderStart?html.slice(startupRenderStart,startupRenderEnd):'';
 if(startupRenderBlock.includes('renderRelationshipExplanation();scheduleSecondaryRender()')||
    !startupRenderBlock.includes("if(deep?.open)renderRelationshipExplanation()")){
-  fail('V2.9 hidden relationship rendering still blocks startup');
-}else pass('V2.9 hidden relationship rendering deferred');
+  fail('V2.10 hidden relationship rendering still blocks startup');
+}else pass('V2.10 hidden relationship rendering deferred');
 
 
 if(!html.includes('const beautyGuard=clamp((aesthetic-.48)/.34)')||
    !html.includes('return aesthetic*3.85+tonal*2.10')||
    !html.includes('Tonal Cohesion × Aesthetic Gate × Atlas')){
-  fail('V2.9 aesthetic-first utility or UI contract missing');
-}else pass('V2.9 aesthetic-first utility');
+  fail('V2.10 aesthetic-first utility or UI contract missing');
+}else pass('V2.10 aesthetic-first utility');
 
 if((inspirationAtlas.match(/tier:"core"/g)||[]).length<10){
-  fail('V2.9 high-confidence core anchors missing');
-}else pass('V2.9 high-confidence core anchors');
+  fail('V2.10 high-confidence core anchors missing');
+}else pass('V2.10 high-confidence core anchors');
 
 
 const toneFamilyCount=(toneFamilies.match(/id:"(?:morandi|pastel|earth|editorial|luxury|jewel|digital|airy)"/g)||[]).length;
-if(toneFamilyCount!==8) fail('V2.9 tone family database count '+toneFamilyCount);
-else pass('V2.9 tone family database size 8');
+if(toneFamilyCount!==8) fail('V2.10 tone family database count '+toneFamilyCount);
+else pass('V2.10 tone family database size 8');
 
 for(const fn of ['toneFamilyById','inferToneFamilyId','toneMixColor','tonalHarmonizeGenerated','tonalCohesionScore','toneFamilyLabel']){
-  if(!html.includes('function '+fn+'(')) fail('V2.9 tonal function missing: '+fn);
+  if(!html.includes('function '+fn+'(')) fail('V2.10 tonal function missing: '+fn);
 }
 if(!html.includes("item.tonal>=.52")||
    !html.includes("Tonal Cohesion × Aesthetic Gate")||
    !html.includes("loadScriptOnce('./data/tone-families.js','TONE_FAMILIES')")){
-  fail('V2.9 tonal cohesion recommendation contract missing');
-}else pass('V2.9 tonal cohesion recommendation contract');
+  fail('V2.10 tonal cohesion recommendation contract missing');
+}else pass('V2.10 tonal cohesion recommendation contract');
 
-if(!sw.includes('./data/tone-families.js')) fail('V2.9 tone family offline cache missing');
-else pass('V2.9 tone family offline cache');
+if(!sw.includes('./data/tone-families.js')) fail('V2.10 tone family offline cache missing');
+else pass('V2.10 tone family offline cache');
+
+
+for(const fn of ['roleAlternativeContext','roleAlternativePool','nextRoleAlternative','recommendationBatch','nextRecommendationBatch']){
+  if(!html.includes('function '+fn+'(')) fail('V2.10 exploration function missing: '+fn);
+}
+if(html.includes("Math.floor(Math.random()*Math.min(5,opts.length))")){
+  fail('V2.10 legacy five-color shuffle cap still active');
+}else pass('V2.10 role shuffle five-color cap removed');
+
+if(!html.includes('roleAlternativePool(role,36,state.familyId)')||
+   !html.includes("toast(remaining>0?'已換色 · 還有 '")){
+  fail('V2.10 deep role alternative pool missing');
+}else pass('V2.10 deep role alternative pool');
+
+if(!html.includes('const recommendationBatchSize=5')||
+   !html.includes('selectDiverseRecommendations(candidates,30)')||
+   !html.includes('id="nextRecommendations"')){
+  fail('V2.10 recommendation batching contract missing');
+}else pass('V2.10 recommendation batching contract');
+
+if(!html.includes("progress.textContent=recs.length?start+'–'+end+' / '+recs.length+' 組通過品質門檻'")){
+  fail('V2.10 recommendation progress missing');
+}else pass('V2.10 recommendation progress');
 
 
 if(manifest.display!=='standalone') fail('manifest display must be standalone');
@@ -488,9 +511,9 @@ for(const key of ['hierarchy','distinctiveness','cohesion','focus','practicality
 }
 pass('V1.9 quality dimensions present');
 
-if(!html.includes('const out=selectDiverseRecommendations(candidates,5)')){
-  fail('recommendation diversity selector not active');
-}else pass('recommendation diversity selector active');
+if(!html.includes('const out=selectDiverseRecommendations(candidates,30)')){
+  fail('V2.10 deep recommendation selector not active');
+}else pass('V2.10 deep recommendation selector active');
 
 
 for(const fn of ['photoCompositionProfile','renderPhotoInsight']){
@@ -555,7 +578,7 @@ if(!html.includes("personal*.45")||!html.includes("reference,accessibility,perso
   fail('V2.3 personal recommendation dimension missing');
 }else pass('V2.3 personal recommendation dimension');
 
-if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.9.0'")||
+if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.10.0'")||
    !html.includes("preference:sanitizePreferenceModel(preferenceState)")||
    !html.includes("preferenceEnabled")){
   fail('V2.3 backup v4 personalization payload missing');
@@ -629,7 +652,7 @@ if(!html.includes("return enabled?preferenceAffinityFromModel(model,colors):0;")
   fail('disabled personalization does not force zero affinity');
 }else pass('disabled personalization forces zero affinity');
 
-if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.9.0'")){
+if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.10.0'")){
   fail('V2.3 personalization setting persistence or backup v4 missing');
 }else pass('V2.3 setting persistence and backup v4');
 
@@ -710,4 +733,4 @@ if(!workflows.includes('group: color-lab-codeql-')||!workflows.includes('cancel-
 }else pass('CodeQL superseded-run concurrency');
 
 if(process.exitCode) process.exit(process.exitCode);
-console.log('Color Lab V2.9 verification complete.');
+console.log('Color Lab V2.10 verification complete.');

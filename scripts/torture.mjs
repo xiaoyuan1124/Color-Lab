@@ -162,6 +162,17 @@ check('textFor fixes medium olive contrast regression',
 
 
 
+
+check('V2.10 exploration hue scaffold has at least 18 directions',
+  html.includes("const hueOffsets=[0,12,-12,24,-24,38,-38,52,-52,72,-72,96,-96,120,-120,150,-150,180]"),
+  '18 hue directions');
+check('V2.10 recommendation pool is deeper than visible batch',
+  html.includes('selectDiverseRecommendations(candidates,30)')&&html.includes('const recommendationBatchSize=5'),
+  '30 candidate pool / 5 visible');
+check('V2.10 legacy random five-option shuffle removed',
+  !html.includes('Math.floor(Math.random()*Math.min(5,opts.length))'),
+  'legacy cap removed');
+
 const tonalRaw=['#C84335','#315EAA','#5E6648'];
 const tonalMorandi=A.tonalHarmonizeGenerated(tonalRaw,0,'morandi');
 check('tonal harmonizer emits valid Morandi trio',
