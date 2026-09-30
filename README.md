@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.14.0**
+**目前版本：V2.15.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,17 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.15.0 Inspire History + Anti-repeat
+
+Inspire 原有「上一批 / 下一批」穩定歷史保留，這版補上跨 session 的近期瀏覽記憶：
+
+- 每批仍最多顯示 5 組，上一批 → 下一批會回到完全相同的候選
+- 本機記住最近看過的 24 組 palette fingerprint
+- 相同輸入條件重新建立候選池時，近期看過的 palette 會排到新候選之後，降低重新從同一批開始的機率
+- 最近看過的 palette 不會被刪除，只是延後，因此仍可繼續瀏覽找回
+- 記憶只存在 localStorage，不新增帳號、後端或追蹤
+- 換色、模式或參考資料造成候選 context 改變時，批次歷史仍會正確重置，不沿用錯誤頁碼
 
 ## V2.14.0 Actionable Accessibility Fix
 
@@ -364,7 +375,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v2140-accessibility-fix`
+目前 cache generation：`color-lab-v2150-inspire-memory`
 
 ## Quality Gates
 

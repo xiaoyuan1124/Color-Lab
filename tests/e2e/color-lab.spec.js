@@ -194,3 +194,36 @@ test('V2.14 Dark validation never offers source-color apply actions', async ({ p
   await expect(page.locator('#accessibilityFixes')).toContainText('Dark 為衍生預覽');
   await expect(page.locator('[data-accessibility-apply]')).toHaveCount(0);
 });
+
+test('V2.15 Inspire recent memory prioritizes fresh palettes without deleting seen ones', async ({ page }) => {
+  const result = await page.evaluate(() => {
+    const item = (a,b,c) => ({ palette:{ base:a, structure:b, accent:c } });
+    const seen = item('#111111','#222222','#333333');
+    const fresh = item('#AAAAAA','#BBBBBB','#CCCCCC');
+    recommendationRecentFingerprints=[recommendationFingerprint(seen)];
+    const ordered=prioritizeUnseenRecommendations([seen,fresh]);
+    return {
+      keys:ordered.map(recommendationFingerprint),
+      seenKey:recommendationFingerprint(seen),
+      freshKey:recommendationFingerprint(fresh)
+    };
+  });
+  expect(result.keys).toEqual([result.freshKey,result.seenKey]);
+});
+
+test('V2.15 Inspire recent memory stays bounded to 24 fingerprints', async ({ page }) => {
+  const state = await page.evaluate(() => {
+    recommendationRecentFingerprints=[];
+    const items=Array.from({length:30},(_,i)=>{
+      const n=(i+1).toString(16).padStart(2,'0').toUpperCase();
+      return {palette:{base:'#'+n+'0000',structure:'#00'+n+'00',accent:'#0000'+n}};
+    });
+    rememberRecommendationBatch(items);
+    return {
+      length:recommendationRecentFingerprints.length,
+      stored:JSON.parse(localStorage.getItem('colorlab.inspireRecentV1')||'[]').length
+    };
+  });
+  expect(state.length).toBe(24);
+  expect(state.stored).toBe(24);
+});

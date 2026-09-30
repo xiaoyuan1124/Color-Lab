@@ -223,6 +223,12 @@ check('V2.13 dark validation is derived only',
   !appText.includes("palette=paletteValidationData("),
   'dark matrix never overwrites palette');
 
+check('V2.15 Inspire recent memory is bounded and non-destructive',
+  appText.includes("recommendationRecentLimit=24")&&
+  appText.includes("slice(-recommendationRecentLimit)")&&
+  appText.includes("fresh.concat(seen)")&&
+  appText.includes("colorlab.inspireRecentV1"),
+  'recent palettes move behind fresh palettes instead of being deleted');
 check('V2.14 accessibility fix changes smaller visual role',
   appText.includes("ROLE_RATIOS={base:75,structure:18,accent:7}")&&
   appText.includes("function accessibilityChangeRole(a,b)")&&
