@@ -347,12 +347,15 @@ if(!html.includes("function previewThemePalette(theme=previewTheme)")||
   fail('V2.13.0 validation theme integration missing');
 }else pass('V2.13.0 original / dark validation integration');
 
-if(!html.includes("$$('#contextTabs [data-context]').forEach")||
-   !html.includes("$$('#contextThemeModes [data-preview-theme]').forEach")||
-   !html.includes("$$('[data-preview-theme]').forEach")||
-   !html.includes("$$('[data-export-format]').forEach")){
+if(!html.includes("$('#contextTabs [data-context]').forEach")||
+   !html.includes("$('#contextThemeModes [data-preview-theme]').forEach")||
+   !html.includes("$('[data-preview-theme]').forEach")||
+   !html.includes("$('[data-export-format]').forEach")){
   fail('V2.12.0 collection controls are not bound with querySelectorAll helper');
 }else pass('V2.12.0 collection controls use querySelectorAll helper');
+
+if(html.includes('$$(')) fail('invalid triple-dollar selector helper detected');
+else pass('selector helper arity');
 
 
 if(!html.includes("base:{key:'',pool:[],index:-1,familyId:'',origin:''}")||
