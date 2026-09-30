@@ -424,3 +424,72 @@ test('V2.18 context preview stylesheet is local and loaded', async ({ page }) =>
   expect(style.loaded).toBe(true);
   expect(style.rules).toBeGreaterThan(20);
 });
+
+test('V2.18 renders all five realistic 75/18/7 context scenes', async ({ page }) => {
+  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  const cases=[
+    ['app','.cp2-app','App / Web'],
+    ['brand','.cp2-brand','品牌'],
+    ['room','.cp2-room','室內'],
+    ['outfit','.cp2-outfit','穿搭'],
+    ['slides','.cp2-slide','簡報']
+  ];
+  for(const [context,selector,label] of cases){
+    await page.locator('[data-context="'+context+'"]').click();
+    await expect(page.locator('#uiPreview '+selector)).toBeVisible();
+    await expect(page.locator('#uiPreview')).toHaveAttribute('aria-label',new RegExp(label));
+  }
+});
+
+test('V2.18 context switching and Dark preview never mutate the source palette', async ({ page }) => {
+  await page.evaluate(() => {
+    selectedColors=['#E7DCC8','#274C55','#C65338'];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+  });
+  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  const before=await page.evaluate(() => paletteArtifactBase());
+
+  await page.locator('[data-context="app"]').click();
+  await page.locator('[data-preview-theme="dark"]').click();
+  await expect(page.locator('#contextThemeNote')).toContainText('Dark 預覽變體');
+  await expect(page.locator('#uiPreview .cp2-app')).toBeVisible();
+
+  await page.locator('[data-context="brand"]').click();
+  await expect(page.locator('#uiPreview .cp2-brand')).toBeVisible();
+  await page.locator('[data-context="slides"]').click();
+  await expect(page.locator('#uiPreview .cp2-slide')).toBeVisible();
+
+  const after=await page.evaluate(() => paletteArtifactBase());
+  expect(after.palette).toEqual(before.palette);
+});
+
+test('V2.18 Room and Outfit stay on exact source colors even while Dark mode is selected', async ({ page }) => {
+  await page.evaluate(() => {
+    selectedColors=['#E7DCC8','#274C55','#C65338'];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+  });
+  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await page.locator('[data-preview-theme="dark"]').click();
+
+  for(const context of ['room','outfit']){
+    await page.locator('[data-context="'+context+'"]').click();
+    await expect(page.locator('#contextThemeNote')).toContainText('原色情境');
+    const result=await page.evaluate(() => ({
+      context:previewContext,
+      palette:paletteArtifactBase().palette,
+      note:document.querySelector('#contextThemeNote')?.textContent||''
+    }));
+    expect(result.context).toBe(context);
+    expect(result.palette).toEqual({base:'#E7DCC8',structure:'#274C55',accent:'#C65338'});
+    expect(result.note).toContain('原色情境');
+  }
+});
+
+test('V2.18 App scene uses all three palette roles in distinct product UI responsibilities', async ({ page }) => {
+  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await page.locator('[data-context="app"]').click();
+  await expect(page.locator('.cp2-app-rail')).toBeVisible();
+  await expect(page.locator('.cp2-app-hero')).toBeVisible();
+  await expect(page.locator('.cp2-app-cta')).toBeVisible();
+  await expect(page.locator('.cp2-app-card')).toHaveCount(2);
+});
