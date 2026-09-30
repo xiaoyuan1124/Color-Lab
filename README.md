@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.28.0**
+**目前版本：V2.29.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,18 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.29.0 Cross-platform Handoff
+
+Professional Handoff 再補三個常用開發平台格式，但維持同一個 exact source contract：
+
+- 「更多格式」新增 SCSS、Flutter、Jetpack Compose；不增加首頁或主導航資訊密度
+- SCSS 輸出 `$color-base` / `$color-structure` / `$color-accent`，並保留 75 / 18 / 7 語意註解
+- Flutter 輸出可直接使用的 Dart `Color(0xFFRRGGBB)` 常數
+- Jetpack Compose 輸出 Kotlin `Color(0xFFRRGGBB)` 常數
+- 三個格式都直接從 `paletteArtifactBase()` 取得 Base / Structure / Accent，不經 Dark、CVD、Gradient、Tone Explorer 或 Accessibility preview
+- 檔名沿用既有 palette name sanitizer；支援 Web Share file，不支援時仍回退本機下載
+- 不新增 SDK、套件、後端、網路請求或付費 API
 
 ## V2.28.0 Gradient Studio
 
