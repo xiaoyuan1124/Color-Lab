@@ -804,3 +804,58 @@ test('V2.23 snapshot parser fails closed on malformed palette payloads', async (
   expect(result).toEqual([null,null,null]);
 });
 
+
+
+test('V2.24 Custom Design Preview sanitizes unsafe SVG content before rendering', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    const unsafe='<svg viewBox="0 0 100 100" onload="alert(1)"><script>alert(1)</script><image href="https://example.com/a.png"/><rect x="0" y="0" width="60" height="100" fill="#112233" onclick="alert(2)"/><path d="M60 0H100V100H60Z" style="fill:#445566;stroke:#AABBCC;filter:url(#x)"/></svg>';
+    const parsed=customDesignSanitizeSvg(unsafe);
+    return {markup:parsed.markup,colors:parsed.colors.map(x=>x.hex)};
+  });
+  expect(result.markup).not.toContain('<script');
+  expect(result.markup).not.toContain('<image');
+  expect(result.markup).not.toContain('onload=');
+  expect(result.markup).not.toContain('onclick=');
+  expect(result.markup).not.toContain('href=');
+  expect(result.markup).not.toContain('filter=');
+  expect(result.markup).not.toContain('url(');
+  expect(result.colors).toEqual(expect.arrayContaining(['#112233','#445566','#AABBCC']));
+});
+
+test('V2.24 maps local SVG flat colors to exact source roles without mutating Compose', async ({ page }) => {
+  await page.evaluate(() => {
+    selectedColors=['#E7DCC8','#274C55','#C65338'];
+    lockedSlots=[false,false,false];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+  });
+  const before=await page.evaluate(() => paletteArtifactBase());
+  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await page.locator('#customDesignPreviewDetails').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80"><rect width="40" height="80" fill="#111111"/><rect x="40" width="20" height="80" fill="#111111"/><rect x="60" width="20" height="80" fill="#111111"/><rect x="80" width="20" height="80" fill="#222222"/><circle cx="100" cy="20" r="10" fill="#222222"/><circle cx="105" cy="55" r="8" fill="#333333"/></svg>';
+  await page.locator('#customDesignInput').setInputFiles({name:'sample.svg',mimeType:'image/svg+xml',buffer:Buffer.from(svg)});
+
+  await expect(page.locator('#customDesignStatus')).toContainText('sample.svg');
+  await expect(page.locator('#customDesignMappings select')).toHaveCount(3);
+  await expect(page.locator('#customDesignCanvas svg')).toBeVisible();
+
+  const mapped=await page.evaluate(() => ({
+    roles:customDesignMappedRoles(),
+    markup:customDesignMappedMarkup(),
+    after:paletteArtifactBase()
+  }));
+  expect(mapped.roles).toEqual({
+    '#111111':'#E7DCC8',
+    '#222222':'#274C55',
+    '#333333':'#C65338'
+  });
+  expect(mapped.markup).toContain('#E7DCC8');
+  expect(mapped.markup).toContain('#274C55');
+  expect(mapped.markup).toContain('#C65338');
+  expect(mapped.after).toEqual(before);
+
+  await page.locator('[data-custom-design-color="#333333"]').selectOption('keep');
+  const afterManual=await page.evaluate(() => ({markup:customDesignMappedMarkup(),palette:paletteArtifactBase()}));
+  expect(afterManual.markup).toContain('#333333');
+  expect(afterManual.palette).toEqual(before);
+});
