@@ -129,3 +129,17 @@ test('three-color accessibility matrix validates original and Dark preview witho
   expect(darkPreview.accent).toBe(before.palette.accent);
   await expect(page.locator('#validationSummary')).toContainText('/ 3');
 });
+
+test('V2.13.1 local palette runtime is loaded and callable', async ({ page }) => {
+  await expect(page.locator('script[src="./runtime/palette-tools.js"]')).toHaveCount(1);
+  const api = await page.evaluate(() => ({
+    artifact: typeof paletteArtifact,
+    validation: typeof renderPaletteValidation,
+    context: typeof renderContextPreview,
+    dark: previewThemePalette('dark')
+  }));
+  expect(api.artifact).toBe('function');
+  expect(api.validation).toBe('function');
+  expect(api.context).toBe('function');
+  expect(api.dark.derived).toBe(true);
+});
