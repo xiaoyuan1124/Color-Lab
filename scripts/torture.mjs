@@ -7,7 +7,8 @@ const toneExplorer=fs.readFileSync('runtime/tone-explorer.js','utf8');
 const photoPalette=fs.readFileSync('runtime/photo-palette.js','utf8');
 const appText=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette;
 const toneSource=fs.readFileSync('data/tone-families.js','utf8');
-const scriptMatch=html.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/);
+const inlineScripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+const scriptMatch=inlineScripts.at(-1);
 if(!scriptMatch){
   console.error('FAIL inline app script not found');
   process.exit(1);
