@@ -449,7 +449,8 @@ if(!html.includes("schema:'color-lab-backup-v5'")||
    !html.includes("schema:'color-lab-shadow-v4'")||
    !html.includes("projectId:sanitizeProjectId(x.projectId)")||
    !html.includes("localProjectMatches(x)")||
-   !html.includes("localProjectSearchText(x)")||
+   !localProjects.includes("function localProjectSearchText(")||
+   !localProjects.includes("localProjectSearchText(x)")||
    !html.includes("initLocalProjects()")||
    !localProjects.includes("配色不會被刪除，只會變成未歸類")||
    !localProjects.includes("item.projectId=id")){
@@ -865,7 +866,7 @@ if(!html.includes("added:inputs.length===1?[refined[1],refined[2]]:[refined[2]]"
 
 
 for(const fn of ['getIGPatternRows','paletteSignature','librarySearchText','handleSlotKeyboard']){
-  if(!html.includes('function '+fn+'(')) fail('V1.6 hardening function missing: '+fn);
+  if(!appSource.includes('function '+fn+'(')) fail('V1.6 hardening function missing: '+fn);
 }
 pass('V1.6 hardening functions present');
 
@@ -1143,7 +1144,7 @@ if(!html.includes("hueCoherence=clamp(Math.hypot(role.sumX,role.sumY)/role.w,0,1
 
 
 const loadSavedStart=html.indexOf('function loadSaved(index){');
-const loadSavedEnd=html.indexOf('function librarySearchText(',loadSavedStart);
+const loadSavedEnd=html.indexOf('function renderSaved(){',loadSavedStart);
 const loadSavedBlock=loadSavedStart>=0&&loadSavedEnd>loadSavedStart?html.slice(loadSavedStart,loadSavedEnd):'';
 if(!loadSavedBlock.includes("selectedColors=[x.palette.base,x.palette.structure,x.palette.accent]")||loadSavedBlock.includes('completeCombo(')){
   fail('V2.3 saved palette exact restore contract missing');
