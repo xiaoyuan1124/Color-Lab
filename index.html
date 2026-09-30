@@ -4918,13 +4918,6 @@ function save(){
   toast('已收藏 '+currentComboName);
 }
 
-function renderFolderFilter(data){
-  const select=$('#libraryFolderFilter');if(!select)return;
-  const folders=[...new Set(data.map(x=>(x.folder||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'zh-Hant'));
-  const current=libraryFolderFilter;
-  select.innerHTML='<option value="">全部分類</option>'+folders.map(f=>'<option value="'+escapeHtml(f)+'">'+escapeHtml(f)+'</option>').join('');
-  if(folders.includes(current))select.value=current;else{libraryFolderFilter='';select.value=''}
-}
 function toggleSavedPin(index){
   const data=readSavedData(),item=data[index];if(!item)return;
   item.pinned=!item.pinned;localStorage.setItem('colorlab.saved',JSON.stringify(data));scheduleResilienceBackup();renderSaved();
