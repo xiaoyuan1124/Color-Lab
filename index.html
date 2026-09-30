@@ -3236,8 +3236,8 @@ function setPreviewTheme(next){
 }
 function renderContextPreview(){
   const host=$('#uiPreview');if(!host)return;
-  $$$('#contextTabs [data-context]').forEach(b=>b.classList.toggle('active',b.dataset.context===previewContext));
-  $$$('#contextThemeModes [data-preview-theme]').forEach(b=>{
+  $$('#contextTabs [data-context]').forEach(b=>b.classList.toggle('active',b.dataset.context===previewContext));
+  $$('#contextThemeModes [data-preview-theme]').forEach(b=>{
     const active=b.dataset.previewTheme===previewTheme;
     b.classList.toggle('active',active);b.setAttribute('aria-pressed',active?'true':'false');
   });
