@@ -104,13 +104,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2190")) fail('service worker cache version is not V2.19.0');
+if(!sw.includes("color-lab-v2200")) fail('service worker cache version is not V2.20.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.19.0') fail('package version must be 2.19.0');
+if(pkg.version!=='2.20.0') fail('package version must be 2.20.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.19.0')||!html.includes('<div class="version">V2.19.0</div>')||!html.includes("appVersion:'2.19.0'")) fail('V2.19.0 UI or backup version metadata missing');
-else pass('V2.19.0 version metadata');
+if(!html.includes('Color Lab V2.20.0')||!html.includes('<div class="version">V2.20.0</div>')||!html.includes("appVersion:'2.20.0'")) fail('V2.20.0 UI or backup version metadata missing');
+else pass('V2.20.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -256,6 +256,27 @@ if(!appSource.includes("selectedColors=[...colors]")||
    !appSource.includes("localStorage.setItem('colorlab.photoPaletteStyle'")){
   fail('V2.19.0 explicit apply / perceptual dedupe contract missing');
 }else pass('V2.19.0 explicit apply + perceptual dedupe');
+
+if(!html.includes('id="handoffMore"')||
+   !html.includes('data-export-format="tailwind"')||
+   !html.includes('data-export-format="swiftui"')||
+   !html.includes('data-export-format="svg"')||
+   !appSource.includes("if(kind==='tailwind')")||
+   !appSource.includes("if(kind==='swiftui')")||
+   !appSource.includes("if(kind==='svg')")||
+   !appSource.includes("function artifactSwiftColor(")||
+   !appSource.includes("function artifactXmlEscape(")){
+  fail('V2.20.0 Professional Export 2.0 format contract missing');
+}else pass('V2.20.0 Tailwind / SwiftUI / SVG exports');
+
+if(!appSource.includes("data.palette.base")||
+   !appSource.includes("data.palette.structure")||
+   !appSource.includes("data.palette.accent")||
+   !appSource.includes("type:'image/svg+xml'")||
+   !appSource.includes("type:'text/javascript'")||
+   !appSource.includes("name:safe+'.swift'")){
+  fail('V2.20.0 exact-color handoff contract missing');
+}else pass('V2.20.0 exact source-color professional handoff');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||

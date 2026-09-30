@@ -1,4 +1,4 @@
-/* Color Lab V2.14.0 local runtime
+/* Color Lab V2.20.0 local runtime
    Professional Handoff + Palette Validation + Context Preview.
    No network/runtime dependencies. Source palette remains authoritative. */
 
@@ -111,6 +111,17 @@ function paletteArtifactBase(){
   const name=($('#comboName')?.value||currentComboName||'Color Lab 配色').trim()||'Color Lab 配色';
   return{name,palette:{base:palette.base,structure:palette.structure,accent:palette.accent},ratios:{base:75,structure:18,accent:7}};
 }
+function artifactHexRgb(hex){
+  const h=String(hex||'').replace('#','');
+  return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16));
+}
+function artifactSwiftColor(hex){
+  const [r,g,b]=artifactHexRgb(hex).map(v=>(v/255).toFixed(6));
+  return 'Color(red: '+r+', green: '+g+', blue: '+b+')';
+}
+function artifactXmlEscape(value){
+  return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[ch]));
+}
 function paletteArtifact(kind){
   const data=paletteArtifactBase();
   const safe=(data.name.replace(/[^\w\u4e00-\u9fff-]+/g,'-')||'color-lab').slice(0,40);
@@ -125,6 +136,33 @@ function paletteArtifact(kind){
       accent:{$type:'color',$value:data.palette.accent,$description:'7% Accent / Focus'}
     },ratio:{base:75,structure:18,accent:7}};
     return{name:safe+'.tokens.json',type:'application/json',text:JSON.stringify(payload,null,2)+'\n'};
+  }
+  if(kind==='tailwind'){
+    const text='// '+data.name+' · Color Lab 75 / 18 / 7\nexport default {\n  theme: {\n    extend: {\n      colors: {\n        base: \''+data.palette.base+'\',\n        structure: \''+data.palette.structure+'\',\n        accent: \''+data.palette.accent+'\'\n      }\n    }\n  }\n};\n';
+    return{name:safe+'.tailwind.js',type:'text/javascript',text};
+  }
+  if(kind==='swiftui'){
+    const text='// '+data.name+' · Color Lab 75 / 18 / 7\nimport SwiftUI\n\nextension Color {\n  static let paletteBase = '+artifactSwiftColor(data.palette.base)+' // 75%\n  static let paletteStructure = '+artifactSwiftColor(data.palette.structure)+' // 18%\n  static let paletteAccent = '+artifactSwiftColor(data.palette.accent)+' // 7%\n}\n';
+    return{name:safe+'.swift',type:'text/plain',text};
+  }
+  if(kind==='svg'){
+    const title=artifactXmlEscape(data.name);
+    const baseText=textFor(data.palette.base),structureText=textFor(data.palette.structure),accentText=textFor(data.palette.accent);
+    const text='<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">\n'+
+      '  <title id="title">'+title+' · Color Lab</title>\n'+
+      '  <desc id="desc">75 percent Base, 18 percent Structure, 7 percent Accent palette sheet.</desc>\n'+
+      '  <rect width="1200" height="720" fill="#F3EFE8"/>\n'+
+      '  <text x="72" y="82" font-family="system-ui, sans-serif" font-size="24" font-weight="700" fill="#242624">COLOR LAB · 75 / 18 / 7</text>\n'+
+      '  <text x="72" y="132" font-family="system-ui, sans-serif" font-size="38" font-weight="700" fill="#242624">'+title+'</text>\n'+
+      '  <rect x="72" y="190" width="792" height="360" rx="24" fill="'+data.palette.base+'"/>\n'+
+      '  <rect x="864" y="190" width="190" height="360" fill="'+data.palette.structure+'"/>\n'+
+      '  <rect x="1054" y="190" width="74" height="360" rx="0" fill="'+data.palette.accent+'"/>\n'+
+      '  <text x="96" y="230" font-family="system-ui, sans-serif" font-size="22" font-weight="700" fill="'+baseText+'">75 · BASE</text>\n'+
+      '  <text x="888" y="230" font-family="system-ui, sans-serif" font-size="18" font-weight="700" fill="'+structureText+'">18</text>\n'+
+      '  <text x="1070" y="230" font-family="system-ui, sans-serif" font-size="16" font-weight="700" fill="'+accentText+'">7</text>\n'+
+      '  <text x="72" y="620" font-family="ui-monospace, monospace" font-size="22" fill="#242624">BASE '+data.palette.base+'   STRUCTURE '+data.palette.structure+'   ACCENT '+data.palette.accent+'</text>\n'+
+      '</svg>\n';
+    return{name:safe+'.palette.svg',type:'image/svg+xml',text};
   }
   const payload={schema:'color-lab-palette-v1',...data};
   return{name:safe+'.json',type:'application/json',text:JSON.stringify(payload,null,2)+'\n'};

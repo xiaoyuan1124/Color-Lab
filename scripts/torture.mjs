@@ -233,6 +233,32 @@ check('V2.13 dark validation is derived only',
 const quietAesthetic=A.paletteAestheticCore(['#E9E1D2','#25313A','#4D739B']);
 const vividAesthetic=A.paletteAestheticCore(['#286B69','#D0A32E','#A94B38']);
 const noisyAesthetic=A.paletteAestheticCore(['#FF4B55','#FF5A4D','#FF6A45']);
+check('V2.20 professional export formats are present',
+  appText.includes("if(kind==='tailwind')")&&
+  appText.includes("if(kind==='swiftui')")&&
+  appText.includes("if(kind==='svg')")&&
+  appText.includes("data-export-format=\"tailwind\"")&&
+  appText.includes("data-export-format=\"swiftui\"")&&
+  appText.includes("data-export-format=\"svg\""),
+  'tailwind swiftui svg');
+check('V2.20 SwiftUI export derives only from exact HEX channels',
+  appText.includes("function artifactHexRgb(hex)")&&
+  appText.includes("v/255")&&
+  appText.includes("artifactSwiftColor(data.palette.base)"),
+  'exact sRGB conversion');
+check('V2.20 SVG sheet uses exact semantic colors and 75/18/7 geometry',
+  appText.includes('width="792"')&&
+  appText.includes('width="190"')&&
+  appText.includes('width="74"')&&
+  appText.includes("fill=\"'+data.palette.base+'")&&
+  appText.includes("fill=\"'+data.palette.structure+'")&&
+  appText.includes("fill=\"'+data.palette.accent+'"),
+  'exact palette SVG sheet');
+check('V2.20 export never reads derived preview palette',
+  !appText.includes("paletteArtifactBase(previewThemePalette")&&
+  !appText.includes("artifactSwiftColor(previewThemePalette"),
+  'source palette only');
+
 check('V2.19 photo palette uses perceptual dedupe',
   appText.includes('function photoDistinctClusters(')&&
   appText.includes('perceptualDistance(x.hex,item.hex)>=threshold'),

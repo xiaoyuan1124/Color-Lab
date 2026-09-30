@@ -500,3 +500,77 @@ test('V2.19 photo palette runtime and styles are local', async ({ page }) => {
   expect(api.dedupe).toBe('function');
   expect(['balanced','muted','vivid']).toContain(api.strategy);
 });
+
+test('V2.20 Tailwind SwiftUI and SVG exports keep exact source palette', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    selectedColors=['#112233','#445566','#AABBCC'];
+    lockedSlots=[false,false,false];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+    const input=document.querySelector('#comboName');
+    input.value='R&D <Test>';currentComboName=input.value;
+    const tailwind=paletteArtifact('tailwind');
+    const swift=paletteArtifact('swiftui');
+    const svg=paletteArtifact('svg');
+    return {tailwind,swift,svg,base:paletteArtifactBase()};
+  });
+
+  expect(result.base.palette).toEqual({base:'#112233',structure:'#445566',accent:'#AABBCC'});
+  expect(result.tailwind.name).toMatch(/\.tailwind\.js$/);
+  expect(result.tailwind.type).toBe('text/javascript');
+  for(const hex of ['#112233','#445566','#AABBCC'])expect(result.tailwind.text).toContain(hex);
+  expect(result.tailwind.text).toContain("base: '#112233'");
+  expect(result.tailwind.text).toContain("structure: '#445566'");
+  expect(result.tailwind.text).toContain("accent: '#AABBCC'");
+
+  expect(result.swift.name).toMatch(/\.swift$/);
+  expect(result.swift.text).toContain('Color(red: 0.066667, green: 0.133333, blue: 0.200000)');
+  expect(result.swift.text).toContain('Color(red: 0.266667, green: 0.333333, blue: 0.400000)');
+  expect(result.swift.text).toContain('Color(red: 0.666667, green: 0.733333, blue: 0.800000)');
+  expect(result.swift.text).toContain('// 75%');
+  expect(result.swift.text).toContain('// 18%');
+  expect(result.swift.text).toContain('// 7%');
+
+  expect(result.svg.name).toMatch(/\.palette\.svg$/);
+  expect(result.svg.type).toBe('image/svg+xml');
+  expect(result.svg.text).toContain('R&amp;D &lt;Test&gt;');
+  for(const hex of ['#112233','#445566','#AABBCC'])expect(result.svg.text).toContain(hex);
+  expect(result.svg.text).toContain('width="792"');
+  expect(result.svg.text).toContain('width="190"');
+  expect(result.svg.text).toContain('width="74"');
+});
+
+test('V2.20 derived Dark preview never changes professional export values', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    selectedColors=['#F4EFE6','#28343A','#D4513D'];
+    lockedSlots=[false,false,false];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+    const source=paletteArtifactBase();
+    const light={
+      tailwind:paletteArtifact('tailwind').text,
+      swiftui:paletteArtifact('swiftui').text,
+      svg:paletteArtifact('svg').text
+    };
+    setPreviewTheme('dark');
+    const darkPreview=previewThemePalette('dark');
+    const after={
+      tailwind:paletteArtifact('tailwind').text,
+      swiftui:paletteArtifact('swiftui').text,
+      svg:paletteArtifact('svg').text
+    };
+    return {source,light,after,darkPreview};
+  });
+  expect(result.darkPreview.base).not.toBe(result.source.palette.base);
+  expect(result.after).toEqual(result.light);
+  expect(result.after.tailwind).toContain(result.source.palette.base);
+  expect(result.after.svg).not.toContain(result.darkPreview.base);
+});
+
+test('V2.20 keeps advanced handoff formats behind compact disclosure', async ({ page }) => {
+  await expect(page.locator('#handoffMore')).toHaveCount(1);
+  await expect(page.locator('[data-export-format="tailwind"]')).not.toBeVisible();
+  await page.locator('#handoffMore summary').click();
+  await expect(page.locator('[data-export-format="tailwind"]')).toBeVisible();
+  await expect(page.locator('[data-export-format="swiftui"]')).toBeVisible();
+  await expect(page.locator('[data-export-format="svg"]')).toBeVisible();
+  await expect(page.locator('.handoff-more-actions .utility-btn')).toHaveCount(3);
+});
