@@ -113,6 +113,15 @@ button{cursor:pointer}
 .pct{font-size:23px;font-weight:650;letter-spacing:-.03em}
 .hex-mini{border:0;background:transparent;color:var(--muted);padding:0;font-size:13px;font-weight:500}
 .shuffle{border:0;background:transparent;color:#6E6963;font-size:13px;padding:10px 0 10px 14px}
+.candidate-mode-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:2px 0 6px}
+.candidate-mode-label{font-size:11px;letter-spacing:.11em;font-weight:700;color:var(--text-3)}
+.candidate-mode-options{display:flex;align-items:center;gap:4px}
+.candidate-mode-options button{border:0;background:transparent;color:var(--muted);font-size:12px;font-weight:600;min-height:38px;padding:0 9px;border-radius:999px}
+.candidate-mode-options button.active{background:rgba(104,112,94,.10);color:var(--olive-12)}
+.candidate-controls{display:grid;grid-template-columns:36px minmax(58px,auto) 36px;align-items:center;gap:2px}
+.candidate-step{width:36px;height:40px;border:0;background:transparent;color:var(--olive-11);font-size:20px;line-height:1;border-radius:12px}
+.candidate-step:disabled{opacity:.25}
+.candidate-progress{font-size:11px;line-height:1.2;color:var(--text-3);text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums}
 .name-field{margin-top:22px}
 .name-label{font-size:11px;letter-spacing:.12em;color:var(--text-3);font-weight:700;margin-bottom:8px}
 .name-input{width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;padding:4px 0 11px;font-size:18px;font-weight:600;color:var(--ink);outline:none}
@@ -2123,7 +2132,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.10.1</div>
+    <div class="version">V2.11.0</div>
   </div>
 
   <main class="app-main">
@@ -2180,6 +2189,15 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
         <div class="preview" id="preview"></div>
 
         <div class="health-strip" id="paletteHealth"></div>
+
+        <div class="candidate-mode-bar" id="candidateModeBar">
+          <span class="candidate-mode-label">探索方向</span>
+          <div class="candidate-mode-options" role="group" aria-label="候選探索方向">
+            <button type="button" data-candidate-mode="harmony">和諧</button>
+            <button type="button" data-candidate-mode="variation">變化</button>
+            <button type="button" data-candidate-mode="bold">大膽</button>
+          </div>
+        </div>
 
         <div class="relation-list" id="palette"></div>
 
@@ -2392,7 +2410,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.10.1</div>
+  <div class="footer app-footer">Color Lab V2.11.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2519,10 +2537,12 @@ let recentColors=readRecentColors();
 let recommendationCacheKey='',recommendationCacheValue=[];
 let recommendationBatchOffset=0;
 const recommendationBatchSize=5;
+let candidateExploreMode=localStorage.getItem('colorlab.candidateExploreMode')||'harmony';
+if(!['harmony','variation','bold'].includes(candidateExploreMode))candidateExploreMode='harmony';
 const roleShuffleState={
-  base:{key:'',pool:[],index:-1,familyId:''},
-  structure:{key:'',pool:[],index:-1,familyId:''},
-  accent:{key:'',pool:[],index:-1,familyId:''}
+  base:{key:'',pool:[],index:-1,familyId:'',origin:''},
+  structure:{key:'',pool:[],index:-1,familyId:'',origin:''},
+  accent:{key:'',pool:[],index:-1,familyId:'',origin:''}
 };
 let igRelationCache=null;
 let preferenceState=null,preferenceEnabled=true;
@@ -2953,7 +2973,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.10.1',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.11.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -3680,11 +3700,12 @@ function inferToneFamilyId(colors,lane='editorial',archetypeId=''){
   if(avgC<.07)return'morandi';
   return'editorial';
 }
-function toneMixColor(hex,family,roleIndex){
+function toneMixColor(hex,family,roleIndex,strength=1){
   const p=toOKLCH(hex),anchor=toOKLCH(family.anchor);
-  const neutral=clamp(family.neutralMix?.[roleIndex]??.18,0,.6);
-  const lightMix=clamp(family.lightMix?.[roleIndex]??.28,0,.7);
-  const chromaMix=clamp(family.chromaMix?.[roleIndex]??.45,0,.8);
+  const mixStrength=clamp(strength,.5,1.15);
+  const neutral=clamp((family.neutralMix?.[roleIndex]??.18)*mixStrength,0,.6);
+  const lightMix=clamp((family.lightMix?.[roleIndex]??.28)*mixStrength,0,.7);
+  const chromaMix=clamp((family.chromaMix?.[roleIndex]??.45)*mixStrength,0,.8);
   const rad=Math.PI/180;
   const px=p.c*Math.cos(p.h*rad),py=p.c*Math.sin(p.h*rad);
   const ax=anchor.c*Math.cos(anchor.h*rad),ay=anchor.c*Math.sin(anchor.h*rad);
@@ -4476,7 +4497,32 @@ function roleAlternativeContext(role){
   const idx=roleIndex(role);
   const trio=[palette.base,palette.structure,palette.accent];
   trio[idx]='*';
-  return [role,...trio,...chosenColors()].join('|');
+  return [role,candidateExploreMode,...trio,...chosenColors()].join('|');
+}
+function candidateExploreConfig(mode=candidateExploreMode){
+  if(mode==='variation')return{label:'變化',toneStrength:.78,aestheticFloor:.49,tonalFloor:.42,distanceFloor:.055,duplicateThreshold:.070};
+  if(mode==='bold')return{label:'大膽',toneStrength:.62,aestheticFloor:.48,tonalFloor:.39,distanceFloor:.065,duplicateThreshold:.074};
+  return{label:'和諧',toneStrength:1,aestheticFloor:.50,tonalFloor:.46,distanceFloor:.045,duplicateThreshold:.064};
+}
+function resetRoleCandidateSessions(){
+  Object.values(roleShuffleState).forEach(state=>{
+    state.key='';state.pool=[];state.index=-1;state.familyId='';state.origin='';
+  });
+}
+function setCandidateExploreMode(next){
+  if(!['harmony','variation','bold'].includes(next)||next===candidateExploreMode)return;
+  candidateExploreMode=next;
+  localStorage.setItem('colorlab.candidateExploreMode',next);
+  resetRoleCandidateSessions();
+  render();
+  toast('探索方向：'+candidateExploreConfig(next).label);
+}
+function isPerceptualDuplicate(a,b,threshold=.068){
+  if(!a||!b)return false;
+  const pa=toOKLCH(a),pb=toOKLCH(b);
+  const delta=perceptualDistance(a,b);
+  const dL=Math.abs(pa.l-pb.l),dC=Math.abs(pa.c-pb.c),dH=hueDistance(pa.h,pb.h);
+  return delta<threshold||(dL<.018&&dC<.014&&dH<7);
 }
 function roleAlternativePool(role,limit=36,familyId=''){
   const idx=roleIndex(role);
@@ -4484,11 +4530,12 @@ function roleAlternativePool(role,limit=36,familyId=''){
   const resolvedFamily=familyId||inferToneFamilyId([palette.base,palette.structure,palette.accent],role==='accent'?'expressive':'editorial');
   const family=toneFamilyById(resolvedFamily);
   if(!family||!current)return[];
+  const cfg=candidateExploreConfig();
   const baseHue=toOKLCH(current).h;
   const seedHue=toOKLCH(seed||current).h;
-  const hueOffsets=[0,12,-12,24,-24,38,-38,52,-52,72,-72,96,-96,120,-120,150,-150,180];
-  const lightOffsets=role==='base'?[0,.035,-.035]:role==='structure'?[0,-.05,.05,-.09]:[0,.045,-.045,.08];
-  const chromaFactors=role==='base'?[.82,1,1.14]:role==='structure'?[.78,1,1.18]:[.78,1,1.18,1.36];
+  const hueOffsets=[0,10,-10,20,-20,32,-32,46,-46,62,-62,82,-82,104,-104,128,-128,154,-154,180];
+  const lightOffsets=role==='base'?[0,.03,-.03,.06,-.055]:role==='structure'?[0,-.045,.045,-.085,.08]:[0,.04,-.04,.08,-.075];
+  const chromaFactors=role==='base'?[.72,.90,1.08,1.26]:role==='structure'?[.68,.88,1.08,1.30]:[.70,.90,1.12,1.38,1.62];
   const raw=[];
   for(let hIndex=0;hIndex<hueOffsets.length;hIndex++){
     const hue=(hIndex%2===0?baseHue:seedHue)+hueOffsets[hIndex];
@@ -4497,7 +4544,7 @@ function roleAlternativePool(role,limit=36,familyId=''){
         const targetL=clamp((family.light[idx]??toOKLCH(current).l)+dl,.06,.96);
         const targetC=clamp((family.chroma[idx]??toOKLCH(current).c)*cf,.008,.30);
         let hex=gamutMapOKLCH(targetL,targetC,hue);
-        hex=toneMixColor(hex,family,idx);
+        hex=toneMixColor(hex,family,idx,cfg.toneStrength);
         if(hex===current)continue;
         const trio=[palette.base,palette.structure,palette.accent];
         trio[idx]=hex;
@@ -4506,26 +4553,51 @@ function roleAlternativePool(role,limit=36,familyId=''){
         const aesthetic=paletteAestheticScore(trio);
         const tonal=tonalCohesionScore(trio,resolvedFamily);
         const distance=perceptualDistance(current,hex);
-        if(aesthetic<.48||tonal<.44||distance<.045)continue;
-        raw.push({hex,score:aesthetic*2.4+tonal*2.1+clamp(distance/.28)*.55});
+        if(aesthetic<cfg.aestheticFloor||tonal<cfg.tonalFloor||distance<cfg.distanceFloor)continue;
+        const surprise=paletteSurpriseScore(trio);
+        const hueMove=clamp(hueDistance(baseHue,toOKLCH(hex).h)/180);
+        const distanceScore=clamp(distance/.34);
+        let score;
+        if(candidateExploreMode==='variation')score=aesthetic*3.05+tonal*1.72+distanceScore*1.05+surprise*.34+hueMove*.18;
+        else if(candidateExploreMode==='bold')score=aesthetic*2.85+tonal*1.34+distanceScore*1.20+surprise*.82+hueMove*.32;
+        else score=aesthetic*3.35+tonal*2.35+distanceScore*.28+surprise*.08;
+        raw.push({hex,score});
       }
     }
   }
   raw.sort((a,b)=>b.score-a.score);
   const out=[];
   for(const item of raw){
-    if(out.some(hex=>perceptualDistance(hex,item.hex)<.055))continue;
+    if(out.some(hex=>isPerceptualDuplicate(hex,item.hex,cfg.duplicateThreshold)))continue;
     out.push(item.hex);
     if(out.length>=limit)break;
   }
   return out;
 }
-function nextRoleAlternative(role){
+function prepareRoleCandidateSession(role){
+  const state=roleShuffleState[role];
+  const key=roleAlternativeContext(role);
+  if(state.key!==key||!state.pool.length){
+    state.key=key;
+    state.index=-1;
+    state.origin=palette[role];
+    state.familyId=inferToneFamilyId([palette.base,palette.structure,palette.accent],role==='accent'?'expressive':'editorial');
+    state.pool=roleAlternativePool(role,36,state.familyId);
+  }
+  return state;
+}
+function moveRoleAlternative(role,direction=1){
   const state=roleShuffleState[role];
   if(!state||!state.pool.length)return null;
-  state.index=(state.index+1)%state.pool.length;
+  if(direction<0){
+    if(state.index<0)return state.origin||null;
+    if(state.index===0){state.index=-1;return state.origin||null}
+    state.index--;return state.pool[state.index];
+  }
+  state.index=state.index<0?0:(state.index+1)%state.pool.length;
   return state.pool[state.index];
 }
+
 function fastInitialPalette(){
   const inputs=chosenColors();
   if(inputs.length>=3)return orderedPalette(inputs.slice(0,3));
@@ -4535,29 +4607,44 @@ function fastInitialPalette(){
   return orderedPalette([inputs[0],fallback.structure,fallback.accent]);
 }
 function generate(scroll=false){palette=completeCombo(chosenColors(),mode);renderComboSlots();render();if(scroll)$('#result').scrollIntoView({behavior:'smooth',block:'start'})}
-async function shuffle(role){
+async function shuffle(role,direction=1){
   await ensureToneFamilies();
-  const state=roleShuffleState[role];
-  const key=roleAlternativeContext(role);
-  if(state.key!==key||!state.pool.length){
-    state.key=key;
-    state.index=-1;
-    state.familyId=inferToneFamilyId([palette.base,palette.structure,palette.accent],role==='accent'?'expressive':'editorial');
-    state.pool=roleAlternativePool(role,36,state.familyId);
-  }
-  const next=nextRoleAlternative(role);
-  if(!next){toast('這個色調世界暫時沒有更多合適選項');return}
+  const state=prepareRoleCandidateSession(role);
+  if(!state.pool.length){toast('這個方向暫時沒有更多合適選項');return}
+  const next=moveRoleAlternative(role,direction);
+  if(!next)return;
   palette[role]=next;
   render();
-  toast('第 '+(state.index+1)+' / '+state.pool.length+' 個候選');
+  const progress=state.index<0?'原始色':'第 '+(state.index+1)+' / '+state.pool.length+' 個';
+  toast(progress+' · '+candidateExploreConfig().label);
+}
+function renderCandidateModeControls(selectedSet){
+  const bar=$('#candidateModeBar');if(!bar)return;
+  const generated=['base','structure','accent'].some(role=>!selectedSet.has(palette[role]));
+  bar.hidden=!generated;
+  bar.querySelectorAll('[data-candidate-mode]').forEach(button=>{
+    const active=button.dataset.candidateMode===candidateExploreMode;
+    button.classList.toggle('active',active);
+    button.setAttribute('aria-pressed',active?'true':'false');
+  });
+}
+function candidateSessionView(role){
+  const state=roleShuffleState[role];
+  const valid=state&&state.key===roleAlternativeContext(role)&&state.pool.length;
+  if(!valid)return{label:'探索',canPrevious:false};
+  if(state.index<0)return{label:'原始',canPrevious:false};
+  return{label:(state.index+1)+' / '+state.pool.length,canPrevious:true};
 }
 function render(){
   const p=$('#palette');p.innerHTML='';
   const selectedSet=new Set(chosenColors());
+  renderCandidateModeControls(selectedSet);
   [['base','BASE','Calm',75],['structure','STRUCTURE','Order',18],['accent','ACCENT','Focus',7]].forEach(([k,label,meaning,pct])=>{
     const row=document.createElement('div');row.className='relation';
     const isOwn=selectedSet.has(palette[k]);
-    row.innerHTML=`<div class="relation-main"><div class="dot" style="background:${palette[k]}"></div><div><div class="role">${label} · ${meaning} · ${isOwn?'自選':'推薦'}</div><div class="role-line"><span class="pct">${pct}%</span><button class="hex-mini" data-copy="${palette[k]}">${palette[k]}</button></div></div></div>${isOwn?'':'<button class="shuffle" data-shuffle="'+k+'">換一個</button>'}`;
+    const nav=candidateSessionView(k);
+    const controls=isOwn?'':`<div class="candidate-controls" aria-label="${label} 候選"><button type="button" class="candidate-step" data-shuffle="${k}" data-shuffle-dir="-1" aria-label="上一個候選" ${nav.canPrevious?'':'disabled'}>‹</button><span class="candidate-progress" aria-live="polite">${nav.label}</span><button type="button" class="candidate-step" data-shuffle="${k}" data-shuffle-dir="1" aria-label="下一個候選">›</button></div>`;
+    row.innerHTML=`<div class="relation-main"><div class="dot" style="background:${palette[k]}"></div><div><div class="role">${label} · ${meaning} · ${isOwn?'自選':'推薦'}</div><div class="role-line"><span class="pct">${pct}%</span><button class="hex-mini" data-copy="${palette[k]}">${palette[k]}</button></div></div></div>${controls}`;
     p.appendChild(row);
   });
   const pv=$('#preview');pv.innerHTML='';
@@ -5164,8 +5251,9 @@ document.addEventListener('click',e=>{
   const rm=e.target.closest('[data-remove-slot]');if(rm){e.stopPropagation();removeSlot(+rm.dataset.removeSlot);return}
   if(e.target.closest('.drag-handle'))return;
   const sl=e.target.closest('[data-slot]');if(sl){setActiveSlot(+sl.dataset.slot,!selectedColors[+sl.dataset.slot]);return}
+  const cm=e.target.closest('[data-candidate-mode]');if(cm){setCandidateExploreMode(cm.dataset.candidateMode);return}
   const c=e.target.closest('[data-copy]');if(c)copy(c.dataset.copy);
-  const s=e.target.closest('[data-shuffle]');if(s)shuffle(s.dataset.shuffle);
+  const s=e.target.closest('[data-shuffle]');if(s){shuffle(s.dataset.shuffle,Number(s.dataset.shuffleDir)||1);return}
   const rn=e.target.closest('[data-rename]');if(rn){renameSaved(+rn.dataset.rename);return}
   const l=e.target.closest('[data-load]');if(l){loadSaved(+l.dataset.load)}
 });

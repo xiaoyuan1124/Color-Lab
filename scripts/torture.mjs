@@ -163,9 +163,9 @@ check('textFor fixes medium olive contrast regression',
 
 
 
-check('V2.10 exploration hue scaffold has at least 18 directions',
-  html.includes("const hueOffsets=[0,12,-12,24,-24,38,-38,52,-52,72,-72,96,-96,120,-120,150,-150,180]"),
-  '18 hue directions');
+check('V2.11 exploration hue scaffold has at least 20 directions',
+  html.includes("const hueOffsets=[0,10,-10,20,-20,32,-32,46,-46,62,-62,82,-82,104,-104,128,-128,154,-154,180]"),
+  '20 hue directions');
 check('V2.10 recommendation pool is deeper than visible batch',
   html.includes('selectDiverseRecommendations(candidates,30)')&&html.includes('const recommendationBatchSize=5'),
   '30 candidate pool / 5 visible');
@@ -174,15 +174,25 @@ check('V2.10 legacy random five-option shuffle removed',
   'legacy cap removed');
 
 
-check('V2.10.1 shuffle uses a frozen candidate pool',
-  html.includes("state.pool=roleAlternativePool(role,36,state.familyId)")&&
-  html.includes("state.index=(state.index+1)%state.pool.length"),
-  'frozen pool + sequential cursor');
-check('V2.10.1 candidate progress is monotonic within a session',
-  html.includes("toast('第 '+(state.index+1)+' / '+state.pool.length+' 個候選')")&&
-  !html.includes("toast(remaining>0?'已換色 · 還有 '"),
-  '1 / N, 2 / N, 3 / N');
-check('V2.10.1 shuffle no longer rebuilds the pool after every color',
+check('V2.11 candidate session stores original color',
+  html.includes("state.origin=palette[role]")&&
+  html.includes("if(state.index===0){state.index=-1;return state.origin||null}"),
+  'origin + previous restoration');
+check('V2.11 candidate progress is inline and reversible',
+  html.includes('class="candidate-progress"')&&
+  html.includes('data-shuffle-dir="-1"')&&
+  html.includes('data-shuffle-dir="1"'),
+  'previous / progress / next');
+check('V2.11 exploration modes keep beauty gate while changing depth',
+  html.includes("candidateExploreMode==='variation'")&&
+  html.includes("candidateExploreMode==='bold'")&&
+  html.includes('aesthetic<cfg.aestheticFloor'),
+  'mode-specific ranking + aesthetic floor');
+check('V2.11 perceptual duplicate guard is explicit',
+  html.includes('function isPerceptualDuplicate(')&&
+  html.includes('duplicateThreshold:.070')&&html.includes('duplicateThreshold:.074'),
+  'visual duplicate threshold');
+check('V2.11 shuffle no longer rebuilds the pool after every color',
   !html.includes('const pool=roleAlternativePool(role,36,state.familyId);'),
   'pool built only when context changes');
 
