@@ -1,0 +1,25 @@
+.gradient-studio{margin-top:28px;border-top:1px solid var(--line)}
+.gradient-studio>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 0 16px}
+.gradient-studio>summary::-webkit-details-marker{display:none}
+.gradient-studio>summary span:first-child{display:grid;gap:4px}
+.gradient-studio>summary b{font-size:14px;letter-spacing:.01em}
+.gradient-studio>summary small{font-size:11px;line-height:1.45;color:var(--text-3);font-weight:500}
+.gst-mark{font-size:18px;color:var(--muted);transition:transform .18s ease}
+.gradient-studio[open] .gst-mark{transform:rotate(45deg)}
+.gst-body{padding:0 0 10px}
+.gst-preview{height:168px;border-radius:18px;border:1px solid rgba(36,38,36,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.gst-block{margin-top:16px}
+.gst-label{font-size:10px;letter-spacing:.11em;font-weight:750;color:var(--text-3);margin-bottom:8px}
+.gst-options{display:flex;gap:8px;flex-wrap:wrap}
+.gst-options button{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;min-height:38px;padding:8px 11px;font-size:11px;font-weight:650}
+.gst-options button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.gst-angles button{display:inline-flex;align-items:center;gap:5px}
+.gst-angles button span{display:inline-block;font-size:13px}
+.gst-source{display:grid;gap:0;margin-top:16px;border-top:1px solid var(--line)}
+.gst-source>span{display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.gst-source i{width:22px;height:22px;border-radius:7px;border:1px solid rgba(36,38,36,.08)}
+.gst-source b{font-size:11px}.gst-source code{font-size:10px;color:var(--text-3)}
+.gst-code{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-top:16px;padding:12px 0;border-bottom:1px solid var(--line)}
+.gst-code code{font-size:10px;line-height:1.55;overflow-wrap:anywhere;color:var(--muted)}
+.gst-code button{border:0;background:transparent;color:var(--olive-11);font-size:11px;font-weight:700;min-height:36px;padding:4px 0}
+.gst-note{font-size:10px;line-height:1.65;color:var(--text-3);margin:12px 0 0}
