@@ -156,6 +156,18 @@ function assignSavedProject(index,projectId){
   scheduleResilienceBackup();renderSaved();
   toast(id?'已移到 '+localProjectName(id):'已移到未歸類');
 }
+function mergeSavedPaletteRecords(current,imported){
+  const merged=[...current],sig=x=>[x.name,x.palette.base,x.palette.structure,x.palette.accent].join('|');
+  const bySig=new Map(merged.map((x,i)=>[sig(x),i]));
+  imported.forEach(item=>{
+    const key=sig(item),index=bySig.get(key);
+    if(index===undefined){bySig.set(key,merged.length);merged.push(item);return}
+    if(!sanitizeProjectId(merged[index].projectId)&&sanitizeProjectId(item.projectId)){
+      merged[index]={...merged[index],projectId:sanitizeProjectId(item.projectId)};
+    }
+  });
+  return merged;
+}
 function mergeImportedProjectData(rawProjects,importedSaved,currentProjects=readLocalProjects()){
   const imported=sanitizeLocalProjects(rawProjects),current=sanitizeLocalProjects(currentProjects),used=new Set(current.map(x=>x.id));
   const map=new Map(),merged=[...current];
