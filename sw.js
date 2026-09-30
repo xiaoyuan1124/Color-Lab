@@ -1,5 +1,5 @@
-const CACHE='color-lab-v2200-professional-export-2';
-const ASSETS=['./','./index.html','./manifest.json','./apple-touch-icon.png','./icon-192.png','./icon-512.png','./vendor/poline.umd.js','./vendor/iro.min.js','./vendor/Sortable.min.js','./data/fashion-palettes.js','./data/ig-style-patterns.js','./data/inspiration-atlas.js','./data/tone-families.js','./runtime/palette-tools.js','./runtime/tone-explorer.js','./runtime/context-preview.css','./runtime/photo-palette.js','./runtime/photo-palette.css'];
+const CACHE='color-lab-v2210-color-relationship-map';
+const ASSETS=['./','./index.html','./manifest.json','./apple-touch-icon.png','./icon-192.png','./icon-512.png','./vendor/poline.umd.js','./vendor/iro.min.js','./vendor/Sortable.min.js','./data/fashion-palettes.js','./data/ig-style-patterns.js','./data/inspiration-atlas.js','./data/tone-families.js','./runtime/palette-tools.js','./runtime/tone-explorer.js','./runtime/context-preview.css','./runtime/photo-palette.js','./runtime/photo-palette.css','./runtime/color-relationship.js','./runtime/color-relationship.css'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(
