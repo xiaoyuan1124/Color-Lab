@@ -96,13 +96,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2131")) fail('service worker cache version is not V2.13.1');
+if(!sw.includes("color-lab-v2140")) fail('service worker cache version is not V2.14.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.13.1') fail('package version must be 2.13.1');
+if(pkg.version!=='2.14.0') fail('package version must be 2.14.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.13.1')||!html.includes('<div class="version">V2.13.1</div>')||!html.includes("appVersion:'2.13.1'")) fail('V2.13.1 UI or backup version metadata missing');
-else pass('V2.13.1 version metadata');
+if(!html.includes('Color Lab V2.14.0')||!html.includes('<div class="version">V2.14.0</div>')||!html.includes("appVersion:'2.14.0'")) fail('V2.14.0 UI or backup version metadata missing');
+else pass('V2.14.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -111,6 +111,25 @@ if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    html.includes('function renderContextPreview(')){
   fail('V2.13.1 palette runtime modularization contract missing');
 }else pass('V2.13.1 palette runtime modularization');
+
+if(!html.includes('id="accessibilityFixes"')||
+   !appSource.includes('function nearestAccessibleColor(')||
+   !appSource.includes('function accessibilityChangeRole(')||
+   !appSource.includes('function previewAccessibilitySuggestion(')||
+   !appSource.includes('function applyAccessibilitySuggestion(')||
+   !appSource.includes("ROLE_RATIOS={base:75,structure:18,accent:7}")||
+   !appSource.includes("target=4.5")||
+   !appSource.includes("accessibilityPreview=null")){
+  fail('V2.14.0 actionable accessibility fix contract missing');
+}else pass('V2.14.0 actionable accessibility fix contract');
+
+if(!appSource.includes("validationTheme!=='original'")||
+   !appSource.includes("Dark 為衍生預覽，不直接改原色")||
+   !appSource.includes("只比較，不改原色")||
+   !appSource.includes("data-accessibility-apply")||
+   !appSource.includes("data-accessibility-preview")){
+  fail('V2.14.0 preview-only before explicit apply contract missing');
+}else pass('V2.14.0 preview before explicit apply');
 
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
