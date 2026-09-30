@@ -34,7 +34,7 @@ function parseShareSnapshot(hash=location.hash){
     return{version:1,colors,context,theme};
   }catch(_){return null}
 }
-function applyShareSnapshotFromLocation(){
+function applyShareSnapshotFromLocation(renderNow=false){
   const snap=parseShareSnapshot();
   if(!snap)return false;
   selectedColors=[...snap.colors];
@@ -44,7 +44,22 @@ function applyShareSnapshotFromLocation(){
   currentComboName='';
   previewContext=snap.context;
   previewTheme=snap.theme;
+  if(renderNow){
+    const name=document.querySelector('#comboName');if(name)name.value='';
+    const color=document.querySelector('#color');if(color)color.value=seed;
+    const hex=document.querySelector('#hex');if(hex)hex.value=seed;
+    generate(false);
+    updateLockToggle();
+    updatePhotoTarget();
+    pushHistory();
+    toast('已套用分享配色');
+  }
   return true;
+}
+function installShareSnapshotHashListener(){
+  if(window.__colorLabShareHashListener)return;
+  window.__colorLabShareHashListener=true;
+  window.addEventListener('hashchange',()=>applyShareSnapshotFromLocation(true));
 }
 function ensureShareSnapshotUi(){
   if(document.querySelector('#shareSnapshotPanel'))return;
