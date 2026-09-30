@@ -52,7 +52,7 @@ function ensureShareSnapshotUi(){
   anchor.insertAdjacentHTML('afterend',
     '<section class="share-snapshot-panel" id="shareSnapshotPanel" hidden aria-label="跨裝置分享">'+
       '<div class="share-snapshot-head"><div><strong>Share Snapshot</strong><span>URL fragment · 零後端</span></div><button type="button" id="closeShareSnapshot" aria-label="關閉分享面板">×</button></div>'+
-      '<div class="share-snapshot-content"><div class="share-snapshot-qr" id="shareSnapshotQr" aria-label="配色分享 QR Code"></div>'+
+      '<div class="share-snapshot-content"><div class="share-snapshot-qr" id="shareSnapshotQr" role="img" aria-label="配色分享 QR Code"></div>'+
       '<div class="share-snapshot-meta"><div class="share-snapshot-ratio" id="shareSnapshotRatio"></div><label for="shareSnapshotUrl">可還原配色的連結</label><input id="shareSnapshotUrl" readonly spellcheck="false">'+
       '<div class="share-snapshot-actions"><button type="button" id="copyShareSnapshot">複製連結</button><button type="button" id="nativeShareSnapshot">系統分享</button></div>'+
       '<p>連結只包含三個原色與 Context / Light-Dark 預覽狀態；不包含收藏、照片、偏好或任何帳號資料。</p></div></div>'+
