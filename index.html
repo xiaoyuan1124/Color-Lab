@@ -3202,9 +3202,7 @@ function importBackupFile(file){
       const projectMerge=data.schema==='color-lab-backup-v5'?mergeImportedProjectData(data.projects,importedSaved,readLocalProjects()):{projects:readLocalProjects(),saved:importedSaved};
       if(data.schema==='color-lab-backup-v5')writeLocalProjects(projectMerge.projects);
       const importedForMerge=projectMerge.saved;
-      const sig=x=>[x.name,x.palette.base,x.palette.structure,x.palette.accent].join('|');
-      const seen=new Set(current.map(sig)),merged=[...current];
-      importedForMerge.forEach(x=>{if(!seen.has(sig(x))){merged.push(x);seen.add(sig(x))}});
+      const merged=mergeSavedPaletteRecords(current,importedForMerge);
       localStorage.setItem('colorlab.saved',JSON.stringify(merged.slice(0,300)));
       if(Array.isArray(data.recent)){const imported=data.recent.filter(x=>typeof x==='string'&&normHex(x)).map(x=>normHex(x));recentColors=[...new Set([...recentColors,...imported])].slice(0,20);localStorage.setItem('colorlab.recent',JSON.stringify(recentColors))}
       if(data.compareA){const safeA=sanitizeCompareRecord(data.compareA);if(safeA){compareA=safeA;localStorage.setItem('colorlab.compareA',JSON.stringify(compareA))}}
