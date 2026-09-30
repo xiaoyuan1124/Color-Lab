@@ -636,100 +636,22 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 .health-item span{font-size:var(--text-xs);color:var(--text-2)}
 .health-item.good strong{color:var(--olive-11)}
 .health-item.warn strong{color:#875F43}
-.validation-lab{
-  padding:24px 0;
-  border-top:1px solid var(--border-subtle);
-  border-bottom:1px solid var(--border-subtle);
-}
-.validation-theme-modes{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin-bottom:14px;
-}
-.validation-theme-modes button{
-  min-height:34px;
-  padding:0 12px;
-  border:1px solid var(--border-subtle);
-  border-radius:var(--radius-pill);
-  background:transparent;
-  color:var(--text-2);
-  font-size:11px;
-  font-weight:700;
-}
-.validation-theme-modes button.active{
-  background:var(--olive-2);
-  border-color:var(--border-strong);
-  color:var(--olive-12);
-}
-.validation-theme-note{
-  margin-left:auto;
-  color:var(--text-3);
-  font-size:10px;
-}
-.validation-summary{
-  display:flex;
-  gap:8px 16px;
-  flex-wrap:wrap;
-  margin-bottom:14px;
-  color:var(--text-2);
-  font-size:11px;
-}
-.validation-summary strong{color:var(--text-1)}
-.validation-table-wrap{
-  overflow-x:auto;
-  border-top:1px solid var(--hairline);
-  border-bottom:1px solid var(--hairline);
-}
-.validation-table{
-  width:100%;
-  min-width:330px;
-  border-collapse:collapse;
-  table-layout:fixed;
-  font-size:10px;
-}
-.validation-table th,
-.validation-table td{
-  padding:10px 5px;
-  text-align:center;
-  border-bottom:1px solid var(--hairline);
-  border-right:1px solid var(--hairline);
-}
-.validation-table tr:last-child th,
-.validation-table tr:last-child td{border-bottom:0}
-.validation-table th:last-child,
-.validation-table td:last-child{border-right:0}
-.validation-table th{
-  color:var(--text-2);
-  font-weight:700;
-}
+.validation-lab{padding:24px 0;border-block:1px solid var(--border-subtle)}
+.validation-theme-modes{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.validation-theme-modes button{min-height:34px;padding:0 12px;border:1px solid var(--border-subtle);border-radius:var(--radius-pill);background:transparent;color:var(--text-2);font-size:11px;font-weight:700}
+.validation-theme-modes button.active{background:var(--olive-2);color:var(--olive-12)}
+.validation-theme-note{margin-left:auto;font-size:10px;color:var(--text-3)}
+.validation-summary{display:flex;gap:8px 16px;flex-wrap:wrap;margin-bottom:12px;font-size:11px;color:var(--text-2)}
+.validation-summary strong,.validation-advice strong,.validation-cell strong{color:var(--text-1)}
+.validation-table-wrap{overflow-x:auto;border-block:1px solid var(--hairline)}
+.validation-table{width:100%;min-width:330px;border-collapse:collapse;table-layout:fixed;font-size:10px}
+.validation-table :is(th,td){padding:9px 4px;text-align:center;border:1px solid var(--hairline)}
 .validation-table .row-head{text-align:left}
-.validation-cell strong{
-  display:block;
-  color:var(--text-1);
-  font-size:11px;
-}
-.validation-cell span{
-  display:block;
-  margin-top:2px;
-  color:var(--text-3);
-}
-.validation-cell.aaa span,
-.validation-cell.aa span{color:var(--olive-11)}
-.validation-cell.large span{color:#875F43}
-.validation-cell.fail span{color:#8A5C52}
-.validation-diagonal{color:var(--text-3)}
-.validation-advice{
-  display:grid;
-  gap:7px;
-  margin:14px 0 0;
-  padding:0;
-  list-style:none;
-  color:var(--text-2);
-  font-size:11px;
-  line-height:1.45;
-}
-.validation-advice strong{color:var(--text-1)}
+.validation-cell strong,.validation-cell span{display:block}
+.validation-cell span{margin-top:2px;color:var(--text-3)}
+.validation-cell:is(.aaa,.aa) span{color:var(--olive-11)}
+.validation-cell.large span{color:#875F43}.validation-cell.fail span{color:#8A5C52}
+.validation-advice{display:grid;gap:6px;margin:12px 0 0;padding:0;list-style:none;color:var(--text-2);font-size:11px;line-height:1.45}
 .real-preview-wrap{
   margin-top:var(--space-6);
   padding-top:var(--space-5);
@@ -2972,68 +2894,26 @@ function contrastRatio(a,b){
   const L1=lum(a),L2=lum(b),hi=Math.max(L1,L2),lo=Math.min(L1,L2);
   return (hi+.05)/(lo+.05);
 }
-function contrastGrade(ratio){
-  if(ratio>=7)return{key:'aaa',label:'AAA 文字'};
-  if(ratio>=4.5)return{key:'aa',label:'AA 文字'};
-  if(ratio>=3)return{key:'large',label:'大字 / UI'};
-  return{key:'fail',label:'僅裝飾'};
-}
+const VALIDATION_ROLES=[['base','Base'],['structure','Structure'],['accent','Accent']];
+function contrastGrade(r){return r>=7?['aaa','AAA 文字']:r>=4.5?['aa','AA 文字']:r>=3?['large','大字 / UI']:['fail','僅裝飾']}
 function paletteValidationData(theme='original'){
   const colors=theme==='dark'?previewThemePalette('dark'):{...palette,derived:false};
-  const roles=[
-    {key:'base',label:'Base'},
-    {key:'structure',label:'Structure'},
-    {key:'accent',label:'Accent'}
-  ];
-  const pairs=[
-    ['base','structure'],
-    ['base','accent'],
-    ['structure','accent']
-  ].map(([a,b])=>{
-    const ratio=contrastRatio(colors[a],colors[b]);
-    return{a,b,ratio,grade:contrastGrade(ratio)};
-  });
-  return{theme,colors,roles,pairs,normal:pairs.filter(x=>x.ratio>=4.5).length,large:pairs.filter(x=>x.ratio>=3).length};
+  const pairs=[['base','structure'],['base','accent'],['structure','accent']].map(([a,b])=>{const ratio=contrastRatio(colors[a],colors[b]);return{a,b,ratio,grade:contrastGrade(ratio)}});
+  return{colors,pairs,normal:pairs.filter(x=>x.ratio>=4.5).length,large:pairs.filter(x=>x.ratio>=3).length};
 }
-function validationPair(data,a,b){
-  return data.pairs.find(x=>(x.a===a&&x.b===b)||(x.a===b&&x.b===a));
-}
-function validationAdviceText(label,ratio){
-  if(ratio>=4.5)return'<strong>'+label+'</strong> 可作一般文字';
-  if(ratio>=3)return'<strong>'+label+'</strong> 僅建議大字或 UI 邊界';
-  return'<strong>'+label+'</strong> 不建議直接承擔文字閱讀';
-}
-function setValidationTheme(next){
-  if(!['original','dark'].includes(next))return;
-  validationTheme=next;
-  renderPaletteValidation();
-}
+function validationPair(d,a,b){return d.pairs.find(x=>(x.a===a&&x.b===b)||(x.a===b&&x.b===a))}
+function validationAdviceText(label,r){return'<strong>'+label+'</strong> '+(r>=4.5?'可作一般文字':r>=3?'僅建議大字或 UI 邊界':'不建議直接承擔文字閱讀')}
+function setValidationTheme(next){if(['original','dark'].includes(next)){validationTheme=next;renderPaletteValidation()}}
 function renderPaletteValidation(){
-  const host=$('#accessibilityMatrix'),summary=$('#validationSummary'),advice=$('#validationAdvice');
-  if(!host||!summary||!advice)return;
-  const data=paletteValidationData(validationTheme);
-  $('#validationThemeModes [data-validation-theme]').forEach(b=>{
-    const active=b.dataset.validationTheme===validationTheme;
-    b.classList.toggle('active',active);
-    b.setAttribute('aria-pressed',active?'true':'false');
-  });
-  const note=$('#validationThemeNote');
-  if(note)note.textContent=validationTheme==='dark'?'Dark 衍生值 · 不修改目前三色':'不修改目前三色';
-  summary.innerHTML='<span><strong>'+data.normal+' / 3</strong> 組可作一般文字</span><span><strong>'+data.large+' / 3</strong> 組達 3:1</span>';
-  const head='<thead><tr><th scope="col">文字 ↓ / 背景 →</th>'+data.roles.map(r=>'<th scope="col">'+r.label+'</th>').join('')+'</tr></thead>';
-  const body='<tbody>'+data.roles.map(row=>'<tr><th scope="row" class="row-head">'+row.label+'</th>'+data.roles.map(col=>{
-    if(row.key===col.key)return'<td class="validation-diagonal">—</td>';
-    const pair=validationPair(data,row.key,col.key),ratio=pair.ratio,grade=pair.grade;
-    return'<td class="validation-cell '+grade.key+'"><strong>'+ratio.toFixed(1)+':1</strong><span>'+grade.label+'</span></td>';
-  }).join('')+'</tr>').join('')+'</tbody>';
+  const host=$('#accessibilityMatrix'),summary=$('#validationSummary'),advice=$('#validationAdvice');if(!host||!summary||!advice)return;
+  const d=paletteValidationData(validationTheme);
+  $$$('#validationThemeModes [data-validation-theme]').forEach(b=>{const on=b.dataset.validationTheme===validationTheme;b.classList.toggle('active',on);b.setAttribute('aria-pressed',on?'true':'false')});
+  $('#validationThemeNote').textContent=validationTheme==='dark'?'Dark 衍生值 · 不修改目前三色':'不修改目前三色';
+  summary.innerHTML='<span><strong>'+d.normal+' / 3</strong> 組可作一般文字</span><span><strong>'+d.large+' / 3</strong> 組達 3:1</span>';
+  const head='<thead><tr><th>文字 ↓ / 背景 →</th>'+VALIDATION_ROLES.map(x=>'<th>'+x[1]+'</th>').join('')+'</tr></thead>';
+  const body='<tbody>'+VALIDATION_ROLES.map(row=>'<tr><th class="row-head">'+row[1]+'</th>'+VALIDATION_ROLES.map(col=>{if(row[0]===col[0])return'<td class="validation-diagonal">—</td>';const p=validationPair(d,row[0],col[0]),g=p.grade;return'<td class="validation-cell '+g[0]+'"><strong>'+p.ratio.toFixed(1)+':1</strong><span>'+g[1]+'</span></td>'}).join('')+'</tr>').join('')+'</tbody>';
   host.innerHTML='<table class="validation-table" aria-label="'+(validationTheme==='dark'?'Dark 預覽':'原色')+' 三色對比矩陣">'+head+body+'</table>';
-  const bs=validationPair(data,'base','structure').ratio;
-  const ba=validationPair(data,'base','accent').ratio;
-  const sa=validationPair(data,'structure','accent').ratio;
-  advice.innerHTML=
-    '<li>'+validationAdviceText('Structure / Base',bs)+'</li>'+
-    '<li>'+validationAdviceText('Accent / Base',ba)+'</li>'+
-    '<li>'+validationAdviceText('Accent / Structure',sa)+'</li>';
+  advice.innerHTML=[['Structure / Base','base','structure'],['Accent / Base','base','accent'],['Accent / Structure','structure','accent']].map(x=>'<li>'+validationAdviceText(x[0],validationPair(d,x[1],x[2]).ratio)+'</li>').join('');
 }
 
 const LEARNING_CONCEPTS={
@@ -3370,8 +3250,8 @@ function setPreviewTheme(next){
 }
 function renderContextPreview(){
   const host=$('#uiPreview');if(!host)return;
-  $$('#contextTabs [data-context]').forEach(b=>b.classList.toggle('active',b.dataset.context===previewContext));
-  $$('#contextThemeModes [data-preview-theme]').forEach(b=>{
+  $$$('#contextTabs [data-context]').forEach(b=>b.classList.toggle('active',b.dataset.context===previewContext));
+  $$$('#contextThemeModes [data-preview-theme]').forEach(b=>{
     const active=b.dataset.previewTheme===previewTheme;
     b.classList.toggle('active',active);b.setAttribute('aria-pressed',active?'true':'false');
   });
@@ -5726,9 +5606,9 @@ $('#backupInput').addEventListener('change',e=>{const file=e.target.files&&e.tar
 $('#clearRecent').onclick=()=>{recentColors=[];localStorage.removeItem('colorlab.recent');renderRecentColors();toast('已清除最近用色')};
 $('#copyPalette').onclick=()=>{navigator.clipboard?.writeText(paletteText()).then(()=>toast('已複製三色')).catch(()=>toast('無法複製'))};
 $('#sharePalette').onclick=sharePalette;
-$('[data-preview-theme]').forEach(b=>b.addEventListener('click',()=>setPreviewTheme(b.dataset.previewTheme)));
-$('[data-validation-theme]').forEach(b=>b.addEventListener('click',()=>setValidationTheme(b.dataset.validationTheme)));
-$('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
+$$('[data-preview-theme]').forEach(b=>b.addEventListener('click',()=>setPreviewTheme(b.dataset.previewTheme)));
+$$('[data-validation-theme]').forEach(b=>b.addEventListener('click',()=>setValidationTheme(b.dataset.validationTheme)));
+$$('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
 $('#librarySearch').addEventListener('input',renderSaved);
 $('#librarySort').value=librarySort;
 $('#librarySort').addEventListener('change',e=>{librarySort=e.target.value;localStorage.setItem('colorlab.librarySort',librarySort);renderSaved()});
