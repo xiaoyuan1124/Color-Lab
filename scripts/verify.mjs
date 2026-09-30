@@ -162,12 +162,12 @@ if(!appSource.includes("penalty+=clamp((averageChroma-.21)/.12)*(1-energyStructu
    !appSource.includes("if(roleClarity<.20)")||
    !appSource.includes("vividIntent*.04")){
   fail('V2.16.0 vivid-overload guard missing');
-}else pass('V2.17.0 vivid palettes judged by structure, not saturation alone');
+}else pass('V2.16.0 vivid palettes judged by structure, not saturation alone');
 
 if(!appSource.includes("const supportChroma=Math.max(baseO.c,structureO.c)")||
    !appSource.includes("const accentControl=")||
    appSource.includes("const chromaUsability=")){
-  fail('V2.17.0 role-aware practicality contract missing');
+  fail('V2.16.0 role-aware practicality contract missing');
 }else pass('V2.16.0 vivid Accent practicality is role-aware');
 
 if(!html.includes('id="toneExplorer"')||
