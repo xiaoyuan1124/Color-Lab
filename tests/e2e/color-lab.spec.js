@@ -101,3 +101,31 @@ test('dark context preview never overwrites the current palette', async ({ page 
   expect(preview.derived).toBe(true);
   expect(preview.accent).toBe(before.palette.accent);
 });
+
+test('three-color accessibility matrix validates original and Dark preview without mutation', async ({ page }) => {
+  await page.locator('#composeDeepDive').evaluate(el => { el.open = true; el.dispatchEvent(new Event('toggle')); });
+
+  const matrix = page.locator('#accessibilityMatrix .validation-table');
+  await expect(matrix).toBeVisible();
+  await expect(matrix.locator('tbody tr')).toHaveCount(3);
+  await expect(matrix.locator('.validation-cell')).toHaveCount(6);
+
+  const thresholds = await page.evaluate(() => [contrastGrade(7)[0], contrastGrade(4.5)[0], contrastGrade(3)[0], contrastGrade(2.9)[0]]);
+  expect(thresholds).toEqual(['aaa', 'aa', 'large', 'fail']);
+
+  const before = await page.evaluate(() => paletteArtifactBase());
+  const original = await page.evaluate(() => paletteValidationData('original').pairs.map(x => x.ratio));
+  expect(original).toHaveLength(3);
+  expect(original.every(x => Number.isFinite(x) && x >= 1)).toBe(true);
+
+  const dark = page.locator('[data-validation-theme="dark"]');
+  await dark.click();
+  await expect(dark).toHaveAttribute('aria-pressed', 'true');
+
+  const after = await page.evaluate(() => paletteArtifactBase());
+  expect(after.palette).toEqual(before.palette);
+
+  const darkPreview = await page.evaluate(() => previewThemePalette('dark'));
+  expect(darkPreview.accent).toBe(before.palette.accent);
+  await expect(page.locator('#validationSummary')).toContainText('/ 3');
+});
