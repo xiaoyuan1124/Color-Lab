@@ -145,6 +145,31 @@ function paletteArtifact(kind){
     const text='// '+data.name+' · Color Lab 75 / 18 / 7\nimport SwiftUI\n\nextension Color {\n  static let paletteBase = '+artifactSwiftColor(data.palette.base)+' // 75%\n  static let paletteStructure = '+artifactSwiftColor(data.palette.structure)+' // 18%\n  static let paletteAccent = '+artifactSwiftColor(data.palette.accent)+' // 7%\n}\n';
     return{name:safe+'.swift',type:'text/plain',text};
   }
+  if(kind==='scss'){
+    const text='// '+data.name+' · Color Lab 75 / 18 / 7\n'+
+      '$color-base: '+data.palette.base+'; // 75% Base / Calm\n'+
+      '$color-structure: '+data.palette.structure+'; // 18% Structure / Order\n'+
+      '$color-accent: '+data.palette.accent+'; // 7% Accent / Focus\n';
+    return{name:safe+'.scss',type:'text/x-scss',text};
+  }
+  if(kind==='flutter'){
+    const text='// '+data.name+' · Color Lab 75 / 18 / 7\n'+
+      "import 'package:flutter/material.dart';\n\n"+
+      'abstract final class ColorLabPalette {\n'+
+      '  static const Color base = Color(0xFF'+data.palette.base.slice(1)+'); // 75%\n'+
+      '  static const Color structure = Color(0xFF'+data.palette.structure.slice(1)+'); // 18%\n'+
+      '  static const Color accent = Color(0xFF'+data.palette.accent.slice(1)+'); // 7%\n'+
+      '}\n';
+    return{name:safe+'.dart',type:'text/plain',text};
+  }
+  if(kind==='jetpack'){
+    const text='// '+data.name+' · Color Lab 75 / 18 / 7\n'+
+      'import androidx.compose.ui.graphics.Color\n\n'+
+      'val ColorLabBase = Color(0xFF'+data.palette.base.slice(1)+') // 75%\n'+
+      'val ColorLabStructure = Color(0xFF'+data.palette.structure.slice(1)+') // 18%\n'+
+      'val ColorLabAccent = Color(0xFF'+data.palette.accent.slice(1)+') // 7%\n';
+    return{name:safe+'.kt',type:'text/plain',text};
+  }
   if(kind==='svg'){
     const title=artifactXmlEscape(data.name);
     const baseText=textFor(data.palette.base),structureText=textFor(data.palette.structure),accentText=textFor(data.palette.accent);
