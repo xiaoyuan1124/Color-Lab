@@ -363,12 +363,13 @@ if(html.includes('const LEARNING_CONCEPTS=')||html.includes('function showLearni
   fail('V2.23.0 learning concept modularization missing');
 }else pass('V2.23.0 learning concepts moved out of index budget');
 
-if(!html.includes('id="customDesignPreviewDetails"')||!html.includes('id="customDesignInput"')||
-   !html.includes('id="customDesignMappings"')||!html.includes('id="customDesignCanvas"')||
+if(!html.includes('id="customDesignMount"')||
+   !customDesignPreview.includes('id="customDesignPreviewDetails"')||!customDesignPreview.includes('id="customDesignInput"')||
+   !customDesignPreview.includes('id="customDesignMappings"')||!customDesignPreview.includes('id="customDesignCanvas"')||
    !html.includes('<script src="./runtime/custom-design-preview.js"></script>')||
    !html.includes('<link rel="stylesheet" href="./runtime/custom-design-preview.css">')||
    !sw.includes('./runtime/custom-design-preview.js')||!sw.includes('./runtime/custom-design-preview.css')||
-   !customDesignPreview.includes('function customDesignSanitizeSvg(')||
+   !customDesignPreview.includes('function customDesignEnsureUi(')||!customDesignPreview.includes('function customDesignSanitizeSvg(')||
    !customDesignPreview.includes('function customDesignMappedMarkup(')||
    !customDesignPreview.includes('function renderCustomDesignPreview(')||
    !customDesignPreviewCss.includes('.cdp-canvas{')){
