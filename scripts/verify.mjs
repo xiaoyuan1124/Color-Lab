@@ -11,9 +11,11 @@ const roleScale=fs.readFileSync('runtime/role-scale.js','utf8');
 const roleScaleCss=fs.readFileSync('runtime/role-scale.css','utf8');
 const shareSnapshot=fs.readFileSync('runtime/share-snapshot.js','utf8');
 const shareSnapshotCss=fs.readFileSync('runtime/share-snapshot.css','utf8');
+const customDesignPreview=fs.readFileSync('runtime/custom-design-preview.js','utf8');
+const customDesignPreviewCss=fs.readFileSync('runtime/custom-design-preview.css','utf8');
 const qrVendor=fs.readFileSync('vendor/qrcode.min.js','utf8');
 const qrLicense=fs.readFileSync('vendor/qrcode.LICENSE.txt','utf8');
-const appSource=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot;
+const appSource=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview;
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -44,6 +46,8 @@ try { new Function(roleScale); pass('role scale runtime syntax'); }
 catch(e){ fail('role scale runtime syntax: '+e.message); }
 try { new Function(shareSnapshot); pass('share snapshot runtime syntax'); }
 catch(e){ fail('share snapshot runtime syntax: '+e.message); }
+try { new Function(customDesignPreview); pass('custom design preview runtime syntax'); }
+catch(e){ fail('custom design preview runtime syntax: '+e.message); }
 try { new Function(qrVendor); pass('local QR vendor syntax'); }
 catch(e){ fail('local QR vendor syntax: '+e.message); }
 
@@ -120,13 +124,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2230")) fail('service worker cache version is not V2.23.0');
+if(!sw.includes("color-lab-v2240")) fail('service worker cache version is not V2.24.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.23.0') fail('package version must be 2.23.0');
+if(pkg.version!=='2.24.0') fail('package version must be 2.24.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.23.0')||!html.includes('<div class="version">V2.23.0</div>')||!html.includes("appVersion:'2.23.0'")) fail('V2.23.0 UI or backup version metadata missing');
-else pass('V2.23.0 version metadata');
+if(!html.includes('Color Lab V2.24.0')||!html.includes('<div class="version">V2.24.0</div>')||!html.includes("appVersion:'2.24.0'")) fail('V2.24.0 UI or backup version metadata missing');
+else pass('V2.24.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -359,6 +363,32 @@ if(html.includes('const LEARNING_CONCEPTS=')||html.includes('function showLearni
   fail('V2.23.0 learning concept modularization missing');
 }else pass('V2.23.0 learning concepts moved out of index budget');
 
+if(!html.includes('id="customDesignMount"')||
+   !customDesignPreview.includes('id="customDesignPreviewDetails"')||!customDesignPreview.includes('id="customDesignInput"')||
+   !customDesignPreview.includes('id="customDesignMappings"')||!customDesignPreview.includes('id="customDesignCanvas"')||
+   !html.includes('<script src="./runtime/custom-design-preview.js"></script>')||
+   !html.includes('<link rel="stylesheet" href="./runtime/custom-design-preview.css">')||
+   !sw.includes('./runtime/custom-design-preview.js')||!sw.includes('./runtime/custom-design-preview.css')||
+   !customDesignPreview.includes('function customDesignEnsureUi(')||!customDesignPreview.includes('function customDesignSanitizeSvg(')||
+   !customDesignPreview.includes('function customDesignMappedMarkup(')||
+   !customDesignPreview.includes('function renderCustomDesignPreview(')||
+   !customDesignPreviewCss.includes('.cdp-canvas{')){
+  fail('V2.24.0 Custom Design Preview runtime + UI contract missing');
+}else pass('V2.24.0 Custom Design Preview runtime + UI');
+
+if(!customDesignPreview.includes("CUSTOM_SVG_MAX_BYTES=1024*1024")||
+   !customDesignPreview.includes("CUSTOM_SVG_MAX_ELEMENTS=2500")||
+   !customDesignPreview.includes("name.startsWith('on')")||
+   !customDesignPreview.includes("/javascript\\s*:|data\\s*:|url\\s*\\(/i")||
+   !customDesignPreview.includes("CUSTOM_SVG_ALLOWED_TAGS")||
+   !customDesignPreview.includes("el.setAttribute(name,palette[role])")||
+   customDesignPreview.includes('selectedColors=')||
+   customDesignPreview.includes('palette.base=')||
+   customDesignPreview.includes('palette.structure=')||
+   customDesignPreview.includes('palette.accent=')){
+  fail('V2.24.0 safe local SVG or preview-only source-color contract missing');
+}else pass('V2.24.0 sanitized local SVG + exact source-color preview-only contract');
+
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
    !html.includes("padding:10px 0 16px var(--app-gutter)")){
@@ -442,7 +472,7 @@ if(!html.includes('--text-3:#716C66')||
   fail('V2.6.1 accessibility contrast or label hardening missing');
 }else pass('V2.6.1 accessibility contrast and labels');
 
-if(!html.includes("if(deep?.open){renderVision();renderColorRelationshipMap();renderToneExplorer();renderPaletteValidation();renderContextPreview()}")||
+if(!html.includes("if(deep?.open){renderVision();renderColorRelationshipMap();renderToneExplorer();renderPaletteValidation();renderContextPreview()")||
    !html.includes("$('#composeDeepDive').addEventListener('toggle'")||
    !html.includes('color:var(--text-3);')){
   fail('V2.6.2 deferred deep-dive or contrast follow-up missing');
@@ -494,7 +524,7 @@ const startupRenderStart=html.indexOf('function render(){');
 const startupRenderEnd=html.indexOf('function scheduleSecondaryRender()',startupRenderStart);
 const startupRenderBlock=startupRenderStart>=0&&startupRenderEnd>startupRenderStart?html.slice(startupRenderStart,startupRenderEnd):'';
 if(startupRenderBlock.includes('renderRelationshipExplanation();scheduleSecondaryRender()')||
-   !startupRenderBlock.includes("if(deep?.open){renderRelationshipExplanation();renderColorRelationshipMap();renderToneExplorer();renderPaletteValidation();}")){
+   !startupRenderBlock.includes("if(deep?.open){renderRelationshipExplanation();renderColorRelationshipMap();renderToneExplorer();renderPaletteValidation();")){
   fail('V2.11.0 hidden relationship rendering still blocks startup');
 }else pass('V2.11.0 hidden relationship rendering deferred');
 
