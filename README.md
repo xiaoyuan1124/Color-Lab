@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.19.0**
+**目前版本：V2.20.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,20 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.20.0 Professional Export 2.0
+
+Professional Handoff 在既有 CSS / JSON / Design Tokens 上增加真正能直接進工程流程的格式，但不增加首頁資訊噪音：
+
+- 第一層仍只保留 CSS / JSON / Tokens；Tailwind / SwiftUI / SVG Sheet 收在「更多格式」
+- Tailwind 產出可直接放入設定檔的 `theme.extend.colors`，使用 Base / Structure / Accent semantic names
+- SwiftUI 直接把 exact HEX 轉成 `Color(red:green:blue:)` 的 sRGB 0–1 數值，不依賴額外 Hex helper
+- SVG Palette Sheet 產出 1200 × 720 可縮放交付圖，色塊依 75 / 18 / 7 幾何比例呈現並附三色 HEX
+- 原本的「圖片」PNG 匯出仍保留，沒有重複新增另一顆 PNG 按鈕
+- 所有新格式都從 `paletteArtifactBase()` 讀取目前 Base / Structure / Accent exact source colors
+- Light / Dark Context Preview、Tone Explorer preview、Accessibility 建議都不會滲入匯出，除非使用者已明確套用到 Compose
+- 檔名沿用既有 palette name sanitizer，支援 Web Share file；不支援時仍回退本機下載
+- 不新增第三方 SDK、後端、帳號或付費 API
 
 ## V2.19.0 Photo → Palette 2.0
 
@@ -437,7 +451,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v2190-photo-palette-2`
+目前 cache generation：`color-lab-v2200-professional-export-2`
 
 ## Quality Gates
 
