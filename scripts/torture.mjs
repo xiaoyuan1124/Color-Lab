@@ -301,10 +301,11 @@ check('V2.23 share snapshot preserves semantic source order',
   'Base Structure Accent round trip');
 check('V2.23 share snapshot stays fragment-only and network-free',
   shareSnapshot.includes("url.hash=shareSnapshotHash().slice(1)")&&
+  shareSnapshot.includes("window.addEventListener('hashchange',()=>applyShareSnapshotFromLocation(true))")&&
   !shareSnapshot.includes('fetch(')&&
   !shareSnapshot.includes('XMLHttpRequest')&&
   !shareSnapshot.includes('localStorage.setItem'),
-  'URL fragment only');
+  'URL fragment only + live hash restore');
 
 check('V2.19 photo palette uses perceptual dedupe',
   appText.includes('function photoDistinctClusters(')&&
