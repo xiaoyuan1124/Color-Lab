@@ -13,18 +13,11 @@ function deepDivePreferredSection(){
   const saved=storageReadRaw(DEEP_DIVE_SECTION_KEY,'deepUnderstanding');
   return DEEP_DIVE_SECTIONS.includes(saved)?saved:'deepUnderstanding';
 }
-function ensureDeepDiveSection(){
-  const open=DEEP_DIVE_SECTIONS.find(id=>deepDiveSectionOpen(id));
-  if(open)return open;
-  const preferred=deepDivePreferredSection();
-  const target=document.getElementById(preferred)||document.getElementById('deepUnderstanding');
-  if(target)target.open=true;
-  return target?.id||'';
-}
 function renderDeepDiveVisible(){
   const deep=document.getElementById('composeDeepDive');
   if(!deep?.open)return;
-  const section=ensureDeepDiveSection();
+  const section=DEEP_DIVE_SECTIONS.find(id=>deepDiveSectionOpen(id));
+  if(!section)return;
 
   if(section==='deepUnderstanding'){
     renderRelationshipExplanation();
