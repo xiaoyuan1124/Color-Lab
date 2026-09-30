@@ -3192,9 +3192,12 @@ function previewThemePalette(){
   };
 }
 function setPreviewTheme(next){
-  if(!['light','dark'].includes(next)||next===previewTheme)return;
+  if(!['light','dark'].includes(next))return;
+  const changed=next!==previewTheme;
   previewTheme=next;
-  try{localStorage.setItem('colorlab.previewTheme',previewTheme)}catch(_){}
+  if(changed){
+    try{localStorage.setItem('colorlab.previewTheme',previewTheme)}catch(_){}
+  }
   renderContextPreview();
 }
 function renderContextPreview(){
