@@ -332,7 +332,7 @@ if(!html.includes('<script src="./runtime/share-snapshot.js"></script>')||
    !html.includes('<link rel="stylesheet" href="./runtime/share-snapshot.css">')||
    !sw.includes('./runtime/share-snapshot.js')||!sw.includes('./runtime/share-snapshot.css')||!sw.includes('./vendor/qrcode.min.js')||
    !appSource.includes('function shareSnapshotHash(')||!appSource.includes('function parseShareSnapshot(')||
-   !appSource.includes('function applyShareSnapshotFromLocation(')||!appSource.includes('function openShareSnapshot(')||
+   !appSource.includes('function applyShareSnapshotFromLocation(')||!appSource.includes('function installShareSnapshotHashListener(')||!appSource.includes('function openShareSnapshot(')||
    !shareSnapshotCss.includes('.share-snapshot-panel{')||!shareSnapshotCss.includes('.share-snapshot-qr{')){
   fail('V2.23.0 Shareable Snapshot runtime + UI contract missing');
 }else pass('V2.23.0 Shareable Snapshot runtime + UI');
@@ -342,6 +342,8 @@ if(!shareSnapshot.includes("'#clv=1&cl='")||
    !shareSnapshot.includes("selectedColors=[...snap.colors]")||
    !shareSnapshot.includes("lockedSlots=[false,false,false]")||
    !html.includes('restoreDraft();applyShareSnapshotFromLocation();')||
+   !html.includes('updateHistoryButtons();installShareSnapshotHashListener();')||
+   !shareSnapshot.includes("window.addEventListener('hashchange',()=>applyShareSnapshotFromLocation(true))")||
    shareSnapshot.includes('fetch(')||shareSnapshot.includes('XMLHttpRequest')){
   fail('V2.23.0 exact-order stateless URL snapshot contract missing');
 }else pass('V2.23.0 exact-order stateless URL snapshots');
