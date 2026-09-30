@@ -2125,6 +2125,14 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
   color:var(--text-3);
   opacity:.65;
 }
+.rec-nav-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.rec-nav-actions .text-action{
+  white-space:nowrap;
+}
 
 </style>
 </head>
@@ -2132,7 +2140,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.11.0</div>
+    <div class="version">V2.11.1</div>
   </div>
 
   <main class="app-main">
@@ -2288,7 +2296,10 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
         <div class="rec-scroll" id="recommendations"></div>
         <div class="rec-toolbar" id="recommendationToolbar">
           <span id="recommendationProgress">先顯示 5 組</span>
-          <button type="button" class="text-action" id="nextRecommendations">換一批 →</button>
+          <div class="rec-nav-actions">
+            <button type="button" class="text-action" id="previousRecommendations">← 上一批</button>
+            <button type="button" class="text-action" id="nextRecommendations">下一批 →</button>
+          </div>
         </div>
       </section>
 
@@ -2410,7 +2421,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.11.0</div>
+  <div class="footer app-footer">Color Lab V2.11.1</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2536,6 +2547,7 @@ let historyStack=[],historyIndex=-1,isHistoryRestore=false;
 let recentColors=readRecentColors();
 let recommendationCacheKey='',recommendationCacheValue=[];
 let recommendationBatchOffset=0;
+let recommendationBatchHistory=[0],recommendationBatchHistoryIndex=0;
 const recommendationBatchSize=5;
 let candidateExploreMode=localStorage.getItem('colorlab.candidateExploreMode')||'harmony';
 if(!['harmony','variation','bold'].includes(candidateExploreMode))candidateExploreMode='harmony';
@@ -4060,7 +4072,7 @@ function recommendationCombos(){
   if(inputs.length>=3)return[];
   const cacheKey=[...inputs,mode,(window.FASHION_PALETTES||[]).length,(window.IG_STYLE_PATTERNS||[]).length,(window.INSPIRATION_ATLAS||[]).length,Object.keys(window.TONE_FAMILIES||{}).length].join('|');
   if(cacheKey===recommendationCacheKey&&recommendationCacheValue.length)return recommendationCacheValue;
-  recommendationBatchOffset=0;
+  resetRecommendationBatchSession();
 
   const pool=intelligentPool(inputs,mode);
   const candidates=[
@@ -4118,21 +4130,48 @@ function recommendationCombos(){
   return out;
 }
 
+function resetRecommendationBatchSession(){
+  recommendationBatchOffset=0;
+  recommendationBatchHistory=[0];
+  recommendationBatchHistoryIndex=0;
+}
 function recommendationBatch(recs){
   if(!Array.isArray(recs)||!recs.length)return[];
-  if(recommendationBatchOffset>=recs.length)recommendationBatchOffset=0;
+  if(recommendationBatchOffset>=recs.length)resetRecommendationBatchSession();
   return recs.slice(recommendationBatchOffset,recommendationBatchOffset+recommendationBatchSize);
 }
-function nextRecommendationBatch(){
+function recommendationBatchCount(recs){
+  return Math.max(1,Math.ceil((Array.isArray(recs)?recs.length:0)/recommendationBatchSize));
+}
+function moveRecommendationBatch(direction=1){
   const recs=recommendationCombos();
   if(recs.length<=recommendationBatchSize){
     toast('目前這組條件只有 '+recs.length+' 個通過品質門檻的候選');
     return;
   }
-  recommendationBatchOffset+=recommendationBatchSize;
-  if(recommendationBatchOffset>=recs.length)recommendationBatchOffset=0;
+  if(direction<0){
+    if(recommendationBatchHistoryIndex<=0){toast('已經是第一批');return}
+    recommendationBatchHistoryIndex--;
+    recommendationBatchOffset=recommendationBatchHistory[recommendationBatchHistoryIndex];
+    renderRecommendations();
+    return;
+  }
+  if(recommendationBatchHistoryIndex<recommendationBatchHistory.length-1){
+    recommendationBatchHistoryIndex++;
+    recommendationBatchOffset=recommendationBatchHistory[recommendationBatchHistoryIndex];
+    renderRecommendations();
+    return;
+  }
+  const nextOffset=recommendationBatchOffset+recommendationBatchSize;
+  if(nextOffset>=recs.length){toast('已看完這輪所有候選');return}
+  recommendationBatchHistory=recommendationBatchHistory.slice(0,recommendationBatchHistoryIndex+1);
+  recommendationBatchHistory.push(nextOffset);
+  recommendationBatchHistoryIndex++;
+  recommendationBatchOffset=nextOffset;
   renderRecommendations();
 }
+function previousRecommendationBatch(){moveRecommendationBatch(-1)}
+function nextRecommendationBatch(){moveRecommendationBatch(1)}
 function applyRecommendation(index){
   const recs=recommendationCombos(),r=recs[index];if(!r)return;
   const empties=selectedColors.map((v,i)=>v?null:i).filter(v=>v!==null);
@@ -4163,12 +4202,13 @@ function recommendationDirection(paletteLike,meta={}){
 function renderRecommendations(){
   const box=$('#recommendations');if(!box)return;
   const inputs=chosenColors();
-  const progress=$('#recommendationProgress'),next=$('#nextRecommendations');
+  const progress=$('#recommendationProgress'),previous=$('#previousRecommendations'),next=$('#nextRecommendations');
   if(inputs.length>=3){
     $('#intelHeading').textContent='三色已完整';
     $('#intelDescription').textContent='你選的三色會完整保留';
     box.innerHTML='<div class="saved-empty">移除其中一色後 系統會重新提出補色建議</div>';
     if(progress)progress.textContent='三色已完整';
+    if(previous)previous.disabled=true;
     if(next)next.disabled=true;
     return;
   }
@@ -4189,9 +4229,16 @@ function renderRecommendations(){
   if(progress){
     const start=recs.length?recommendationBatchOffset+1:0;
     const end=Math.min(recommendationBatchOffset+visible.length,recs.length);
-    progress.textContent=recs.length?start+'–'+end+' / '+recs.length+' 組通過品質門檻':'沒有可用候選';
+    const batchNumber=recs.length?Math.floor(recommendationBatchOffset/recommendationBatchSize)+1:0;
+    progress.textContent=recs.length?'第 '+batchNumber+' / '+recommendationBatchCount(recs)+' 批 · '+start+'–'+end+' / '+recs.length+' 組':'沒有可用候選';
   }
-  if(next)next.disabled=recs.length<=recommendationBatchSize;
+  if(previous)previous.disabled=recommendationBatchHistoryIndex<=0;
+  if(next){
+    const hasForwardHistory=recommendationBatchHistoryIndex<recommendationBatchHistory.length-1;
+    const hasUnseen=recommendationBatchOffset+recommendationBatchSize<recs.length;
+    next.disabled=recs.length<=recommendationBatchSize||(!hasForwardHistory&&!hasUnseen);
+    next.textContent=next.disabled&&recs.length>recommendationBatchSize?'已看完':'下一批 →';
+  }
 }
 
 function permutations3(a){
@@ -5223,6 +5270,7 @@ $('#generate').onclick=async()=>{
   finally{button.disabled=false;button.textContent=label}
 };
 $('#save').onclick=save;
+$('#previousRecommendations').onclick=previousRecommendationBatch;
 $('#nextRecommendations').onclick=nextRecommendationBatch;
 document.addEventListener('click',e=>{
   const pm=e.target.closest('[data-photo-mode]');if(pm){setPhotoMode(pm.dataset.photoMode);return}
