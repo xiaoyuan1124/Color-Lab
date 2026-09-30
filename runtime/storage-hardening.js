@@ -42,6 +42,9 @@ function storageJsonState(key,validator=null){
     return{status:'valid',value};
   }catch(error){return{status:'corrupt',value:null,error}}
 }
+function storageNeedsRecovery(key,validator=null){
+  return storageJsonState(key,validator).status!=='valid';
+}
 function storageCapture(keys){
   const snapshot=new Map();
   try{
