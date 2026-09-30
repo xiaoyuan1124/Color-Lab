@@ -859,3 +859,106 @@ test('V2.24 maps local SVG flat colors to exact source roles without mutating Co
   expect(afterManual.markup).toContain('#333333');
   expect(afterManual.palette).toEqual(before);
 });
+
+
+test('V2.25 detects CVD role conflicts and previews a minimal fix without mutating source colors', async ({ page }) => {
+  await page.evaluate(() => {
+    selectedColors=['#777777','#787878','#E24A3B'];
+    lockedSlots=[false,false,false];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+  });
+  const before=await page.evaluate(() => paletteArtifactBase());
+
+  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await page.locator('[data-vision="deutan"]').click();
+
+  const result=await page.evaluate(() => {
+    const analysis=visionAnalysis('deutan');
+    const fixes=visionFixes(analysis);
+    const first=fixes[0]||null;
+    if(first)previewVisionSuggestion(first.role,first.suggestion.color);
+    return {
+      pairs:analysis.pairs.map(x=>({a:x.a,b:x.b,status:x.status.key,distance:x.distance})),
+      fix:first&&{role:first.role,color:first.suggestion.color,method:first.suggestion.method},
+      preview:visionFixPreview,
+      after:paletteArtifactBase()
+    };
+  });
+
+  expect(result.pairs.find(x=>x.a==='base'&&x.b==='structure')?.status).not.toBe('clear');
+  expect(result.fix).not.toBeNull();
+  expect(['structure','accent']).toContain(result.fix.role);
+  expect(result.preview).not.toBeNull();
+  expect(result.after).toEqual(before);
+  await expect(page.locator('#visionPreview')).toContainText('最小修正方向');
+  await expect(page.locator('#visionPreview')).toContainText('只比較，不改原色');
+  await expect(page.locator('#visionPreview')).toContainText('不代表臨床色覺測試');
+});
+
+test('V2.25 syncs CVD simulation across all five context previews and restores exact source preview', async ({ page }) => {
+  await page.evaluate(() => {
+    selectedColors=['#E7DCC8','#274C55','#C65338'];
+    lockedSlots=[false,false,false];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+  });
+  const before=await page.evaluate(() => paletteArtifactBase());
+
+  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await page.locator('[data-context="room"]').click();
+  const normalRoom=await page.locator('.cp2-room-wall').evaluate(el => getComputedStyle(el).backgroundColor);
+
+  await page.locator('[data-vision="deutan"]').click();
+  await expect(page.locator('#contextThemeNote')).toContainText('綠色弱近似模擬');
+  await expect(page.locator('#contextThemeNote')).toContainText('原色不變');
+
+  const expected=await page.evaluate(() => transformVision(palette.base,'deutan'));
+  const expectedCss=await page.evaluate(hex => {
+    const probe=document.createElement('i');probe.style.background=hex;document.body.appendChild(probe);
+    const value=getComputedStyle(probe).backgroundColor;probe.remove();return value;
+  },expected);
+  const simulatedRoom=await page.locator('.cp2-room-wall').evaluate(el => getComputedStyle(el).backgroundColor);
+  expect(simulatedRoom).toBe(expectedCss);
+  expect(simulatedRoom).not.toBe(normalRoom);
+
+  for(const [context,selector] of [
+    ['app','.cp2-app'],['brand','.cp2-brand'],['room','.cp2-room'],['outfit','.cp2-outfit'],['slides','.cp2-slide']
+  ]){
+    await page.locator('[data-context="'+context+'"]').click();
+    await expect(page.locator('#uiPreview '+selector)).toBeVisible();
+    await expect(page.locator('#uiPreview')).toHaveAttribute('aria-label',/綠色弱近似模擬/);
+  }
+
+  await page.locator('[data-context="room"]').click();
+  await page.locator('[data-vision="normal"]').click();
+  await expect(page.locator('#contextThemeNote')).toContainText('原色情境');
+  const restoredRoom=await page.locator('.cp2-room-wall').evaluate(el => getComputedStyle(el).backgroundColor);
+  expect(restoredRoom).toBe(normalRoom);
+  const after=await page.evaluate(() => paletteArtifactBase());
+  expect(after).toEqual(before);
+});
+
+test('V2.25 explicit vision fix respects locked roles and only applies after confirmation', async ({ page }) => {
+  const setup=await page.evaluate(() => {
+    selectedColors=['#777777','#787878','#E24A3B'];
+    lockedSlots=[false,true,false];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+    const analysis=visionAnalysis('deutan');
+    const fix=visionMinimalFix(analysis.pairs.find(x=>x.a==='base'&&x.b==='structure'),'deutan');
+    return {before:paletteArtifactBase(),fix:fix&&{role:fix.role,color:fix.suggestion.color}};
+  });
+  expect(setup.fix).not.toBeNull();
+  expect(setup.fix.role).toBe('structure');
+
+  await page.evaluate(fix => applyVisionSuggestion(fix.role,fix.color),setup.fix);
+  const locked=await page.evaluate(() => paletteArtifactBase());
+  expect(locked).toEqual(setup.before);
+
+  await page.evaluate(fix => {
+    lockedSlots[1]=false;
+    applyVisionSuggestion(fix.role,fix.color);
+  },setup.fix);
+  const applied=await page.evaluate(() => paletteArtifactBase());
+  expect(applied.palette.base).toBe(setup.before.palette.base);
+  expect(applied.palette.accent).toBe(setup.before.palette.accent);
+  expect(applied.palette.structure).toBe(setup.fix.color);
+});
