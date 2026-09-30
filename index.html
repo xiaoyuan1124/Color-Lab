@@ -5389,8 +5389,6 @@ document.addEventListener('click',e=>{
   }
   const vf=e.target.closest('[data-vision]');if(vf){visionMode=vf.dataset.vision;renderVision();return}
   const ctx=e.target.closest('[data-context]');if(ctx){previewContext=ctx.dataset.context;renderContextPreview();return}
-  const theme=e.target.closest('[data-preview-theme]');if(theme){setPreviewTheme(theme.dataset.previewTheme);return}
-  const exportFormat=e.target.closest('[data-export-format]');if(exportFormat){exportPaletteArtifact(exportFormat.dataset.exportFormat);return}
   const tf=e.target.closest('[data-tag-filter]');if(tf){libraryTagFilter=tf.dataset.tagFilter||'';renderSaved();return}
   const et=e.target.closest('[data-edit-tags]');if(et){editSavedTags(+et.dataset.editTags);return}
   const cmp=e.target.closest('[data-use-compare]');if(cmp){useCompare(cmp.dataset.useCompare);return}
@@ -5560,6 +5558,8 @@ $('#backupInput').addEventListener('change',e=>{const file=e.target.files&&e.tar
 $('#clearRecent').onclick=()=>{recentColors=[];localStorage.removeItem('colorlab.recent');renderRecentColors();toast('已清除最近用色')};
 $('#copyPalette').onclick=()=>{navigator.clipboard?.writeText(paletteText()).then(()=>toast('已複製三色')).catch(()=>toast('無法複製'))};
 $('#sharePalette').onclick=sharePalette;
+$('[data-preview-theme]').forEach(b=>b.addEventListener('click',()=>setPreviewTheme(b.dataset.previewTheme)));
+$('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
 $('#librarySearch').addEventListener('input',renderSaved);
 $('#librarySort').value=librarySort;
 $('#librarySort').addEventListener('change',e=>{librarySort=e.target.value;localStorage.setItem('colorlab.librarySort',librarySort);renderSaved()});
