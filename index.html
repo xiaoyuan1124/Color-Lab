@@ -656,6 +656,21 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 .accessibility-preview{padding:12px;border:1px solid var(--border-subtle);border-radius:var(--radius-lg)}
 .accessibility-preview-strip{display:grid;grid-template-columns:75fr 18fr 7fr;height:44px;margin-top:10px;overflow:hidden;border-radius:var(--radius-md)}
 .accessibility-preview-strip i{display:block}
+.tone-explorer{padding:24px 0;border-block:1px solid var(--border-subtle)}
+.tone-explorer-modes{display:flex;gap:6px;margin:10px 0 14px}
+.tone-explorer-modes button{border:0;background:transparent;color:var(--muted);font-size:12px;font-weight:700;min-height:36px;padding:0 10px;border-radius:999px}
+.tone-explorer-modes button.active{background:rgba(104,112,94,.10);color:var(--olive-12)}
+.tone-explorer-grid{display:grid;gap:10px}
+.tone-explorer-card{display:grid;grid-template-columns:88px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--hairline)}
+.tone-explorer-swatches{display:grid;grid-template-columns:75fr 18fr 7fr;height:40px;overflow:hidden;border-radius:10px}
+.tone-explorer-swatches i{display:block}
+.tone-explorer-copy{display:grid;gap:2px;min-width:0}.tone-explorer-copy strong{font-size:11px}.tone-explorer-copy span{font-size:10px;color:var(--text-3)}
+.tone-explorer-actions{display:flex;gap:8px}
+.tone-explorer-preview{padding:12px;border:1px solid var(--border-subtle);border-radius:var(--radius-lg);margin-bottom:12px}
+.tone-explorer-preview-head{display:flex;align-items:center;gap:8px;font-size:11px}.tone-explorer-preview-head span{margin-left:auto;color:var(--text-3)}
+.tone-explorer-compare{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.tone-explorer-compare small{display:block;margin-bottom:5px;color:var(--text-3)}
+.tone-explorer-note{font-size:11px;color:var(--text-3)}
+@media(max-width:390px){.tone-explorer-card{grid-template-columns:78px 1fr}.tone-explorer-actions{grid-column:2}}
 .real-preview-wrap{
   margin-top:var(--space-6);
   padding-top:var(--space-5);
@@ -2187,7 +2202,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.16.0</div>
+    <div class="version">V2.17.0</div>
   </div>
 
   <main class="app-main">
@@ -2269,6 +2284,15 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
                 <strong id="learningTitle"></strong>
                 <p id="learningText"></p>
               </div>
+            </div>
+
+            <div class="tone-explorer">
+              <div class="micro-head"><span>Tone Explorer</span><span>只比較，不偷改原色</span></div>
+              <div class="tone-explorer-modes" id="toneExplorerModes" role="group" aria-label="色調探索模式">
+                <button type="button" data-tone-mode="tone" aria-pressed="true">固定 Hue · 換 Tone</button>
+                <button type="button" data-tone-mode="hue" aria-pressed="false">固定 Tone · 換 Hue</button>
+              </div>
+              <div id="toneExplorer"></div>
             </div>
 
             <div class="validation-lab">
@@ -2492,7 +2516,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.16.0</div>
+  <div class="footer app-footer">Color Lab V2.17.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2585,6 +2609,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true">已複製</div>
 
 <script src="./runtime/palette-tools.js"></script>
+<script src="./runtime/tone-explorer.js"></script>
 <script>
 const MODES={
   quiet:{label:'安靜',baseL:.93,structureL:.27,accentShift:22,sat:.26},
@@ -3046,7 +3071,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.16.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.17.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -4772,7 +4797,7 @@ function render(){
   [['base','75'],['structure','18'],['accent','7']].forEach(([k,t])=>{const d=document.createElement('div');d.style.background=palette[k];d.style.color=textFor(palette[k]);d.innerHTML=`<span>${t}</span>`;pv.appendChild(d)});
   renderPaletteHealth();
   const deep=$('#composeDeepDive');
-  if(deep?.open){renderRelationshipExplanation();renderPaletteValidation();}
+  if(deep?.open){renderRelationshipExplanation();renderToneExplorer();renderPaletteValidation();}
   scheduleSecondaryRender();
 }
 function scheduleSecondaryRender(){
@@ -4782,7 +4807,7 @@ function scheduleSecondaryRender(){
     const active=document.querySelector('.tab-view.active')?.dataset.view||'compose';
     if(active==='compose'){
       const deep=$('#composeDeepDive');
-      if(deep?.open){renderVision();renderPaletteValidation();renderContextPreview()}
+      if(deep?.open){renderVision();renderToneExplorer();renderPaletteValidation();renderContextPreview()}
     }else if(active==='inspire'){
       ensureInspirationResources().then(()=>{if(token===secondaryRenderToken){renderIdeas();renderRecommendations()}});
     }
@@ -5431,7 +5456,7 @@ function switchTab(name,scrollTop=true){
     ensureInspirationResources().then(()=>requestAnimationFrame(()=>{renderIdeas();renderRecommendations()}));
   }
   if(name==='compose'&&$('#composeDeepDive')?.open)requestAnimationFrame(()=>{
-    renderRelationshipExplanation();renderVision();renderContextPreview();
+    renderRelationshipExplanation();renderToneExplorer();renderVision();renderContextPreview();
   });
   setCornerNavOpen(false);
   if(scrollTop){
@@ -5542,7 +5567,7 @@ $('#libraryFolderFilter').addEventListener('change',e=>{libraryFolderFilter=e.ta
 $('#comboName').addEventListener('input',e=>{currentComboName=e.target.value;persistDraft()});
 $('#composeDeepDive').addEventListener('toggle',e=>{
   if(e.currentTarget.open)requestAnimationFrame(()=>{
-    renderRelationshipExplanation();renderPaletteValidation();renderVision();renderContextPreview();
+    renderRelationshipExplanation();renderToneExplorer();renderPaletteValidation();renderVision();renderContextPreview();
   });
 });
 renderModes();palette=fastInitialPalette();renderComboSlots();render();updateLockToggle();

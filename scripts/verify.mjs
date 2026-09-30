@@ -2,7 +2,8 @@ import fs from 'node:fs';
 
 const html=fs.readFileSync('index.html','utf8');
 const paletteTools=fs.readFileSync('runtime/palette-tools.js','utf8');
-const appSource=html+'\n'+paletteTools;
+const toneExplorer=fs.readFileSync('runtime/tone-explorer.js','utf8');
+const appSource=html+'\n'+paletteTools+'\n'+toneExplorer;
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -22,6 +23,8 @@ else {
 }
 try { new Function(paletteTools); pass('palette tools runtime syntax'); }
 catch(e){ fail('palette tools runtime syntax: '+e.message); }
+try { new Function(toneExplorer); pass('tone explorer runtime syntax'); }
+catch(e){ fail('tone explorer runtime syntax: '+e.message); }
 
 
 const forbiddenPatterns=[
@@ -96,13 +99,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2160")) fail('service worker cache version is not V2.16.0');
+if(!sw.includes("color-lab-v2170")) fail('service worker cache version is not V2.17.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.16.0') fail('package version must be 2.16.0');
+if(pkg.version!=='2.17.0') fail('package version must be 2.17.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.16.0')||!html.includes('<div class="version">V2.16.0</div>')||!html.includes("appVersion:'2.16.0'")) fail('V2.16.0 UI or backup version metadata missing');
-else pass('V2.16.0 version metadata');
+if(!html.includes('Color Lab V2.17.0')||!html.includes('<div class="version">V2.17.0</div>')||!html.includes("appVersion:'2.17.0'")) fail('V2.17.0 UI or backup version metadata missing');
+else pass('V2.17.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -166,6 +169,34 @@ if(!appSource.includes("const supportChroma=Math.max(baseO.c,structureO.c)")||
    appSource.includes("const chromaUsability=")){
   fail('V2.16.0 role-aware practicality contract missing');
 }else pass('V2.16.0 vivid Accent practicality is role-aware');
+
+if(!html.includes('id="toneExplorer"')||
+   !html.includes('id="toneExplorerModes"')||
+   !html.includes('data-tone-mode="tone"')||
+   !html.includes('data-tone-mode="hue"')||
+   !html.includes('<script src="./runtime/tone-explorer.js"></script>')||
+   !sw.includes('./runtime/tone-explorer.js')||
+   !appSource.includes('function toneExplorerToneCandidate(')||
+   !appSource.includes('Object.values(toneFamilies()).map')||
+   !appSource.includes('function toneExplorerHueCandidate(')||
+   !appSource.includes('function previewToneExplorer(')||
+   !appSource.includes('function applyToneExplorer(')){
+  fail('V2.17.0 Tone Explorer contract missing');
+}else pass('V2.17.0 Tone Explorer runtime + UI');
+
+if(!appSource.includes("toneExplorerMode='tone'")||
+   !appSource.includes('TONE_EXPLORER_HUE_STEPS=[-90,-45,-20,20,45,90,180]')||
+   !appSource.includes('gamutMapOKLCH(L,C,o.h)')||
+   !appSource.includes('gamutMapOKLCH(o.l,o.c,o.h+delta)')||
+   !appSource.includes("selectedColors=item.colors.map((hex,i)=>lockedSlots[i]?origin[i]:hex)")||
+   !appSource.includes('toneExplorerPreview={...item,origin:toneExplorerColors()}')){
+  fail('V2.17.0 Hue/Tone preservation or explicit apply contract missing');
+}else pass('V2.17.0 Hue/Tone preservation + preview-only contract');
+
+if(!appSource.includes('toneExplorerSignature(toneExplorerPreview.origin)!==toneExplorerSignature()')||
+   !appSource.includes('toneExplorerPreview=null')){
+  fail('V2.17.0 stale preview guard missing');
+}else pass('V2.17.0 stale preview guard');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||

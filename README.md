@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.16.0**
+**目前版本：V2.17.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -25,7 +25,7 @@ Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把�
 2. Poline 色彩路徑
 3. Fashion Reference Library
 4. Instagram Styling Relationship Library
-5. Aesthetic Gate（明暗節奏、彩度節制、色相結構、角色分工）
+5. Aesthetic Gate（明暗節奏、彩度意圖、色相結構、角色分工）
 6. Cohesion pass
 7. sRGB gamut protection
 8. Multi-factor quality ranking
@@ -143,6 +143,21 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.17.0 Tone Explorer
+
+Tone Explorer 把「換更多顏色」改成兩種可以理解的實驗：
+
+- 固定 Hue · 換 Tone：保留三個角色原本的 Hue，依 Tone Family 改變 Lightness / Chroma 節奏
+- 可探索 Morandi、Soft Pastel、Earth、Editorial、Quiet Luxury、Jewel、Digital、Airy 八種 Tone Family
+- 固定 Tone · 換 Hue：三個角色一起做相同 Hue rotation，盡量保留各自原本的 Lightness / Chroma 與相對關係
+- Hue rotation 提供 -90°、-45°、-20°、+20°、+45°、+90°、180° 七個方向
+- 所有候選先以預覽比較，不會回寫 Compose
+- 預覽顯示「目前 vs 預覽」兩組 75 / 18 / 7 色條
+- 只有明確按「套用」才會改變 palette，並加入 Undo / Redo
+- 鎖定角色永遠保留原色，不被 Tone Explorer 覆蓋
+- palette 在預覽期間若已變更，舊預覽會自動失效，避免把過期候選套到新配色
+- Tone Explorer 使用本地 runtime 並加入 Service Worker 離線快取，不新增後端或 API
 
 ## V2.16.0 Aesthetic Gate 2.0
 
@@ -390,7 +405,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v2160-aesthetic-gate-2`
+目前 cache generation：`color-lab-v2170-tone-explorer`
 
 ## Quality Gates
 

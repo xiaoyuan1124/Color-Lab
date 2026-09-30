@@ -260,3 +260,104 @@ test('V2.16 quality practicality no longer punishes vivid Accent by absolute chr
   expect(source).toContain('accentControl');
   expect(source).not.toContain('chromaUsability');
 });
+
+test('V2.17 fixed-Hue Tone Explorer changes tone while preserving hue identity', async ({ page }) => {
+  const result = await page.evaluate(async () => {
+    await ensureToneFamilies();
+    const colors=['#5E6648','#B95A37','#315EAA'];
+    const candidate=toneExplorerToneCandidate(colors,'earth');
+    const hueDrift=toneExplorerHueDrift(colors,candidate);
+    const toneDelta=toneExplorerToneDelta(colors,candidate);
+    return {candidate,hueDrift,toneDelta};
+  });
+  expect(result.candidate).toHaveLength(3);
+  expect(result.hueDrift.every(x => x < 2.5)).toBe(true);
+  expect(result.toneDelta.some(x => x.light > 0.02 || x.chroma > 0.015)).toBe(true);
+});
+
+test('V2.17 fixed-Tone Hue Explorer rotates hue together and preserves L/C intent', async ({ page }) => {
+  const result = await page.evaluate(() => {
+    const colors=['#D8C7A7','#275C64','#B95A37'];
+    const candidate=toneExplorerHueCandidate(colors,20);
+    const before=colors.map(toOKLCH),after=candidate.map(toOKLCH);
+    const shifts=before.map((x,i)=>{
+      let d=((after[i].h-x.h)%360+360)%360;
+      if(d>180)d-=360;
+      return d;
+    });
+    const lc=before.map((x,i)=>({l:Math.abs(x.l-after[i].l),c:Math.abs(x.c-after[i].c)}));
+    const beforeRelations=[
+      hueDistance(before[0].h,before[1].h),
+      hueDistance(before[0].h,before[2].h),
+      hueDistance(before[1].h,before[2].h)
+    ];
+    const afterRelations=[
+      hueDistance(after[0].h,after[1].h),
+      hueDistance(after[0].h,after[2].h),
+      hueDistance(after[1].h,after[2].h)
+    ];
+    return {shifts,lc,beforeRelations,afterRelations};
+  });
+  expect(result.shifts.every(x => Math.abs(x-20) < 3)).toBe(true);
+  expect(result.lc.every(x => x.l < 0.015 && x.c < 0.025)).toBe(true);
+  result.beforeRelations.forEach((x,i)=>expect(Math.abs(x-result.afterRelations[i])).toBeLessThan(3));
+});
+
+test('V2.17 Tone Explorer preview is non-mutating, apply is explicit, and Undo restores origin', async ({ page }) => {
+  await page.evaluate(() => {
+    selectedColors=['#D8C7A7','#275C64','#B95A37'];
+    lockedSlots=[false,false,false];
+    activeSlot=0;seed=selectedColors[0];
+    generate(false);
+    historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();
+  });
+  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await expect(page.locator('#toneExplorer')).toBeVisible();
+  await expect(page.locator('[data-tone-preview="tone-earth"]')).toBeVisible();
+
+  const before=await page.evaluate(() => paletteArtifactBase());
+  await page.locator('[data-tone-preview="tone-earth"]').click();
+  await expect(page.locator('.tone-explorer-preview')).toContainText('只比較，不改原色');
+  const afterPreview=await page.evaluate(() => paletteArtifactBase());
+  expect(afterPreview.palette).toEqual(before.palette);
+
+  await page.locator('[data-tone-apply="tone-earth"]').click();
+  const afterApply=await page.evaluate(() => paletteArtifactBase());
+  expect(afterApply.palette).not.toEqual(before.palette);
+
+  await page.locator('#undoBtn').click();
+  const afterUndo=await page.evaluate(() => paletteArtifactBase());
+  expect(afterUndo.palette).toEqual(before.palette);
+});
+
+test('V2.17 Tone Explorer explicit apply respects locked roles and stale previews expire', async ({ page }) => {
+  const result=await page.evaluate(async () => {
+    await ensureToneFamilies();
+    selectedColors=['#D8C7A7','#275C64','#B95A37'];
+    lockedSlots=[true,false,false];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+    setToneExplorerMode('hue');
+    const origin=toneExplorerColors();
+    previewToneExplorer('hue-20');
+    const hadPreview=!!toneExplorerPreview;
+    selectedColors=['#D8C7A7','#315EAA','#C84335'];
+    seed=selectedColors[0];generate(false);
+    await renderToneExplorer();
+    const staleCleared=toneExplorerPreview===null;
+    setToneExplorerMode('hue');
+    const applyOrigin=toneExplorerColors();
+    applyToneExplorer('hue-20');
+    return {
+      hadPreview,staleCleared,
+      lockedBefore:applyOrigin[0],
+      lockedAfter:palette.base,
+      structureChanged:palette.structure!==applyOrigin[1],
+      accentChanged:palette.accent!==applyOrigin[2]
+    };
+  });
+  expect(result.hadPreview).toBe(true);
+  expect(result.staleCleared).toBe(true);
+  expect(result.lockedAfter).toBe(result.lockedBefore);
+  expect(result.structureChanged).toBe(true);
+  expect(result.accentChanged).toBe(true);
+});

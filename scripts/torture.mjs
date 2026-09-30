@@ -3,7 +3,8 @@ import vm from 'node:vm';
 
 const html=fs.readFileSync('index.html','utf8');
 const paletteTools=fs.readFileSync('runtime/palette-tools.js','utf8');
-const appText=html+'\n'+paletteTools;
+const toneExplorer=fs.readFileSync('runtime/tone-explorer.js','utf8');
+const appText=html+'\n'+paletteTools+'\n'+toneExplorer;
 const toneSource=fs.readFileSync('data/tone-families.js','utf8');
 const scriptMatch=html.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/);
 if(!scriptMatch){
@@ -13,6 +14,8 @@ if(!scriptMatch){
 const source=scriptMatch[1];
 try{new Function(paletteTools)}
 catch(e){console.error('FAIL palette tools runtime syntax',e.message);process.exit(1)}
+try{new Function(toneExplorer)}
+catch(e){console.error('FAIL tone explorer runtime syntax',e.message);process.exit(1)}
 
 function findFunctionBodyOpen(start){
   const paramsOpen=source.indexOf('(',start);
@@ -226,6 +229,25 @@ check('V2.13 dark validation is derived only',
 const quietAesthetic=A.paletteAestheticCore(['#E9E1D2','#25313A','#4D739B']);
 const vividAesthetic=A.paletteAestheticCore(['#286B69','#D0A32E','#A94B38']);
 const noisyAesthetic=A.paletteAestheticCore(['#FF4B55','#FF5A4D','#FF6A45']);
+check('V2.17 Tone Explorer keeps preview separate from palette',
+  appText.includes("toneExplorerPreview={...item,origin:toneExplorerColors()}")&&
+  appText.includes("function clearToneExplorerPreview()")&&
+  !appText.includes("palette=toneExplorerPreview"),
+  'preview state only');
+check('V2.17 fixed-Hue path keeps original hue input',
+  appText.includes("Object.values(toneFamilies()).map")&&
+  appText.includes("gamutMapOKLCH(L,C,o.h)")&&
+  appText.includes("family.light?.[i]")&&appText.includes("family.chroma?.[i]"),
+  'tone family changes L/C while preserving H');
+check('V2.17 fixed-Tone path rotates all hues by one delta',
+  appText.includes("TONE_EXPLORER_HUE_STEPS=[-90,-45,-20,20,45,90,180]")&&
+  appText.includes("gamutMapOKLCH(o.l,o.c,o.h+delta)"),
+  'shared hue rotation preserves L/C intent');
+check('V2.17 explicit apply respects locked roles',
+  appText.includes("selectedColors=item.colors.map((hex,i)=>lockedSlots[i]?origin[i]:hex)")&&
+  appText.includes("pushHistory()"),
+  'locked roles + undo history');
+
 check('V2.16 quiet and vivid palettes can both clear the beauty gate',
   quietAesthetic.score>=.48&&vividAesthetic.score>=.48,
   'quiet='+quietAesthetic.score+' vivid='+vividAesthetic.score);
