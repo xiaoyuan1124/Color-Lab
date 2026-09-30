@@ -15,9 +15,11 @@ const customDesignPreview=fs.readFileSync('runtime/custom-design-preview.js','ut
 const customDesignPreviewCss=fs.readFileSync('runtime/custom-design-preview.css','utf8');
 const visionAccessibility=fs.readFileSync('runtime/vision-accessibility.js','utf8');
 const visionAccessibilityCss=fs.readFileSync('runtime/vision-accessibility.css','utf8');
+const localProjects=fs.readFileSync('runtime/local-projects.js','utf8');
+const localProjectsCss=fs.readFileSync('runtime/local-projects.css','utf8');
 const qrVendor=fs.readFileSync('vendor/qrcode.min.js','utf8');
 const qrLicense=fs.readFileSync('vendor/qrcode.LICENSE.txt','utf8');
-const appSource=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility;
+const appSource=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects;
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -52,6 +54,8 @@ try { new Function(customDesignPreview); pass('custom design preview runtime syn
 catch(e){ fail('custom design preview runtime syntax: '+e.message); }
 try { new Function(visionAccessibility); pass('vision accessibility runtime syntax'); }
 catch(e){ fail('vision accessibility runtime syntax: '+e.message); }
+try { new Function(localProjects); pass('local projects runtime syntax'); }
+catch(e){ fail('local projects runtime syntax: '+e.message); }
 try { new Function(qrVendor); pass('local QR vendor syntax'); }
 catch(e){ fail('local QR vendor syntax: '+e.message); }
 
@@ -128,13 +132,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2250")) fail('service worker cache version is not V2.25.0');
+if(!sw.includes("color-lab-v2260")) fail('service worker cache version is not V2.26.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.25.0') fail('package version must be 2.25.0');
+if(pkg.version!=='2.26.0') fail('package version must be 2.26.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.25.0')||!html.includes('<div class="version">V2.25.0</div>')||!html.includes("appVersion:'2.25.0'")) fail('V2.25.0 UI or backup version metadata missing');
-else pass('V2.25.0 version metadata');
+if(!html.includes('Color Lab V2.26.0')||!html.includes('<div class="version">V2.26.0</div>')||!html.includes("appVersion:'2.26.0'")) fail('V2.26.0 UI or backup version metadata missing');
+else pass('V2.26.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -427,6 +431,30 @@ if(!visionAccessibility.includes("mode==='normal'")||
    !visionAccessibility.includes("applyVisionSuggestion(")){
   fail('V2.25.0 approximate-simulation disclosure or explicit-apply contract missing');
 }else pass('V2.25.0 approximation disclosure + explicit apply');
+
+if(!html.includes('<script src="./runtime/local-projects.js"></script>')||
+   !html.includes('<link rel="stylesheet" href="./runtime/local-projects.css">')||
+   !sw.includes('./runtime/local-projects.js')||!sw.includes('./runtime/local-projects.css')||
+   !localProjects.includes("LOCAL_PROJECTS_KEY='colorlab.projectsV1'")||
+   !localProjects.includes('function createLocalProject(')||
+   !localProjects.includes('function openProjectPicker(')||
+   !localProjects.includes('function assignSavedProject(')||
+   !localProjects.includes('function mergeImportedProjectData(')||
+   !localProjectsCss.includes('.local-project-chips{')){
+  fail('V2.26.0 Local Projects runtime + UI contract missing');
+}else pass('V2.26.0 Local Projects runtime + UI');
+
+if(!html.includes("schema:'color-lab-backup-v5'")||
+   !html.includes("projects:readLocalProjects()")||
+   !html.includes("schema:'color-lab-shadow-v4'")||
+   !html.includes("projectId:sanitizeProjectId(x.projectId)")||
+   !html.includes("localProjectMatches(x)")||
+   !html.includes("localProjectSearchText(x)")||
+   !html.includes("initLocalProjects()")||
+   !localProjects.includes("配色不會被刪除，只會變成未歸類")||
+   !localProjects.includes("item.projectId=id")){
+  fail('V2.26.0 project persistence / backup / non-destructive delete contract missing');
+}else pass('V2.26.0 project persistence + Backup V5 + non-destructive delete');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
@@ -1008,16 +1036,16 @@ if(!html.includes("personal*.45")||!html.includes("reference,accessibility,perso
   fail('V2.3 personal recommendation dimension missing');
 }else pass('V2.3 personal recommendation dimension');
 
-if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'"+pkg.version+"'")||
+if(!html.includes("color-lab-backup-v5")||!html.includes("appVersion:'"+pkg.version+"'")||
    !html.includes("preference:sanitizePreferenceModel(preferenceState)")||
    !html.includes("preferenceEnabled")){
-  fail('V2.3 backup v4 personalization payload missing');
-}else pass('V2.3 backup v4 personalization payload');
+  fail('personalization backup payload missing');
+}else pass('personalization backup payload');
 
-for(const schema of ['color-lab-backup-v1','color-lab-backup-v2','color-lab-backup-v3','color-lab-backup-v4']){
+for(const schema of ['color-lab-backup-v1','color-lab-backup-v2','color-lab-backup-v3','color-lab-backup-v4','color-lab-backup-v5']){
   if(!html.includes(schema)) fail('backup compatibility missing: '+schema);
 }
-pass('backup v1/v2/v3/v4 compatibility');
+pass('backup v1/v2/v3/v4/v5 compatibility');
 
 if(!html.includes("偏好只存在此裝置")){
   fail('local preference privacy copy missing');
@@ -1082,11 +1110,11 @@ if(!html.includes("return enabled?preferenceAffinityFromModel(model,colors):0;")
   fail('disabled personalization does not force zero affinity');
 }else pass('disabled personalization forces zero affinity');
 
-if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'"+pkg.version+"'")){
-  fail('V2.3 personalization setting persistence or backup v4 missing');
-}else pass('V2.3 setting persistence and backup v4');
+if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v5")||!html.includes("appVersion:'"+pkg.version+"'")){
+  fail('V2.3 personalization setting persistence or current backup missing');
+}else pass('V2.3 setting persistence in current backup');
 
-if(!html.includes("schema:'color-lab-shadow-v3'")||!html.includes("preferenceEnabled,")){
+if(!html.includes("schema:'color-lab-shadow-v4'")||!html.includes("preferenceEnabled,")){
   fail('V2.3 resilience shadow does not include personalization setting');
 }else pass('V2.3 resilience shadow includes personalization setting');
 
