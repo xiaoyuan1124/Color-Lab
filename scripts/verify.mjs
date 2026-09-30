@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 
 const html=fs.readFileSync('index.html','utf8');
+const paletteTools=fs.readFileSync('runtime/palette-tools.js','utf8');
+const appSource=html+'\n'+paletteTools;
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -15,9 +17,11 @@ const pass=(msg)=>console.log('PASS:',msg);
 const inline=html.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/);
 if(!inline) fail('inline app script missing');
 else {
-  try { new Function(inline[1]); pass('JavaScript syntax'); }
-  catch(e){ fail('JavaScript syntax: '+e.message); }
+  try { new Function(inline[1]); pass('inline JavaScript syntax'); }
+  catch(e){ fail('inline JavaScript syntax: '+e.message); }
 }
+try { new Function(paletteTools); pass('palette tools runtime syntax'); }
+catch(e){ fail('palette tools runtime syntax: '+e.message); }
 
 
 const forbiddenPatterns=[
@@ -26,7 +30,7 @@ const forbiddenPatterns=[
   {re:/(?<!\$)\$\([^\n;]+\)\.filter\(/g,label:'single-element helper $() used with filter'}
 ];
 for(const item of forbiddenPatterns){
-  if(item.re.test(html)) fail(item.label);
+  if(item.re.test(appSource)) fail(item.label);
 }
 pass('selector helper usage');
 
@@ -61,7 +65,7 @@ const requiredFunctions=[
   'openResilienceDB','restoreResilienceIfNeeded','installApp'
 ];
 for(const fn of requiredFunctions){
-  if(!html.includes('function '+fn+'(')) fail('function missing: '+fn);
+  if(!appSource.includes('function '+fn+'(')) fail('function missing: '+fn);
 }
 pass('core functions present');
 
@@ -92,13 +96,21 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2130")) fail('service worker cache version is not V2.13.0');
+if(!sw.includes("color-lab-v2131")) fail('service worker cache version is not V2.13.1');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.13.0') fail('package version must be 2.13.0');
+if(pkg.version!=='2.13.1') fail('package version must be 2.13.1');
 else pass('package version');
-if(!html.includes('Color Lab V2.13.0')||!html.includes('<div class="version">V2.13.0</div>')||!html.includes("appVersion:'2.13.0'")) fail('V2.13.0 UI or backup version metadata missing');
-else pass('V2.13.0 version metadata');
+if(!html.includes('Color Lab V2.13.1')||!html.includes('<div class="version">V2.13.1</div>')||!html.includes("appVersion:'2.13.1'")) fail('V2.13.1 UI or backup version metadata missing');
+else pass('V2.13.1 version metadata');
+
+if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
+   !sw.includes('./runtime/palette-tools.js')||
+   html.includes('function paletteArtifact(')||
+   html.includes('function renderPaletteValidation(')||
+   html.includes('function renderContextPreview(')){
+  fail('V2.13.1 palette runtime modularization contract missing');
+}else pass('V2.13.1 palette runtime modularization');
 
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
@@ -302,59 +314,59 @@ if(!html.includes('id="previousRecommendations"')||
 
 
 for(const fn of ['paletteArtifactBase','paletteArtifact','exportPaletteArtifact','previewThemePalette','setPreviewTheme']){
-  if(!html.includes('function '+fn+'(')) fail('V2.12.0 professional handoff function missing: '+fn);
+  if(!appSource.includes('function '+fn+'(')) fail('V2.12.0 professional handoff function missing: '+fn);
 }
-if(!html.includes('data-export-format="css"')||
-   !html.includes('data-export-format="json"')||
-   !html.includes('data-export-format="tokens"')||
-   !html.includes("format:'color-lab-design-tokens-v1'")||
-   !html.includes("schema:'color-lab-palette-v1'")){
+if(!appSource.includes('data-export-format="css"')||
+   !appSource.includes('data-export-format="json"')||
+   !appSource.includes('data-export-format="tokens"')||
+   !appSource.includes("format:'color-lab-design-tokens-v1'")||
+   !appSource.includes("schema:'color-lab-palette-v1'")){
   fail('V2.12.0 CSS / JSON / Tokens handoff contract missing');
 }else pass('V2.12.0 professional handoff formats');
 
-if(!html.includes("--color-base: '+data.palette.base")||
-   !html.includes("--color-structure: '+data.palette.structure")||
-   !html.includes("--color-accent: '+data.palette.accent")||
-   !html.includes("ratios:{base:75,structure:18,accent:7}")){
+if(!appSource.includes("--color-base: '+data.palette.base")||
+   !appSource.includes("--color-structure: '+data.palette.structure")||
+   !appSource.includes("--color-accent: '+data.palette.accent")||
+   !appSource.includes("ratios:{base:75,structure:18,accent:7}")){
   fail('V2.12.0 export does not preserve exact role colors and 75/18/7');
 }else pass('V2.12.0 exact role export contract');
 
-if(!html.includes('id="contextThemeModes"')||
-   !html.includes('data-preview-theme="light"')||
-   !html.includes('data-preview-theme="dark"')||
-   !html.includes("accent:palette.accent")||
-   !html.includes("Dark 預覽變體 · 不改原色")){
+if(!appSource.includes('id="contextThemeModes"')||
+   !appSource.includes('data-preview-theme="light"')||
+   !appSource.includes('data-preview-theme="dark"')||
+   !appSource.includes("accent:palette.accent")||
+   !appSource.includes("Dark 預覽變體 · 不改原色")){
   fail('V2.12.0 Light / Dark preview contract missing');
 }else pass('V2.12.0 Light / Dark preview contract');
 
-if(!html.includes('id="accessibilityMatrix"')||
-   !html.includes('id="validationThemeModes"')||
-   !html.includes('data-validation-theme="original"')||
-   !html.includes('data-validation-theme="dark"')||
-   !html.includes('function contrastGrade(')||
-   !html.includes('function paletteValidationData(')||
-   !html.includes('function renderPaletteValidation(')||
-   !html.includes("r>=7?['aaa'")||
-   !html.includes("r>=4.5?['aa'")||
-   !html.includes("r>=3?['large'")){
+if(!appSource.includes('id="accessibilityMatrix"')||
+   !appSource.includes('id="validationThemeModes"')||
+   !appSource.includes('data-validation-theme="original"')||
+   !appSource.includes('data-validation-theme="dark"')||
+   !appSource.includes('function contrastGrade(')||
+   !appSource.includes('function paletteValidationData(')||
+   !appSource.includes('function renderPaletteValidation(')||
+   !appSource.includes("r>=7?['aaa'")||
+   !appSource.includes("r>=4.5?['aa'")||
+   !appSource.includes("r>=3?['large'")){
   fail('V2.13.0 three-color accessibility matrix contract missing');
 }else pass('V2.13.0 three-color accessibility matrix');
 
-if(!html.includes("function previewThemePalette(theme=previewTheme)")||
-   !html.includes("previewThemePalette('dark')")||
-   !html.includes("$$('#validationThemeModes [data-validation-theme]').forEach")||
-   !html.includes("$$('[data-validation-theme]').forEach")){
+if(!appSource.includes("function previewThemePalette(theme=previewTheme)")||
+   !appSource.includes("previewThemePalette('dark')")||
+   !appSource.includes("$$('#validationThemeModes [data-validation-theme]').forEach")||
+   !appSource.includes("$$('[data-validation-theme]').forEach")){
   fail('V2.13.0 validation theme integration missing');
 }else pass('V2.13.0 original / dark validation integration');
 
-if(!html.includes("$$('#contextTabs [data-context]').forEach")||
-   !html.includes("$$('#contextThemeModes [data-preview-theme]').forEach")||
-   !html.includes("$$('[data-preview-theme]').forEach")||
-   !html.includes("$$('[data-export-format]').forEach")){
+if(!appSource.includes("$$('#contextTabs [data-context]').forEach")||
+   !appSource.includes("$$('#contextThemeModes [data-preview-theme]').forEach")||
+   !appSource.includes("$$('[data-preview-theme]').forEach")||
+   !appSource.includes("$$('[data-export-format]').forEach")){
   fail('V2.12.0 collection controls are not bound with querySelectorAll helper');
 }else pass('V2.12.0 collection controls use querySelectorAll helper');
 
-if(html.includes('$$$(')) fail('invalid triple-dollar selector helper detected');
+if(appSource.includes('$$$(')) fail('invalid triple-dollar selector helper detected');
 else pass('selector helper arity');
 
 

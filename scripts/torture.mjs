@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 const html=fs.readFileSync('index.html','utf8');
+const paletteTools=fs.readFileSync('runtime/palette-tools.js','utf8');
+const appText=html+'\n'+paletteTools;
 const toneSource=fs.readFileSync('data/tone-families.js','utf8');
 const scriptMatch=html.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/);
 if(!scriptMatch){
@@ -9,6 +11,8 @@ if(!scriptMatch){
   process.exit(1);
 }
 const source=scriptMatch[1];
+try{new Function(paletteTools)}
+catch(e){console.error('FAIL palette tools runtime syntax',e.message);process.exit(1)}
 
 function findFunctionBodyOpen(start){
   const paramsOpen=source.indexOf('(',start);
@@ -186,37 +190,37 @@ check('V2.11.1 Inspire does not wrap rejected batches',
 
 
 check('V2.12 professional exports keep exact palette roles',
-  html.includes("palette:{base:palette.base,structure:palette.structure,accent:palette.accent}")&&
-  html.includes("ratios:{base:75,structure:18,accent:7}")&&
-  html.includes("data-export-format=\"tokens\""),
+  appText.includes("palette:{base:palette.base,structure:palette.structure,accent:palette.accent}")&&
+  appText.includes("ratios:{base:75,structure:18,accent:7}")&&
+  appText.includes("data-export-format=\"tokens\""),
   'exact palette + ratios + tokens');
 check('V2.12 dark preview is preview-only',
-  html.includes("function previewThemePalette(theme=previewTheme)")&&
-  html.includes("accent:palette.accent")&&
-  html.includes("function setPreviewTheme(next)")&&
-  !html.includes("palette=previewThemePalette()"),
+  appText.includes("function previewThemePalette(theme=previewTheme)")&&
+  appText.includes("accent:palette.accent")&&
+  appText.includes("function setPreviewTheme(next)")&&
+  !appText.includes("palette=previewThemePalette()"),
   'derived preview does not replace palette');
 
 check('V2.12 multi-control selectors return collections',
-  html.includes("$$('#contextTabs [data-context]').forEach")&&
-  html.includes("$$('#contextThemeModes [data-preview-theme]').forEach")&&
-  html.includes("$$('[data-preview-theme]').forEach")&&
-  html.includes("$$('[data-export-format]').forEach"),
+  appText.includes("$$('#contextTabs [data-context]').forEach")&&
+  appText.includes("$$('#contextThemeModes [data-preview-theme]').forEach")&&
+  appText.includes("$$('[data-preview-theme]').forEach")&&
+  appText.includes("$$('[data-export-format]').forEach"),
   'querySelectorAll helper for preview/export controls');
 
 check('selector helper never grows beyond querySelectorAll',
-  !html.includes('$$$('),
+  !appText.includes('$$$('),
   'no $$$ helper');
 
 check('V2.13 accessibility matrix covers all role pairs',
-  html.includes("const VALIDATION_ROLES=[['base','Base'],['structure','Structure'],['accent','Accent']]")&&
-  html.includes("['base','structure'],['base','accent'],['structure','accent']")&&
-  html.includes("r>=7?['aaa'")&&html.includes("r>=4.5?['aa'")&&html.includes("r>=3?['large'"),
+  appText.includes("const VALIDATION_ROLES=[['base','Base'],['structure','Structure'],['accent','Accent']]")&&
+  appText.includes("['base','structure'],['base','accent'],['structure','accent']")&&
+  appText.includes("r>=7?['aaa'")&&appText.includes("r>=4.5?['aa'")&&appText.includes("r>=3?['large'"),
   '3 role pairs + WCAG thresholds');
 check('V2.13 dark validation is derived only',
-  html.includes("previewThemePalette('dark')")&&
-  html.includes("data-validation-theme=\"dark\"")&&
-  !html.includes("palette=paletteValidationData("),
+  appText.includes("previewThemePalette('dark')")&&
+  appText.includes("data-validation-theme=\"dark\"")&&
+  !appText.includes("palette=paletteValidationData("),
   'dark matrix never overwrites palette');
 
 
