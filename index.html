@@ -921,6 +921,12 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 .preview-app-card b{display:block;font-size:11px;margin-bottom:5px}.preview-app-card span{font-size:9px;opacity:.72}
 .handoff-block{margin-top:var(--space-4);padding-top:var(--space-4);border-top:1px solid var(--hairline)}
 .handoff-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-3)}
+.handoff-more{margin-top:10px}
+.handoff-more summary{list-style:none;cursor:pointer;min-height:38px;display:flex;align-items:center;justify-content:space-between;color:var(--text-2);font-size:11px;font-weight:700}
+.handoff-more summary::-webkit-details-marker{display:none}
+.handoff-more summary::after{content:"＋";font-size:16px;font-weight:400;color:var(--text-3)}
+.handoff-more[open] summary::after{content:"−"}
+.handoff-more-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-3);padding-top:4px}
 .preview-brand-logo{font-size:11px;letter-spacing:.22em;font-weight:800}
 .preview-brand-name{font-size:34px;line-height:1;letter-spacing:-.05em;font-weight:750;max-width:7ch;margin-top:12px}
 .preview-room{position:relative;min-height:230px;overflow:hidden}
@@ -2204,7 +2210,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.19.0</div>
+    <div class="version">V2.20.0</div>
   </div>
 
   <main class="app-main">
@@ -2350,6 +2356,14 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
             <button type="button" class="utility-btn" data-export-format="json">JSON</button>
             <button type="button" class="utility-btn" data-export-format="tokens">Tokens</button>
           </div>
+          <details class="handoff-more" id="handoffMore">
+            <summary>更多格式</summary>
+            <div class="handoff-more-actions">
+              <button type="button" class="utility-btn" data-export-format="tailwind">Tailwind</button>
+              <button type="button" class="utility-btn" data-export-format="swiftui">SwiftUI</button>
+              <button type="button" class="utility-btn" data-export-format="svg">SVG Sheet</button>
+            </div>
+          </details>
         </div>
         <div class="compare-actions">
           <button type="button" class="utility-btn" id="setCompareA">設為 A</button>
@@ -2524,7 +2538,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.19.0</div>
+  <div class="footer app-footer">Color Lab V2.20.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -3079,7 +3093,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.19.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.20.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
