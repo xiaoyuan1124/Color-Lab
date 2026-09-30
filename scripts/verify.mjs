@@ -281,7 +281,7 @@ if(!html.includes('--text-3:#716C66')||
   fail('V2.6.1 accessibility contrast or label hardening missing');
 }else pass('V2.6.1 accessibility contrast and labels');
 
-if(!html.includes("if(deep?.open){renderVision();renderPaletteValidation();renderContextPreview()}")||
+if(!html.includes("if(deep?.open){renderVision();renderToneExplorer();renderPaletteValidation();renderContextPreview()}")||
    !html.includes("$('#composeDeepDive').addEventListener('toggle'")||
    !html.includes('color:var(--text-3);')){
   fail('V2.6.2 deferred deep-dive or contrast follow-up missing');
@@ -333,7 +333,7 @@ const startupRenderStart=html.indexOf('function render(){');
 const startupRenderEnd=html.indexOf('function scheduleSecondaryRender()',startupRenderStart);
 const startupRenderBlock=startupRenderStart>=0&&startupRenderEnd>startupRenderStart?html.slice(startupRenderStart,startupRenderEnd):'';
 if(startupRenderBlock.includes('renderRelationshipExplanation();scheduleSecondaryRender()')||
-   !startupRenderBlock.includes("if(deep?.open){renderRelationshipExplanation();renderPaletteValidation();}")){
+   !startupRenderBlock.includes("if(deep?.open){renderRelationshipExplanation();renderToneExplorer();renderPaletteValidation();}")){
   fail('V2.11.0 hidden relationship rendering still blocks startup');
 }else pass('V2.11.0 hidden relationship rendering deferred');
 
