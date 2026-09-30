@@ -4401,9 +4401,10 @@ function paletteQualityProfile(colors){
 
   const lightnessUsability=
     1-clamp((Math.abs(structureO.l-.5)-.43)/.12,0,1);
-  const chromaUsability=
-    1-clamp((accent.c-.30)/.16,0,1);
-  const practicality=clamp(lightnessUsability*.55+chromaUsability*.45,0,1);
+  const supportChroma=Math.max(baseO.c,structureO.c);
+  const accentControl=
+    1-clamp((accent.c-supportChroma-.22)/.14,0,1);
+  const practicality=clamp(lightnessUsability*.62+accentControl*.38,0,1);
 
   const fashion=fashionAffinity(colors);
   const ig=igPatternAffinity(colors);
