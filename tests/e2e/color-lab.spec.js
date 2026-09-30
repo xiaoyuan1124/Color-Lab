@@ -572,7 +572,8 @@ test('V2.20 keeps advanced handoff formats behind compact disclosure', async ({ 
   await expect(page.locator('[data-export-format="tailwind"]')).toBeVisible();
   await expect(page.locator('[data-export-format="swiftui"]')).toBeVisible();
   await expect(page.locator('[data-export-format="svg"]')).toBeVisible();
-  await expect(page.locator('.handoff-more-actions .utility-btn')).toHaveCount(3);
+  await expect(page.locator('.handoff-more-actions .utility-btn')).toHaveCount(4);
+  await expect(page.locator('#exportReferenceBoard')).toBeVisible();
 });
 
 test('V2.18 renders all five realistic 75/18/7 context scenes', async ({ page }) => {
@@ -1062,4 +1063,69 @@ test('V2.26 backup dedupe preserves imported project assignment on an existing p
   expect(result).toHaveLength(1);
   expect(result[0].projectId).toBe('prj-import1');
   expect(result[0].palette).toEqual({base:'#112233',structure:'#445566',accent:'#AABBCC'});
+});
+
+
+test('V2.27 Reference Board uses exact source colors despite derived preview modes', async ({ page }) => {
+  const result=await page.evaluate(async () => {
+    selectedColors=['#112233','#445566','#AABBCC'];
+    lockedSlots=[false,false,false];activeSlot=0;seed=selectedColors[0];generate(false);
+    const before=paletteArtifactBase();
+    setPreviewTheme('dark');
+    setVisionMode('deutan');
+    const data=await referenceBoardData();
+    const after=paletteArtifactBase();
+    return {before,data,after,theme:previewTheme,vision:visionMode};
+  });
+  expect(result.theme).toBe('dark');
+  expect(result.vision).toBe('deutan');
+  expect(result.data.palette).toEqual({base:'#112233',structure:'#445566',accent:'#AABBCC'});
+  expect(result.data.ratios).toEqual({base:75,structure:18,accent:7});
+  expect(result.data.toneLabel.length).toBeGreaterThan(0);
+  expect(result.after).toEqual(result.before);
+});
+
+test('V2.27 Reference Board renders a 1600x1200 palette board when no photo is loaded', async ({ page }) => {
+  const result=await page.evaluate(async () => {
+    selectedColors=['#E7DCC8','#274C55','#C65338'];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+    if(typeof photoObjectURL!=='undefined')photoObjectURL=null;
+    const before=paletteArtifactBase();
+    const board=await drawReferenceBoard();
+    const pixel=board.canvas.getContext('2d').getImageData(1100,300,1,1).data;
+    const hex='#'+[pixel[0],pixel[1],pixel[2]].map(v=>v.toString(16).padStart(2,'0')).join('').toUpperCase();
+    return {width:board.canvas.width,height:board.canvas.height,data:board.data,pixel:hex,before,after:paletteArtifactBase()};
+  });
+  expect(result.width).toBe(1600);
+  expect(result.height).toBe(1200);
+  expect(result.data.hasPhoto).toBe(false);
+  expect(result.pixel).toBe('#E7DCC8');
+  expect(result.after).toEqual(result.before);
+});
+
+test('V2.27 Reference Board can include the current local photo without changing palette data', async ({ page }) => {
+  const result=await page.evaluate(async () => {
+    selectedColors=['#F4EFE6','#28343A','#D4513D'];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+    photoObjectURL='blob:color-lab-reference-test';
+    photoCanvas.width=120;photoCanvas.height=80;
+    const ctx=photoCanvas.getContext('2d');ctx.fillStyle='#00CC66';ctx.fillRect(0,0,120,80);
+    const before=paletteArtifactBase();
+    const board=await drawReferenceBoard();
+    const pixel=board.canvas.getContext('2d').getImageData(300,400,1,1).data;
+    const hex='#'+[pixel[0],pixel[1],pixel[2]].map(v=>v.toString(16).padStart(2,'0')).join('').toUpperCase();
+    photoObjectURL=null;
+    return {hasPhoto:board.data.hasPhoto,pixel:hex,before,after:paletteArtifactBase()};
+  });
+  expect(result.hasPhoto).toBe(true);
+  expect(result.pixel).toBe('#00CC66');
+  expect(result.after).toEqual(result.before);
+});
+
+test('V2.27 Reference Board export stays behind the existing handoff disclosure', async ({ page }) => {
+  await expect(page.locator('#exportReferenceBoard')).toHaveCount(1);
+  await expect(page.locator('#exportReferenceBoard')).not.toBeVisible();
+  await page.locator('#handoffMore summary').click();
+  await expect(page.locator('#exportReferenceBoard')).toBeVisible();
+  await expect(page.locator('#handoffMore .handoff-more-actions .utility-btn')).toHaveCount(4);
 });

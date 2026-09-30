@@ -17,9 +17,10 @@ const visionAccessibility=fs.readFileSync('runtime/vision-accessibility.js','utf
 const visionAccessibilityCss=fs.readFileSync('runtime/vision-accessibility.css','utf8');
 const localProjects=fs.readFileSync('runtime/local-projects.js','utf8');
 const localProjectsCss=fs.readFileSync('runtime/local-projects.css','utf8');
+const referenceBoard=fs.readFileSync('runtime/reference-board.js','utf8');
 const qrVendor=fs.readFileSync('vendor/qrcode.min.js','utf8');
 const qrLicense=fs.readFileSync('vendor/qrcode.LICENSE.txt','utf8');
-const appSource=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects;
+const appSource=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard;
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -56,6 +57,8 @@ try { new Function(visionAccessibility); pass('vision accessibility runtime synt
 catch(e){ fail('vision accessibility runtime syntax: '+e.message); }
 try { new Function(localProjects); pass('local projects runtime syntax'); }
 catch(e){ fail('local projects runtime syntax: '+e.message); }
+try { new Function(referenceBoard); pass('reference board runtime syntax'); }
+catch(e){ fail('reference board runtime syntax: '+e.message); }
 try { new Function(qrVendor); pass('local QR vendor syntax'); }
 catch(e){ fail('local QR vendor syntax: '+e.message); }
 
@@ -132,13 +135,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2260")) fail('service worker cache version is not V2.26.0');
+if(!sw.includes("color-lab-v2270")) fail('service worker cache version is not V2.27.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.26.0') fail('package version must be 2.26.0');
+if(pkg.version!=='2.27.0') fail('package version must be 2.27.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.26.0')||!html.includes('<div class="version">V2.26.0</div>')||!html.includes("appVersion:'2.26.0'")) fail('V2.26.0 UI or backup version metadata missing');
-else pass('V2.26.0 version metadata');
+if(!html.includes('Color Lab V2.27.0')||!html.includes('<div class="version">V2.27.0</div>')||!html.includes("appVersion:'2.27.0'")) fail('V2.27.0 UI or backup version metadata missing');
+else pass('V2.27.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -456,6 +459,35 @@ if(!html.includes("schema:'color-lab-backup-v5'")||
    !localProjects.includes("item.projectId=id")){
   fail('V2.26.0 project persistence / backup / non-destructive delete contract missing');
 }else pass('V2.26.0 project persistence + Backup V5 + non-destructive delete');
+
+if(!html.includes('<script src="./runtime/reference-board.js"></script>')||
+   !sw.includes('./runtime/reference-board.js')||
+   !html.includes('initReferenceBoardExport()')||
+   !referenceBoard.includes('function referenceBoardData(')||
+   !referenceBoard.includes('function drawReferenceBoard(')||
+   !referenceBoard.includes('function exportReferenceBoard(')||
+   !referenceBoard.includes('function initReferenceBoardExport(')||
+   !referenceBoard.includes("button.id='exportReferenceBoard'")||
+   !referenceBoard.includes("canvas.width=1600")||
+   !referenceBoard.includes("canvas.height=1200")){
+  fail('V2.27.0 Reference Board runtime + export contract missing');
+}else pass('V2.27.0 Reference Board runtime + export');
+
+if(!referenceBoard.includes('const source=paletteArtifactBase()')||
+   !referenceBoard.includes("ratios:{...source.ratios}")||
+   !referenceBoard.includes("await ensureToneFamilies()")||
+   !referenceBoard.includes("photoCanvas")||
+   !referenceBoard.includes("referenceBoardHasPhoto()")||
+   referenceBoard.includes('previewThemePalette(')||
+   referenceBoard.includes('visionPalette(')||
+   referenceBoard.includes('accessibilityPreview')||
+   referenceBoard.includes('toneExplorerPreview')||
+   referenceBoard.includes('selectedColors=')||
+   referenceBoard.includes('palette.base=')||
+   referenceBoard.includes('palette.structure=')||
+   referenceBoard.includes('palette.accent=')){
+  fail('V2.27.0 exact-source / local-photo / preview-isolation contract missing');
+}else pass('V2.27.0 exact source + local photo + preview isolation');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
