@@ -685,3 +685,63 @@ test('V2.21 relationship analysis preserves exact semantic role order', async ({
   expect(result.verdict.accentText.length).toBeGreaterThan(8);
 });
 
+test('V2.22 Role Scale keeps exact source color as one anchor per semantic role', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    selectedColors=['#E7DCC8','#274C55','#C65338'];
+    lockedSlots=[false,false,false];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+    const before=paletteArtifactBase();
+    const system=roleScaleSystem();
+    const compact={};
+    for(const key of ['base','structure','accent']){
+      compact[key]={
+        source:system[key].source,
+        exact:system[key].scale.filter(x=>x.source).map(x=>x.hex),
+        stops:system[key].scale.map(x=>x.stop),
+        lightness:system[key].scale.map(x=>x.l)
+      };
+    }
+    return {before,after:paletteArtifactBase(),compact};
+  });
+  expect(result.after).toEqual(result.before);
+  for(const [key,hex] of [['base','#E7DCC8'],['structure','#274C55'],['accent','#C65338']]){
+    expect(result.compact[key].source).toBe(hex);
+    expect(result.compact[key].exact).toEqual([hex]);
+    expect(result.compact[key].stops).toEqual([50,100,200,300,400,500,600,700,800,900]);
+    const ls=result.compact[key].lightness;
+    for(let i=1;i<ls.length;i++)expect(ls[i]).toBeLessThanOrEqual(ls[i-1]+0.012);
+  }
+});
+
+test('V2.22 Role Scale renders 30 derived swatches and suggested usage without mutating Compose', async ({ page }) => {
+  await page.evaluate(() => {
+    selectedColors=['#F4EFE6','#28343A','#D4513D'];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+  });
+  const before=await page.evaluate(() => paletteArtifactBase());
+  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await page.locator('#roleScaleDetails').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await expect(page.locator('#roleScale')).toBeVisible();
+  await expect(page.locator('#roleScale .rscale-role')).toHaveCount(3);
+  await expect(page.locator('#roleScale .rscale-swatch')).toHaveCount(30);
+  await expect(page.locator('#roleScale .rscale-swatch.source')).toHaveCount(3);
+  await expect(page.locator('#roleScale .rscale-token')).toHaveCount(6);
+  const after=await page.evaluate(() => paletteArtifactBase());
+  expect(after).toEqual(before);
+});
+
+test('V2.22 Role Scale CSS exposes exact source variables separately from derived stops', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    selectedColors=['#112233','#445566','#AABBCC'];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+    const before=paletteArtifactBase();
+    const text=roleScaleCssText();
+    return {before,after:paletteArtifactBase(),text};
+  });
+  expect(result.after).toEqual(result.before);
+  expect(result.text).toContain('--color-base-source: #112233;');
+  expect(result.text).toContain('--color-structure-source: #445566;');
+  expect(result.text).toContain('--color-accent-source: #AABBCC;');
+  expect((result.text.match(/exact source/g)||[]).length).toBe(3);
+});
+

@@ -7,7 +7,9 @@ const photoPalette=fs.readFileSync('runtime/photo-palette.js','utf8');
 const photoPaletteCss=fs.readFileSync('runtime/photo-palette.css','utf8');
 const colorRelationship=fs.readFileSync('runtime/color-relationship.js','utf8');
 const colorRelationshipCss=fs.readFileSync('runtime/color-relationship.css','utf8');
-const appSource=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship;
+const roleScale=fs.readFileSync('runtime/role-scale.js','utf8');
+const roleScaleCss=fs.readFileSync('runtime/role-scale.css','utf8');
+const appSource=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale;
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -34,6 +36,8 @@ try { new Function(photoPalette); pass('photo palette runtime syntax'); }
 catch(e){ fail('photo palette runtime syntax: '+e.message); }
 try { new Function(colorRelationship); pass('color relationship runtime syntax'); }
 catch(e){ fail('color relationship runtime syntax: '+e.message); }
+try { new Function(roleScale); pass('role scale runtime syntax'); }
+catch(e){ fail('role scale runtime syntax: '+e.message); }
 
 
 const forbiddenPatterns=[
@@ -108,13 +112,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2210")) fail('service worker cache version is not V2.21.0');
+if(!sw.includes("color-lab-v2220")) fail('service worker cache version is not V2.22.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.21.0') fail('package version must be 2.21.0');
+if(pkg.version!=='2.22.0') fail('package version must be 2.22.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.21.0')||!html.includes('<div class="version">V2.21.0</div>')||!html.includes("appVersion:'2.21.0'")) fail('V2.21.0 UI or backup version metadata missing');
-else pass('V2.21.0 version metadata');
+if(!html.includes('Color Lab V2.22.0')||!html.includes('<div class="version">V2.22.0</div>')||!html.includes("appVersion:'2.22.0'")) fail('V2.22.0 UI or backup version metadata missing');
+else pass('V2.22.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -298,6 +302,23 @@ if(!appSource.includes("ratio:75")||!appSource.includes("ratio:18")||!appSource.
    !appSource.includes("只讀分析 · 使用目前 Base / Structure / Accent 原色，不重新排序、不寫回 Compose")){
   fail('V2.21.0 read-only 75/18/7 relationship contract missing');
 }else pass('V2.21.0 relationship map preserves exact role order');
+
+if(!html.includes('id="roleScaleDetails"')||!html.includes('id="roleScale"')||!html.includes('id="copyRoleScaleCss"')||
+   !html.includes('<script src="./runtime/role-scale.js"></script>')||
+   !html.includes('<link rel="stylesheet" href="./runtime/role-scale.css">')||
+   !sw.includes('./runtime/role-scale.js')||!sw.includes('./runtime/role-scale.css')||
+   !appSource.includes('function roleScaleFor(')||!appSource.includes('function roleScaleSystem(')||
+   !appSource.includes('function roleScaleCssText(')||!appSource.includes('function renderRoleScale(')||
+   !roleScaleCss.includes('.rscale-strip{')||!roleScaleCss.includes('.rscale-swatch.source{')){
+  fail('V2.22.0 Role Scale runtime + UI contract missing');
+}else pass('V2.22.0 Role Scale runtime + UI');
+
+if(!appSource.includes('const ROLE_SCALE_STOPS=[50,100,200,300,400,500,600,700,800,900]')||
+   !appSource.includes("if(i===anchor)return{stop,hex:source,source:true")||
+   !appSource.includes("--color-'+key+'-source: '+normHex(system[key].source)")||
+   roleScale.includes('selectedColors=')||roleScale.includes('palette.base=')||roleScale.includes('palette.structure=')||roleScale.includes('palette.accent=')){
+  fail('V2.22.0 exact-source anchor or read-only scale contract missing');
+}else pass('V2.22.0 exact source anchors + derived-only scales');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||

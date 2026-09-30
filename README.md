@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.21.0**
+**目前版本：V2.22.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,19 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.22.0 Role Scale / Tonal System
+
+把三個原色延伸成真正可用於產品介面與品牌系統的色階，同時維持 Color Lab 最重要的 source-color 契約：
+
+- Base / Structure / Accent 各自產生 50–900 共 10 階的 derived tonal ladder
+- 使用者目前 exact HEX 依其 OKLCH Lightness 找到最合理的 anchor stop，該 stop 直接保留原色，不重新計算
+- anchor 上下的色階只調整 OKLCH Lightness 與逐步 chroma restraint，再經既有 sRGB gamut mapping
+- 每個角色永遠只有一個 exact-source anchor；Derived scale 不會回寫 Compose、收藏、Photo 或 Professional Export
+- 額外提供 Surface subtle / Surface / Border / Text / CTA / CTA hover 的建議 token mapping，讓三色更容易進入真實 UI
+- Role Scale 收在「深入理解」裡的第二層 disclosure，不增加首頁資訊密度
+- 可複製完整 Role Scale CSS，並另外輸出 `--color-base-source` / `structure-source` / `accent-source`，明確區分原色與衍生色
+- runtime / stylesheet 完全本機並加入 Service Worker offline cache
 
 ## V2.21.0 Color Relationship Map
 
@@ -464,7 +477,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v2210-color-relationship-map`
+目前 cache generation：`color-lab-v2220-role-scale`
 
 ## Quality Gates
 
