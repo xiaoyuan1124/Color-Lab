@@ -2187,7 +2187,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.15.0</div>
+    <div class="version">V2.16.0</div>
   </div>
 
   <main class="app-main">
@@ -2492,7 +2492,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.15.0</div>
+  <div class="footer app-footer">Color Lab V2.16.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -3046,7 +3046,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.15.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.16.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -3817,40 +3817,49 @@ function paletteAestheticCore(colors){
   const lightSpread=Math.max(...lights)-Math.min(...lights);
   const lightRhythm=clamp(lightSpread/.28)*(1-clamp((lightSpread-.82)/.15));
   const roleContrast=clamp((contrastRatio(colors[0],colors[1])-1.35)/3.8);
-  const highChroma=chromas.filter(c=>c>.16).length;
-  const chromaDiscipline=Math.max(...chromas)<.10?.90:(highChroma<=1?1:(highChroma===2?.72:.38));
   const related=1-clamp((huePairs[0]-55)/75);
   const separated=clamp((huePairs[2]-55)/105);
   const bridge=related*.58+separated*.42;
   const analogous=clamp((80-huePairs[2])/55)*.95;
-  const triadic=huePairs[0]>=70&&huePairs[2]<=150?.72:0;
+  const triadic=huePairs[0]>=70&&huePairs[2]<=150?.78:0;
   const hueStructure=Math.max(bridge,analogous,triadic);
-  const accentDistance=Math.min(perceptualDistance(colors[2],colors[0]),perceptualDistance(colors[2],colors[1]));
+  const distances=[
+    perceptualDistance(colors[0],colors[1]),
+    perceptualDistance(colors[0],colors[2]),
+    perceptualDistance(colors[1],colors[2])
+  ];
+  const averageDistance=distances.reduce((a,b)=>a+b,0)/3;
+  const roleClarity=clamp((averageDistance-.055)/.22)*(1-clamp((averageDistance-.68)/.22));
+  const accentDistance=Math.min(distances[1],distances[2]);
   const accentIntent=clamp((accentDistance-.035)/.17)*(1-clamp((accentDistance-.60)/.25));
-  const supportCalm=1-clamp((p[0].c+p[1].c-.26)/.22);
+  const averageChroma=chromas.reduce((a,b)=>a+b,0)/3;
+  const chromaRange=Math.max(...chromas)-Math.min(...chromas);
+  const energy=clamp((averageChroma-.075)/.14);
+  const energyStructure=clamp(lightRhythm*.30+roleContrast*.22+hueStructure*.25+accentIntent*.13+roleClarity*.10);
+  const chromaIntent=clamp(.72+(energyStructure-.5)*.42*energy+(roleClarity-.45)*.18);
+  const vividIntent=energy*energyStructure;
   let penalty=0;
-  if(highChroma>=3&&huePairs[0]>55)penalty+=.18;
-  else if(highChroma===2&&huePairs[0]>70)penalty+=.08;
-  if(lightSpread<.10&&Math.max(...chromas)-Math.min(...chromas)<.05)penalty+=.12;
-  penalty+=clamp((chromas.reduce((a,b)=>a+b,0)-.42)/.30)*.18;
-  if(p[0].c>.22&&p[1].c>.22)penalty+=.12;
+  if(lightSpread<.10&&chromaRange<.05)penalty+=.12;
+  if(roleClarity<.20)penalty+=( .20-roleClarity)*.42;
+  penalty+=clamp((averageChroma-.21)/.12)*(1-energyStructure)*.14;
   const score=clamp(
-    lightRhythm*.18+
-    roleContrast*.17+
-    chromaDiscipline*.16+
-    hueStructure*.18+
-    accentIntent*.14+
-    supportCalm*.07+
-    .10-
+    lightRhythm*.16+
+    roleContrast*.16+
+    chromaIntent*.16+
+    hueStructure*.17+
+    accentIntent*.13+
+    roleClarity*.10+
+    vividIntent*.04+
+    .08-
     penalty
   );
-  return{score,lightRhythm,roleContrast,chromaDiscipline,hueStructure,accentIntent,supportCalm,penalty};
+  return{score,lightRhythm,roleContrast,chromaIntent,hueStructure,accentIntent,roleClarity,energy,energyStructure,vividIntent,penalty};
 }
 function laneAestheticPrior(lane){
-  return({editorial:.97,atmospheric:1,fashion:.98,expressive:.88,unexpected:.82})[lane]||.9;
+  return({editorial:.98,atmospheric:.98,fashion:1,expressive:.98,unexpected:.96})[lane]||.96;
 }
 function laneAestheticFloor(lane){
-  return({editorial:.60,atmospheric:.61,fashion:.60,expressive:.55,unexpected:.52})[lane]||.58;
+  return({editorial:.60,atmospheric:.60,fashion:.60,expressive:.56,unexpected:.54})[lane]||.58;
 }
 function aestheticReferenceAffinity(colors){
   const target=relationVector(colors);if(!target)return 0;
