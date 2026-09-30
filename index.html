@@ -10,6 +10,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="./runtime/context-preview.css">
 <link rel="stylesheet" href="./runtime/photo-palette.css">
+<link rel="stylesheet" href="./runtime/color-relationship.css">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Color Lab</title>
 <style>
@@ -2210,7 +2211,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.20.0</div>
+    <div class="version">V2.21.0</div>
   </div>
 
   <main class="app-main">
@@ -2292,6 +2293,11 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
                 <strong id="learningTitle"></strong>
                 <p id="learningText"></p>
               </div>
+            </div>
+
+            <div class="color-relationship-lab">
+              <div class="micro-head"><span>Color Relationship Map</span><span>只讀 · 原色</span></div>
+              <div class="color-relationship-map" id="colorRelationshipMap" aria-live="polite"></div>
             </div>
 
             <div class="tone-explorer">
@@ -2538,7 +2544,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.20.0</div>
+  <div class="footer app-footer">Color Lab V2.21.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2631,6 +2637,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true">已複製</div>
 
 <script src="./runtime/palette-tools.js"></script>
+<script src="./runtime/color-relationship.js"></script>
 <script src="./runtime/tone-explorer.js"></script>
 <script>
 const MODES={
@@ -3093,7 +3100,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.20.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.21.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -4819,7 +4826,7 @@ function render(){
   [['base','75'],['structure','18'],['accent','7']].forEach(([k,t])=>{const d=document.createElement('div');d.style.background=palette[k];d.style.color=textFor(palette[k]);d.innerHTML=`<span>${t}</span>`;pv.appendChild(d)});
   renderPaletteHealth();
   const deep=$('#composeDeepDive');
-  if(deep?.open){renderRelationshipExplanation();renderToneExplorer();renderPaletteValidation();}
+  if(deep?.open){renderRelationshipExplanation();renderColorRelationshipMap();renderToneExplorer();renderPaletteValidation();}
   scheduleSecondaryRender();
 }
 function scheduleSecondaryRender(){
@@ -4829,7 +4836,7 @@ function scheduleSecondaryRender(){
     const active=document.querySelector('.tab-view.active')?.dataset.view||'compose';
     if(active==='compose'){
       const deep=$('#composeDeepDive');
-      if(deep?.open){renderVision();renderToneExplorer();renderPaletteValidation();renderContextPreview()}
+      if(deep?.open){renderVision();renderColorRelationshipMap();renderToneExplorer();renderPaletteValidation();renderContextPreview()}
     }else if(active==='inspire'){
       ensureInspirationResources().then(()=>{if(token===secondaryRenderToken){renderIdeas();renderRecommendations()}});
     }
@@ -5484,7 +5491,7 @@ function switchTab(name,scrollTop=true){
     ensureInspirationResources().then(()=>requestAnimationFrame(()=>{renderIdeas();renderRecommendations()}));
   }
   if(name==='compose'&&$('#composeDeepDive')?.open)requestAnimationFrame(()=>{
-    renderRelationshipExplanation();renderToneExplorer();renderVision();renderContextPreview();
+    renderRelationshipExplanation();renderColorRelationshipMap();renderToneExplorer();renderVision();renderContextPreview();
   });
   setCornerNavOpen(false);
   if(scrollTop){
@@ -5595,7 +5602,7 @@ $('#libraryFolderFilter').addEventListener('change',e=>{libraryFolderFilter=e.ta
 $('#comboName').addEventListener('input',e=>{currentComboName=e.target.value;persistDraft()});
 $('#composeDeepDive').addEventListener('toggle',e=>{
   if(e.currentTarget.open)requestAnimationFrame(()=>{
-    renderRelationshipExplanation();renderToneExplorer();renderPaletteValidation();renderVision();renderContextPreview();
+    renderRelationshipExplanation();renderColorRelationshipMap();renderToneExplorer();renderPaletteValidation();renderVision();renderContextPreview();
   });
 });
 renderModes();palette=fastInitialPalette();renderComboSlots();render();updateLockToggle();

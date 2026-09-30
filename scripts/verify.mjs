@@ -5,7 +5,9 @@ const paletteTools=fs.readFileSync('runtime/palette-tools.js','utf8');
 const toneExplorer=fs.readFileSync('runtime/tone-explorer.js','utf8');
 const photoPalette=fs.readFileSync('runtime/photo-palette.js','utf8');
 const photoPaletteCss=fs.readFileSync('runtime/photo-palette.css','utf8');
-const appSource=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette;
+const colorRelationship=fs.readFileSync('runtime/color-relationship.js','utf8');
+const colorRelationshipCss=fs.readFileSync('runtime/color-relationship.css','utf8');
+const appSource=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship;
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -30,6 +32,8 @@ try { new Function(toneExplorer); pass('tone explorer runtime syntax'); }
 catch(e){ fail('tone explorer runtime syntax: '+e.message); }
 try { new Function(photoPalette); pass('photo palette runtime syntax'); }
 catch(e){ fail('photo palette runtime syntax: '+e.message); }
+try { new Function(colorRelationship); pass('color relationship runtime syntax'); }
+catch(e){ fail('color relationship runtime syntax: '+e.message); }
 
 
 const forbiddenPatterns=[
@@ -104,13 +108,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2200")) fail('service worker cache version is not V2.20.0');
+if(!sw.includes("color-lab-v2210")) fail('service worker cache version is not V2.21.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.20.0') fail('package version must be 2.20.0');
+if(pkg.version!=='2.21.0') fail('package version must be 2.21.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.20.0')||!html.includes('<div class="version">V2.20.0</div>')||!html.includes("appVersion:'2.20.0'")) fail('V2.20.0 UI or backup version metadata missing');
-else pass('V2.20.0 version metadata');
+if(!html.includes('Color Lab V2.21.0')||!html.includes('<div class="version">V2.21.0</div>')||!html.includes("appVersion:'2.21.0'")) fail('V2.21.0 UI or backup version metadata missing');
+else pass('V2.21.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -277,6 +281,23 @@ if(!appSource.includes("data.palette.base")||
    !appSource.includes("name:safe+'.swift'")){
   fail('V2.20.0 exact-color handoff contract missing');
 }else pass('V2.20.0 exact source-color professional handoff');
+
+if(!html.includes('id="colorRelationshipMap"')||
+   !html.includes('<script src="./runtime/color-relationship.js"></script>')||
+   !html.includes('<link rel="stylesheet" href="./runtime/color-relationship.css">')||
+   !sw.includes('./runtime/color-relationship.js')||!sw.includes('./runtime/color-relationship.css')||
+   !appSource.includes('function renderColorRelationshipMap(')||
+   !appSource.includes('function relationshipVerdict(')||
+   !appSource.includes('function relationshipHuePoint(')||
+   !colorRelationshipCss.includes('.crm-wheel{')||
+   !colorRelationshipCss.includes('.crm-role-weight{')){
+  fail('V2.21.0 Color Relationship Map contract missing');
+}else pass('V2.21.0 Color Relationship Map runtime + UI');
+
+if(!appSource.includes("ratio:75")||!appSource.includes("ratio:18")||!appSource.includes("ratio:7")||
+   !appSource.includes("只讀分析 · 使用目前 Base / Structure / Accent 原色，不重新排序、不寫回 Compose")){
+  fail('V2.21.0 read-only 75/18/7 relationship contract missing');
+}else pass('V2.21.0 relationship map preserves exact role order');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
