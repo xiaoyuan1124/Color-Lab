@@ -556,9 +556,9 @@ if(!html.includes('<script src="./runtime/storage-hardening.js"></script>')||
   fail('V2.30.0 storage hardening runtime contract missing');
 }else pass('V2.30.0 safe local storage runtime + offline cache');
 
-if(!html.includes("const savedState=storageJsonState('colorlab.saved',Array.isArray)")||
-   !html.includes("const projectsState=storageJsonState(LOCAL_PROJECTS_KEY,Array.isArray)")||
-   !html.includes("const needsSaved=savedState.status!=='valid'")||
+if(!storageHardening.includes('function storageNeedsRecovery(')||
+   !html.includes("const needsProjects=storageNeedsRecovery(LOCAL_PROJECTS_KEY,Array.isArray)")||
+   !html.includes("const needsSaved=storageNeedsRecovery('colorlab.saved',Array.isArray)")||
    html.includes('const needsSaved=currentSaved.length===0')||
    !html.includes("storageTransaction(keys,()=>")||
    !localProjects.includes("storageTransaction(['colorlab.saved',LOCAL_PROJECTS_KEY]")||
