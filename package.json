@@ -9,10 +9,19 @@
     "test:property": "node scripts/property.mjs",
     "audit:lighthouse": "lhci autorun --config=lighthouserc.cjs",
     "test:budget": "node scripts/budget.mjs",
-    "test:visual": "node scripts/visual-audit.mjs"
+    "test:visual": "node scripts/visual-audit.mjs",
+    "test:e2e": "playwright test tests/e2e/color-lab.spec.js",
+    "test:a11y": "playwright test tests/e2e/accessibility.spec.js",
+    "test:visual-regression": "playwright test tests/e2e/visual-regression.spec.js",
+    "test:browser:core": "playwright test tests/e2e/color-lab.spec.js tests/e2e/accessibility.spec.js",
+    "test:browser": "playwright test"
   },
   "devDependencies": {
     "@lhci/cli": "0.15.1",
-    "fast-check": "4.10.2"
+    "fast-check": "4.10.2",
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.63.0",
+    "pixelmatch": "7.2.0",
+    "pngjs": "7.0.0"
   }
 }
