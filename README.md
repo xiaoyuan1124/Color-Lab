@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.18.0**
+**目前版本：V2.19.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,23 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.19.0 Photo → Palette 2.0
+
+照片功能從「找主要色」進一步變成可以直接形成 75 / 18 / 7 三色系統：
+
+- 保留原本精準單點取色與區域分析，不犧牲 pixel-level 手動控制
+- 新增 Balanced / Muted / Vivid 三種三色抽取策略
+- Balanced：兼顧照片主體占比、明暗分工、感知距離與焦點彩度
+- Muted：優先較克制的 chroma，但仍要求三色有足夠 perceptual distance
+- Vivid：把高彩、與主體／結構有距離、且不是大面積邊緣背景的顏色優先放到 7% Focus
+- 三色直接映射為「主體 75 / 結構 18 / 焦點 7」，並在套用前顯示比例預覽
+- 策略只從照片實際偵測到的 cluster 選色，不憑空生成新顏色
+- 新增第二層 perceptual dedupe，減少 RGB 不同但肉眼幾乎相同的候選
+- 五個既有語意色票仍保留，可繼續單獨點選加入目前 Color Slot
+- 只有按「使用照片三色」才會寫入 Compose；策略切換本身不修改 palette
+- 策略偏好只保存在 localStorage，所有照片分析仍完全在裝置端
+- `runtime/photo-palette.js` 與 `runtime/photo-palette.css` 都加入 Service Worker 離線快取
 
 ## V2.18.0 Context Preview 2.0
 
@@ -420,7 +437,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v2180-context-preview-2`
+目前 cache generation：`color-lab-v2190-photo-palette-2`
 
 ## Quality Gates
 

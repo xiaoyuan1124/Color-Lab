@@ -1,0 +1,19 @@
+/* Color Lab V2.19 Photo -> Palette 2.0 */
+.photo-strategy-bar{display:flex;align-items:center;gap:5px;margin:12px 0 14px;overflow-x:auto;scrollbar-width:none}
+.photo-strategy-bar::-webkit-scrollbar{display:none}
+.photo-strategy-bar button{border:0;background:transparent;color:var(--muted);font-size:11px;font-weight:700;min-height:36px;padding:0 10px;border-radius:999px;white-space:nowrap}
+.photo-strategy-bar button.active{background:rgba(104,112,94,.10);color:var(--olive-12)}
+.photo-palette-preview{margin:4px 0 14px;padding:12px 0;border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline)}
+.photo-palette-preview[hidden]{display:none}
+.photo-palette-preview-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+.photo-palette-preview-head strong{font-size:11px}.photo-palette-preview-head span{font-size:10px;color:var(--text-3);text-align:right}
+.photo-palette-ratio{display:grid;grid-template-columns:75fr 18fr 7fr;height:62px;overflow:hidden;border-radius:14px}
+.photo-palette-ratio i{display:block;position:relative;font-style:normal}
+.photo-palette-ratio b{position:absolute;left:8px;bottom:7px;font-size:9px;letter-spacing:.08em}
+.photo-palette-role-row{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}
+.photo-palette-role-row span{font-size:9px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.photo-use-palette{margin-top:10px}
+@media(max-width:390px){
+  .photo-palette-role-row{grid-template-columns:1fr}
+  .photo-palette-preview-head{align-items:flex-start;flex-direction:column}
+}

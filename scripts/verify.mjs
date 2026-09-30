@@ -3,7 +3,9 @@ import fs from 'node:fs';
 const html=fs.readFileSync('index.html','utf8');
 const paletteTools=fs.readFileSync('runtime/palette-tools.js','utf8');
 const toneExplorer=fs.readFileSync('runtime/tone-explorer.js','utf8');
-const appSource=html+'\n'+paletteTools+'\n'+toneExplorer;
+const photoPalette=fs.readFileSync('runtime/photo-palette.js','utf8');
+const photoPaletteCss=fs.readFileSync('runtime/photo-palette.css','utf8');
+const appSource=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette;
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -25,6 +27,8 @@ try { new Function(paletteTools); pass('palette tools runtime syntax'); }
 catch(e){ fail('palette tools runtime syntax: '+e.message); }
 try { new Function(toneExplorer); pass('tone explorer runtime syntax'); }
 catch(e){ fail('tone explorer runtime syntax: '+e.message); }
+try { new Function(photoPalette); pass('photo palette runtime syntax'); }
+catch(e){ fail('photo palette runtime syntax: '+e.message); }
 
 
 const forbiddenPatterns=[
@@ -99,13 +103,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2180")) fail('service worker cache version is not V2.18.0');
+if(!sw.includes("color-lab-v2190")) fail('service worker cache version is not V2.19.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.18.0') fail('package version must be 2.18.0');
+if(pkg.version!=='2.19.0') fail('package version must be 2.19.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.18.0')||!html.includes('<div class="version">V2.18.0</div>')||!html.includes("appVersion:'2.18.0'")) fail('V2.18.0 UI or backup version metadata missing');
-else pass('V2.18.0 version metadata');
+if(!html.includes('Color Lab V2.19.0')||!html.includes('<div class="version">V2.19.0</div>')||!html.includes("appVersion:'2.19.0'")) fail('V2.19.0 UI or backup version metadata missing');
+else pass('V2.19.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -219,6 +223,38 @@ if(!appSource.includes("labels={app:'App / Web',brand:'品牌',room:'室內',out
    !appSource.includes("Dark 預覽變體 · 不改原色")){
   fail('V2.18.0 realistic context scene contract missing');
 }else pass('V2.18.0 five realistic 75/18/7 contexts');
+
+if(!html.includes('id="photoStrategyBar"')||
+   !html.includes('data-photo-strategy="balanced"')||
+   !html.includes('data-photo-strategy="muted"')||
+   !html.includes('data-photo-strategy="vivid"')||
+   !html.includes('id="photoPalettePreview"')||
+   !html.includes('<script src="./runtime/photo-palette.js"></script>')||
+   !html.includes('<link rel="stylesheet" href="./runtime/photo-palette.css">')||
+   !sw.includes('./runtime/photo-palette.js')||
+   !sw.includes('./runtime/photo-palette.css')){
+  fail('V2.19.0 Photo to Palette 2.0 UI/runtime contract missing');
+}else pass('V2.19.0 Photo to Palette 2.0 UI + offline runtime');
+
+if(!appSource.includes('function photoDistinctClusters(')||
+   !appSource.includes('function photoPaletteSelection(')||
+   !appSource.includes("style==='muted'")||
+   !appSource.includes("style==='vivid'")||
+   !appSource.includes("roles:[")||
+   !appSource.includes("label:'主體'")||
+   !appSource.includes("label:'結構'")||
+   !appSource.includes("label:'焦點'")||
+   !appSource.includes('photoPalette-ratio')||
+   !photoPaletteCss.includes('.photo-palette-ratio{')){
+  fail('V2.19.0 semantic photo trio contract missing');
+}else pass('V2.19.0 Balanced / Muted / Vivid semantic trio');
+
+if(!appSource.includes("selectedColors=[...colors]")||
+   !appSource.includes("photoPaletteSelection(lastPhotoClusters,lastPhotoRoles,photoPaletteStyle)")||
+   !appSource.includes("perceptualDistance(x.hex,item.hex)>=threshold")||
+   !appSource.includes("localStorage.setItem('colorlab.photoPaletteStyle'")){
+  fail('V2.19.0 explicit apply / perceptual dedupe contract missing');
+}else pass('V2.19.0 explicit apply + perceptual dedupe');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
