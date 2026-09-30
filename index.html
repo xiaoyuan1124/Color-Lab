@@ -2217,7 +2217,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.28.0</div>
+    <div class="version">V2.29.0</div>
   </div>
 
   <main class="app-main">
@@ -2365,8 +2365,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
               <div class="real-preview" id="uiPreview"></div>
             </div>
 
-            <div id="gradientStudioMount"></div>
-            <div id="customDesignMount"></div>
+            <div id="gradientStudioMount"></div><div id="customDesignMount"></div>
 
           </div>
         </details>
@@ -2565,7 +2564,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.28.0</div>
+  <div class="footer app-footer">Color Lab V2.29.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -3124,7 +3123,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v5',appVersion:'2.28.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.29.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -5596,6 +5595,7 @@ $('#copyPalette').onclick=()=>{navigator.clipboard?.writeText(paletteText()).the
 $('#sharePalette').onclick=openShareSnapshot;
 $$('[data-preview-theme]').forEach(b=>b.addEventListener('click',()=>setPreviewTheme(b.dataset.previewTheme)));
 $$('[data-validation-theme]').forEach(b=>b.addEventListener('click',()=>setValidationTheme(b.dataset.validationTheme)));
+initCrossPlatformHandoff();
 $$('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
 $('#librarySearch').addEventListener('input',renderSaved);
 $('#librarySort').value=librarySort;

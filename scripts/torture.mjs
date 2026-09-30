@@ -413,6 +413,21 @@ check('V2.28 gradient studio remains local-only',
   gradientStudio.includes("colorlab.gradientPair")&&
   gradientStudio.includes("colorlab.gradientAngle"),
   'only UI preferences are stored locally');
+check('V2.29 cross-platform handoff formats are present',
+  paletteTools.includes("if(kind==='scss')")&&
+  paletteTools.includes("if(kind==='flutter')")&&
+  paletteTools.includes("if(kind==='jetpack')")&&
+  paletteTools.includes("name:safe+'.scss'")&&
+  paletteTools.includes("name:safe+'.dart'")&&
+  paletteTools.includes("name:safe+'.kt'"),
+  'scss flutter and jetpack exports ship together');
+check('V2.29 framework handoff stays exact-source',
+  paletteTools.includes('function paletteArtifact(kind){')&&
+  paletteTools.includes('const data=paletteArtifactBase()')&&
+  paletteTools.includes("'$color-base: '+data.palette.base")&&
+  paletteTools.includes("'  static const Color base = Color(0xFF'+data.palette.base.slice(1)")&&
+  paletteTools.includes("'val ColorLabBase = Color(0xFF'+data.palette.base.slice(1)"),
+  'framework formats read the source handoff directly');
 
 check('V2.18 context preview ships five realistic scene contracts',
   appText.includes('class="cp2 cp2-app"')&&

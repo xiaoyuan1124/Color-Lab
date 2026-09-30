@@ -139,13 +139,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2280")) fail('service worker cache version is not V2.28.0');
+if(!sw.includes("color-lab-v2290")) fail('service worker cache version is not V2.29.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.28.0') fail('package version must be 2.28.0');
+if(pkg.version!=='2.29.0') fail('package version must be 2.29.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.28.0')||!html.includes('<div class="version">V2.28.0</div>')||!html.includes("appVersion:'2.28.0'")) fail('V2.28.0 UI or backup version metadata missing');
-else pass('V2.28.0 version metadata');
+if(!html.includes('Color Lab V2.29.0')||!html.includes('<div class="version">V2.29.0</div>')||!html.includes("appVersion:'2.29.0'")) fail('V2.29.0 UI or backup version metadata missing');
+else pass('V2.29.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -522,6 +522,26 @@ if(!gradientStudio.includes('const source=paletteArtifactBase()')||
    gradientStudio.includes('fetch(')||gradientStudio.includes('XMLHttpRequest')){
   fail('V2.28.0 exact-source / preview-only / local Gradient contract missing');
 }else pass('V2.28.0 exact source gradients + preview-only CSS handoff');
+
+if(!html.includes('initCrossPlatformHandoff();')||
+   !paletteTools.includes('function initCrossPlatformHandoff(')||
+   !paletteTools.includes("[['scss','SCSS'],['flutter','Flutter'],['jetpack','Jetpack']]")||
+   !paletteTools.includes("button.dataset.exportFormat=kind")||
+   !paletteTools.includes("if(kind==='scss')")||
+   !paletteTools.includes("if(kind==='flutter')")||
+   !paletteTools.includes("if(kind==='jetpack')")||
+   !paletteTools.includes("name:safe+'.scss'")||
+   !paletteTools.includes("name:safe+'.dart'")||
+   !paletteTools.includes("name:safe+'.kt'")){
+  fail('V2.29.0 cross-platform handoff format contract missing');
+}else pass('V2.29.0 SCSS / Flutter / Jetpack formats');
+
+if(!paletteTools.includes("'$color-base: '+data.palette.base")||
+   !paletteTools.includes("'  static const Color base = Color(0xFF'+data.palette.base.slice(1)")||
+   !paletteTools.includes("'val ColorLabBase = Color(0xFF'+data.palette.base.slice(1)")||
+   !paletteTools.includes("const data=paletteArtifactBase()")){
+  fail('V2.29.0 exact-source framework handoff contract missing');
+}else pass('V2.29.0 framework handoff uses exact source palette');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
