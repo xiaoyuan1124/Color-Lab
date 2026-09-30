@@ -1043,3 +1043,23 @@ test('V2.26 project picker assigns a saved palette while preserving palette data
   expect(after.projectId).toBe('prj-brand01');
   expect(after.palette).toEqual(before);
 });
+
+
+test('V2.26 backup dedupe preserves imported project assignment on an existing palette', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    const current=[sanitizeSavedRecord({
+      name:'Same Palette',projectId:'',
+      palette:{base:'#112233',structure:'#445566',accent:'#AABBCC'},
+      selectedColors:['#112233','#445566','#AABBCC'],mode:'quiet',date:1
+    })];
+    const imported=[sanitizeSavedRecord({
+      name:'Same Palette',projectId:'prj-import1',
+      palette:{base:'#112233',structure:'#445566',accent:'#AABBCC'},
+      selectedColors:['#112233','#445566','#AABBCC'],mode:'quiet',date:2
+    })];
+    return mergeSavedPaletteRecords(current,imported);
+  });
+  expect(result).toHaveLength(1);
+  expect(result[0].projectId).toBe('prj-import1');
+  expect(result[0].palette).toEqual({base:'#112233',structure:'#445566',accent:'#AABBCC'});
+});
