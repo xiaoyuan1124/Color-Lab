@@ -1,0 +1,28 @@
+/* Color Lab V2.22 Role Scale */
+.role-scale-lab{border-top:1px solid var(--line);padding-top:4px}
+.role-scale-lab>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 0;cursor:pointer}
+.role-scale-lab>summary::-webkit-details-marker{display:none}
+.role-scale-lab>summary span:first-child{display:grid;gap:3px}
+.role-scale-lab>summary b{font-size:11px;letter-spacing:.04em}
+.role-scale-lab>summary small{font-size:9px;color:var(--muted);font-weight:500}
+.role-scale-lab>summary .rscale-mark{font-size:18px;font-weight:300;transition:transform .18s ease}
+.role-scale-lab[open]>summary .rscale-mark{transform:rotate(45deg)}
+.role-scale-body{padding:4px 0 10px}
+.rscale-roles{display:grid;gap:14px}
+.rscale-role{display:grid;gap:6px}
+.rscale-role-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.rscale-role-head strong{font-size:10px;text-transform:uppercase;letter-spacing:.09em}
+.rscale-role-head span{font-size:8px;color:var(--muted)}
+.rscale-strip{display:flex;min-height:48px;overflow:hidden;border-radius:12px;border:1px solid var(--line)}
+.rscale-swatch{flex:1 1 0;min-width:0;border:0;padding:6px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.rscale-swatch b{font-size:7px}.rscale-swatch span{font-size:6px;font-weight:800}
+.rscale-swatch.source{outline:2px solid var(--ink);outline-offset:-3px;z-index:1}
+.rscale-usage{margin-top:16px;padding-top:12px;border-top:1px solid var(--line);display:grid}
+.rscale-usage-head{font-size:9px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;padding-bottom:6px}
+.rscale-usage-head span{float:right;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:500}
+.rscale-token{display:grid;grid-template-columns:10px 1fr auto auto;gap:7px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:9px}
+.rscale-token:last-child{border-bottom:0}.rscale-token i{width:10px;height:10px;border-radius:50%}.rscale-token b{font-size:8px}.rscale-token code{font-size:8px;color:var(--muted)}
+.rscale-actions{display:flex;justify-content:flex-end;margin-top:10px}
+.rscale-copy{border:0;background:transparent;color:var(--ink);font-size:10px;font-weight:700;padding:8px 0}
+.rscale-note{margin-top:8px;font-size:8px;line-height:1.5;color:var(--muted)}
+@media(max-width:390px){.rscale-strip{overflow-x:auto}.rscale-swatch{flex:0 0 31px}.rscale-token{grid-template-columns:10px 1fr auto}.rscale-token code{grid-column:2/4}}
