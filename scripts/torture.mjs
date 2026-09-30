@@ -8,7 +8,8 @@ const photoPalette=fs.readFileSync('runtime/photo-palette.js','utf8');
 const colorRelationship=fs.readFileSync('runtime/color-relationship.js','utf8');
 const roleScale=fs.readFileSync('runtime/role-scale.js','utf8');
 const shareSnapshot=fs.readFileSync('runtime/share-snapshot.js','utf8');
-const appText=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot;
+const visionAccessibility=fs.readFileSync('runtime/vision-accessibility.js','utf8');
+const appText=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+visionAccessibility;
 const toneSource=fs.readFileSync('data/tone-families.js','utf8');
 const inlineScripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
 const scriptMatch=inlineScripts.at(-1);
@@ -29,6 +30,8 @@ try{new Function(roleScale)}
 catch(e){console.error('FAIL role scale runtime syntax',e.message);process.exit(1)}
 try{new Function(shareSnapshot)}
 catch(e){console.error('FAIL share snapshot runtime syntax',e.message);process.exit(1)}
+try{new Function(visionAccessibility)}
+catch(e){console.error('FAIL vision accessibility runtime syntax',e.message);process.exit(1)}
 
 function findFunctionBodyOpen(start){
   const paramsOpen=source.indexOf('(',start);
@@ -326,6 +329,19 @@ check('V2.19 strategy apply stays explicit',
   !appText.includes('selectedColors=photoPaletteSelection('),
   'selection only writes inside usePhotoPalette');
 
+check('V2.25 vision simulation remains preview-first',
+  visionAccessibility.includes('function visionAnalysis(')&&
+  visionAccessibility.includes('function visionMinimalFix(')&&
+  visionAccessibility.includes('visionFixPreview=')&&
+  visionAccessibility.includes('function applyVisionSuggestion(')&&
+  paletteTools.includes('visionContextPalette(sourceP,visionMode)'),
+  'conflict detection, preview state, explicit apply and context sync present');
+check('V2.25 vision thresholds remain explicit and bounded',
+  visionAccessibility.includes('VISION_CONFLICT_LIMIT=.055')&&
+  visionAccessibility.includes('VISION_WATCH_LIMIT=.09')&&
+  visionAccessibility.includes('VISION_FIX_TARGET=.095'),
+  'CVD separation thresholds stay explicit');
+
 check('V2.18 context preview ships five realistic scene contracts',
   appText.includes('class="cp2 cp2-app"')&&
   appText.includes('class="cp2 cp2-brand"')&&
@@ -337,10 +353,16 @@ check('V2.18 room and outfit remain source-color previews',
   appText.includes("const themed=['app','brand','slides'].includes(previewContext)")&&
   appText.includes("!themed?'原色情境 · 75 / 18 / 7'"),
   'only app/brand/slides use derived theme');
+const contextPreviewStart=paletteTools.indexOf('function renderContextPreview(){');
+const contextPreviewEnd=paletteTools.indexOf('\ndocument.addEventListener',contextPreviewStart);
+const contextPreviewBlock=contextPreviewStart>=0&&contextPreviewEnd>contextPreviewStart
+  ?paletteTools.slice(contextPreviewStart,contextPreviewEnd):'';
 check('V2.18 context preview stays non-mutating',
-  appText.includes("const p=themed?previewThemePalette():{...palette,derived:false}")&&
-  !appText.includes("palette=p.derived"),
-  'context render only reads palette');
+  contextPreviewBlock.includes("const sourceP=themed?previewThemePalette():{...palette,derived:false}")&&
+  contextPreviewBlock.includes("visionContextPalette(sourceP,visionMode)")&&
+  !/\bpalette\s*=/.test(contextPreviewBlock)&&
+  !/\bselectedColors\s*=/.test(contextPreviewBlock),
+  'context render may transform previews but never writes source palette');
 
 check('V2.17 Tone Explorer keeps preview separate from palette',
   appText.includes("toneExplorerPreview={...item,origin:toneExplorerColors()}")&&
