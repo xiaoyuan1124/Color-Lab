@@ -168,7 +168,14 @@ async function customDesignExport(){
   }
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出安全清洗後的 SVG');
 }
+function customDesignEnsureUi(){
+  const mount=document.getElementById('customDesignMount');if(!mount)return null;
+  if(document.getElementById('customDesignPreviewDetails'))return document.getElementById('customDesignPreviewDetails');
+  mount.innerHTML='<details class="custom-design-preview" id="customDesignPreviewDetails"><summary><span><b>你的 SVG 設計</b><small>把目前三個原色套進自己的 flat-color SVG</small></span><span class="cdp-mark" aria-hidden="true">＋</span></summary><div class="cdp-body"><p class="cdp-note">SVG 只在此裝置解析。系統會移除 script、事件、外部資源與不安全元素，再讓你把原始 fill / stroke 對應到 Base / Structure / Accent；預覽不會修改 Compose。</p><input id="customDesignInput" type="file" accept=".svg,image/svg+xml" hidden><div class="cdp-actions"><button type="button" id="customDesignChoose">選擇 SVG</button><button type="button" id="customDesignClear" hidden>清除</button><button type="button" id="customDesignExport" hidden>輸出套色 SVG</button></div><div class="cdp-status" id="customDesignStatus" aria-live="polite">尚未載入 SVG · 檔案只在此裝置解析</div><div class="cdp-mappings" id="customDesignMappings"></div><div class="cdp-canvas" id="customDesignCanvas" aria-live="polite"></div></div></details>';
+  return document.getElementById('customDesignPreviewDetails');
+}
 function initCustomDesignPreview(){
+  const details=customDesignEnsureUi();if(!details)return;
   if(customDesignBound)return;customDesignBound=true;
   const choose=document.getElementById('customDesignChoose'),input=document.getElementById('customDesignInput');
   const mappings=document.getElementById('customDesignMappings');
@@ -176,6 +183,7 @@ function initCustomDesignPreview(){
   input?.addEventListener('change',event=>{const file=event.target.files?.[0];if(file)customDesignLoadFile(file);event.target.value=''});
   document.getElementById('customDesignClear')?.addEventListener('click',customDesignClear);
   document.getElementById('customDesignExport')?.addEventListener('click',customDesignExport);
+  details.addEventListener('toggle',event=>{if(event.currentTarget.open)renderCustomDesignPreview()});
   mappings?.addEventListener('change',event=>{
     const select=event.target.closest?.('[data-custom-design-color]');if(!select||!customDesignState)return;
     const source=select.dataset.customDesignColor,role=select.value;
