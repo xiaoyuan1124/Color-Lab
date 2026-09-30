@@ -2822,12 +2822,10 @@ function scheduleResilienceBackup(){
 async function restoreResilienceIfNeeded(){
   try{
     const currentSaved=readSavedData();
-    const savedState=storageJsonState('colorlab.saved',Array.isArray);
-    const projectsState=storageJsonState(LOCAL_PROJECTS_KEY,Array.isArray);
     const rawPreference=safeJsonRead('colorlab.preferenceV1',null);
     const rawPreferenceEnabled=storageReadRaw('colorlab.preferenceEnabled',null);
-    const needsProjects=projectsState.status!=='valid';
-    const needsSaved=savedState.status!=='valid';
+    const needsProjects=storageNeedsRecovery(LOCAL_PROJECTS_KEY,Array.isArray);
+    const needsSaved=storageNeedsRecovery('colorlab.saved',Array.isArray);
     const needsPreference=rawPreference===null;
     const needsPreferenceEnabled=rawPreferenceEnabled===null;
 
