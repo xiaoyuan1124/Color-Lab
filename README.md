@@ -299,7 +299,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v2101-stable-candidate-session`
+目前 cache generation：`color-lab-v2110-candidate-explorer`
 
 ## Quality Gates
 
@@ -310,14 +310,18 @@ Service Worker 採用：
 1. static verification
 2. algorithm torture tests
 3. fast-check property-based tests
-4. GitHub Pages deploy
+4. Playwright Chromium 行動版 E2E
+5. axe-core serious / critical accessibility gate
+6. 部署前 Screenshot Regression：本次畫面與目前正式站做像素差異檢查
+7. GitHub Pages deploy
 
 ### Color Lab Quality
 
 - Lighthouse Performance
 - Lighthouse Accessibility
 - Lighthouse Best Practices
-- 報告保存為 GitHub Actions artifact
+- Pull Request / manual run 會額外執行 Playwright + axe-core
+- Playwright trace、失敗 screenshot、visual diff 與 Lighthouse 報告保存為 GitHub Actions artifact
 
 ### CodeQL
 
