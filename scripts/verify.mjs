@@ -327,6 +327,13 @@ if(!html.includes('id="contextThemeModes"')||
   fail('V2.12.0 Light / Dark preview contract missing');
 }else pass('V2.12.0 Light / Dark preview contract');
 
+if(!html.includes("$('#contextTabs [data-context]').forEach")||
+   !html.includes("$('#contextThemeModes [data-preview-theme]').forEach")||
+   !html.includes("$('[data-preview-theme]').forEach")||
+   !html.includes("$('[data-export-format]').forEach")){
+  fail('V2.12.0 collection controls are not bound with querySelectorAll helper');
+}else pass('V2.12.0 collection controls use querySelectorAll helper');
+
 
 if(!html.includes("base:{key:'',pool:[],index:-1,familyId:'',origin:''}")||
    !html.includes("data-candidate-mode=\"harmony\"")||
