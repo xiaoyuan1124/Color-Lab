@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.13.0**
+**目前版本：V2.13.1**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,18 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.13.1 Runtime Modularization
+
+這一版不新增產品功能，先替後續版本重新建立安全開發空間：
+
+- 將 Professional Handoff、Palette Validation、Light / Dark Context Preview 從單一 `index.html` 抽到 `runtime/palette-tools.js`
+- runtime 仍是純本地 classic script，不使用 CDN、bundler、後端或新付費服務
+- Service Worker 預快取 runtime，離線 PWA 行為不變
+- Playwright 直接驗證 runtime 已載入，CSS / JSON / Tokens、Dark Preview、可讀性矩陣仍可呼叫
+- Verify / Torture 同時檢查 inline app 與 runtime，不因拆檔失去 regression protection
+- `index.html` 從約 240 KB 降到約 231 KB，重新取得約 9 KB 的 235 KiB Size Budget 空間
+- 75 / 18 / 7、使用者原色、收藏、備份與 Local-first 契約完全不變
 
 ## V2.13.0 Palette Validation
 
@@ -338,7 +350,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v2130-palette-validation`
+目前 cache generation：`color-lab-v2131-runtime-modularization`
 
 ## Quality Gates
 
