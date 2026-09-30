@@ -1,4 +1,4 @@
-const CACHE='color-lab-v273-startup-budget';
+const CACHE='color-lab-v28-aesthetic-gate';
 const ASSETS=['./','./index.html','./manifest.json','./apple-touch-icon.png','./icon-192.png','./icon-512.png','./vendor/poline.umd.js','./vendor/iro.min.js','./vendor/Sortable.min.js','./data/fashion-palettes.js','./data/ig-style-patterns.js','./data/inspiration-atlas.js'];
 
 self.addEventListener('install',event=>{

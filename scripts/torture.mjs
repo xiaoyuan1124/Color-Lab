@@ -79,7 +79,7 @@ const functionNames=[
   'isLinearSrgbInGamut','gamutMapOKLCH','hueDistance','signedHueDelta',
   'hueToward','contrastRatio','ensureStructureContrast','cohesionPass','qualityRefineGenerated',
   'qualityMetrics','relationVector','relationVectorDistance',
-  'photoDominanceScore','semanticRolesFromClusters','photoCompositionProfile','photoPaletteFromRoles','recommendationDirection','paletteSurpriseScore',
+  'photoDominanceScore','semanticRolesFromClusters','photoCompositionProfile','photoPaletteFromRoles','recommendationDirection','paletteSurpriseScore','paletteAestheticCore','laneAestheticFloor',
   'emptyPreferenceRole','emptyPreferenceRelation','emptyPreferenceModel','sanitizePreferenceRole','sanitizePreferenceRelation','preferenceRelationMetrics','sanitizePreferenceModel',
   'preferenceRoleAffinity','preferenceRelationAffinity','preferenceRoleDescriptor','preferenceSummaryFromModel','preferenceAffinityFromModel','preferenceAffinityForSetting','preferenceModelWithPalette','preferenceHueFamily'
 ];
@@ -155,6 +155,21 @@ const midText=A.textFor('#838A7B');
 check('textFor fixes medium olive contrast regression',
   A.contrastRatio('#838A7B',midText)>=4.5,
   midText+' ratio='+A.contrastRatio('#838A7B',midText));
+
+
+const elegantEditorial=A.paletteAestheticCore(['#EFE8DC','#25282A','#C84335']).score;
+const elegantMaterial=A.paletteAestheticCore(['#D8C7A7','#275C64','#B95A37']).score;
+const rgbChaos=A.paletteAestheticCore(['#FF0000','#00FF00','#0000FF']).score;
+const neonChaos=A.paletteAestheticCore(['#FF00FF','#00FF00','#00FFFF']).score;
+check('aesthetic gate rewards disciplined editorial relation',
+  elegantEditorial>=.78&&elegantEditorial>rgbChaos+.30,
+  'editorial='+elegantEditorial+' rgb='+rgbChaos);
+check('aesthetic gate rewards material palette over neon conflict',
+  elegantMaterial>=.76&&elegantMaterial>neonChaos+.20,
+  'material='+elegantMaterial+' neon='+neonChaos);
+check('unexpected lane still has a lower but real beauty floor',
+  A.laneAestheticFloor('unexpected')<A.laneAestheticFloor('editorial')&&A.laneAestheticFloor('unexpected')>=.5,
+  A.laneAestheticFloor('unexpected')+' / '+A.laneAestheticFloor('editorial'));
 
 const quietSurprise=A.paletteSurpriseScore(['#E8E4DC','#CEC8BE','#B6B0A8']);
 const vividSurprise=A.paletteSurpriseScore(['#1F2224','#B7A2D7','#B4D63B']);

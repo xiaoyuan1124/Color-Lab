@@ -1,4 +1,4 @@
-// Color Lab Inspiration Atlas V1
+// Color Lab Inspiration Atlas V2
 // Authored relationship archetypes across editorial, interior, fashion, art and digital moods.
 // Samples encode role relationships for transfer, not claims of official brand palettes.
 window.INSPIRATION_ATLAS = [
@@ -35,5 +35,17 @@ window.INSPIRATION_ATLAS = [
   {id:"cobalt-brown-pink",lane:"unexpected",label:"鈷藍・咖啡・粉紅",novelty:.95,sample:["#2F5EAA","#674839","#E0A2B0"],note:"冷藍遇上土棕，再用粉紅做非直覺連接"},
   {id:"mustard-purple-mint",lane:"unexpected",label:"芥末・紫・薄荷",novelty:.99,sample:["#D0A22B","#694D8E","#9FD0BD"],note:"三角色彼此有距離，適合需要記憶點的畫面"},
   {id:"petrol-pink-copper",lane:"unexpected",label:"油藍・粉・銅",novelty:.90,sample:["#245B61","#DEA4B5","#B66C3E"],note:"工業冷色加柔粉，再用金屬暖色收尾"},
-  {id:"olive-cerulean-raspberry",lane:"unexpected",label:"橄欖・天青・覆盆莓",novelty:.96,sample:["#68714E","#62A9CF","#B83D68"],note:"自然色、空氣色、果實色放在同一個比例系統"}
+  {id:"olive-cerulean-raspberry",lane:"unexpected",label:"橄欖・天青・覆盆莓",novelty:.96,sample:["#68714E","#62A9CF","#B83D68"],note:"自然色、空氣色、果實色放在同一個比例系統"},
+
+
+  {id:"parchment-ink-lapis",lane:"editorial",tier:"core",label:"羊皮紙・墨藍・青金",novelty:.61,sample:["#E9E1D2","#25313A","#4D739B"],note:"暖紙底與冷墨形成穩定骨架，青金只做精準焦點"},
+  {id:"shell-aubergine-olive",lane:"editorial",tier:"core",label:"貝殼・茄紫・橄欖",novelty:.66,sample:["#E7DDD2","#503548","#7E8C5A"],note:"柔暖背景讓深紫與灰綠形成成熟的編輯關係"},
+  {id:"ivory-petrol-blush",lane:"atmospheric",tier:"core",label:"象牙・油藍・胭脂",novelty:.63,sample:["#EEE7DC","#355A5A","#D3A0A4"],note:"低彩冷綠建立深度，柔粉只留下溫度"},
+  {id:"mist-espresso-apricot",lane:"atmospheric",tier:"core",label:"晨霧・濃縮・杏桃",novelty:.57,sample:["#D7DBDD","#45342F","#D68B6C"],note:"冷霧背景配深咖啡，杏桃讓空間不顯沉重"},
+  {id:"dustyblue-tobacco-pearl",lane:"atmospheric",tier:"core",label:"灰藍・菸草・珍珠",novelty:.60,sample:["#8197A3","#6A4938","#E7DED2"],note:"冷灰藍與皮革棕互補，珍珠色負責緩衝"},
+  {id:"moss-cream-wine",lane:"fashion",tier:"core",label:"苔蘚・奶油・酒紅",novelty:.64,sample:["#606B55","#E8DEC9","#7C3C49"],note:"低彩綠與奶油建立質感，酒紅提供精準重量"},
+  {id:"charcoal-camel-ice",lane:"fashion",tier:"core",label:"炭灰・駝色・冰藍",novelty:.69,sample:["#303236","#B5895D","#B5CAD8"],note:"深灰承重，駝色與冰藍用溫度差建立時裝感"},
+  {id:"rosewood-powder-sage",lane:"fashion",tier:"core",label:"玫瑰木・粉霧・鼠尾草",novelty:.58,sample:["#6F484C","#D5B8B2","#A7B29A"],note:"同樣柔和的彩度，用紅綠溫度差而不是強衝突取勝"},
+  {id:"slate-oat-persimmon",lane:"editorial",tier:"core",label:"板岩・燕麥・柿橙",novelty:.62,sample:["#5A6670","#DED0B7","#C36A49"],note:"冷板岩與暖燕麥建立秩序，柿橙只做少量焦點"},
+  {id:"ink-sand-cobalt",lane:"fashion",tier:"core",label:"墨藍・砂金・鈷藍",novelty:.67,sample:["#25313C","#C9B995","#5573A6"],note:"深墨與砂金形成材質對比，鈷藍讓整體更當代"},
 ];

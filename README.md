@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.7.3**
+**目前版本：V2.8**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -25,10 +25,11 @@ Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把�
 2. Poline 色彩路徑
 3. Fashion Reference Library
 4. Instagram Styling Relationship Library
-5. Cohesion pass
-6. sRGB gamut protection
-7. Multi-factor quality ranking
-8. V2.3 本機偏好微調
+5. Aesthetic Gate（明暗節奏、彩度節制、色相結構、角色分工）
+6. Cohesion pass
+7. sRGB gamut protection
+8. Multi-factor quality ranking
+9. V2.3 本機偏好微調
 
 品質排序會考慮：
 
@@ -143,6 +144,18 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
 
+## V2.8 Aesthetic Gate
+
+V2.8 把推薦目標從「夠不一樣」改成「先好看，再驚喜」。
+
+- 新增 paletteAestheticCore()：評估明暗節奏、角色對比、彩度節制、色相結構、Accent 意圖與能量過載
+- 新增 reference affinity：Atlas / Fashion / IG 只在關係真的接近時提供美感加分
+- Surprise 不再是主分數，只在已通過美感門檻的候選上提供小幅加分
+- 不再強制 editorial / atmospheric / fashion / expressive / unexpected 每條都入選；某條路線不夠美就可以完全不出現
+- 不同 lane 有不同最低美感門檻，但即使 unexpected 也不能只靠「怪」進前五名
+- Inspiration Atlas 從 30 組擴為 40 組，新增 10 組高信心 core anchors，偏 editorial / interior / fashion 的耐看關係
+- 使用者已選的 1–2 個顏色仍保持，不為了提高分數偷偷改掉
+
 ## V2.7.3 Startup Budget
 
 V2.7.3 針對 Lighthouse 的 Total Blocking Time 做首屏工作分流：
@@ -236,7 +249,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v273-startup-budget`
+目前 cache generation：`color-lab-v28-aesthetic-gate`
 
 ## Quality Gates
 

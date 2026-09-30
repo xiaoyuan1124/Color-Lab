@@ -2090,7 +2090,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.7.3</div>
+    <div class="version">V2.8</div>
   </div>
 
   <main class="app-main">
@@ -2355,7 +2355,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.7.3</div>
+  <div class="footer app-footer">Color Lab V2.8</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2905,7 +2905,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.7.3',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.8',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -3619,6 +3619,64 @@ function paletteSurpriseScore(colors){
   const asymmetric=clamp(Math.abs(huePairs[0]-huePairs[1])/110,0,1);
   return clamp(hueSpread*.35+clamp(chromaRange/.18,0,1)*.18+clamp(lightRange/.52,0,1)*.18+clamp((accentLift-.75)/1.45,0,1)*.17+asymmetric*.12,0,1);
 }
+function paletteAestheticCore(colors){
+  if(!Array.isArray(colors)||colors.length<3||colors.some(x=>!x))return{score:0};
+  const p=colors.map(toOKLCH);
+  const huePairs=[hueDistance(p[0].h,p[1].h),hueDistance(p[0].h,p[2].h),hueDistance(p[1].h,p[2].h)].sort((a,b)=>a-b);
+  const chromas=p.map(x=>x.c),lights=p.map(x=>x.l);
+  const lightSpread=Math.max(...lights)-Math.min(...lights);
+  const lightRhythm=clamp(lightSpread/.28)*(1-clamp((lightSpread-.82)/.15));
+  const roleContrast=clamp((contrastRatio(colors[0],colors[1])-1.35)/3.8);
+  const highChroma=chromas.filter(c=>c>.16).length;
+  const chromaDiscipline=Math.max(...chromas)<.10?.90:(highChroma<=1?1:(highChroma===2?.72:.38));
+  const related=1-clamp((huePairs[0]-55)/75);
+  const separated=clamp((huePairs[2]-55)/105);
+  const bridge=related*.58+separated*.42;
+  const analogous=clamp((80-huePairs[2])/55)*.95;
+  const triadic=huePairs[0]>=70&&huePairs[2]<=150?.72:0;
+  const hueStructure=Math.max(bridge,analogous,triadic);
+  const accentDistance=Math.min(perceptualDistance(colors[2],colors[0]),perceptualDistance(colors[2],colors[1]));
+  const accentIntent=clamp((accentDistance-.035)/.17)*(1-clamp((accentDistance-.60)/.25));
+  const supportCalm=1-clamp((p[0].c+p[1].c-.26)/.22);
+  let penalty=0;
+  if(highChroma>=3&&huePairs[0]>55)penalty+=.18;
+  else if(highChroma===2&&huePairs[0]>70)penalty+=.08;
+  if(lightSpread<.10&&Math.max(...chromas)-Math.min(...chromas)<.05)penalty+=.12;
+  penalty+=clamp((chromas.reduce((a,b)=>a+b,0)-.42)/.30)*.18;
+  if(p[0].c>.22&&p[1].c>.22)penalty+=.12;
+  const score=clamp(
+    lightRhythm*.18+
+    roleContrast*.17+
+    chromaDiscipline*.16+
+    hueStructure*.18+
+    accentIntent*.14+
+    supportCalm*.07+
+    .10-
+    penalty
+  );
+  return{score,lightRhythm,roleContrast,chromaDiscipline,hueStructure,accentIntent,supportCalm,penalty};
+}
+function laneAestheticPrior(lane){
+  return({editorial:.97,atmospheric:1,fashion:.98,expressive:.88,unexpected:.82})[lane]||.9;
+}
+function laneAestheticFloor(lane){
+  return({editorial:.60,atmospheric:.61,fashion:.60,expressive:.55,unexpected:.52})[lane]||.58;
+}
+function aestheticReferenceAffinity(colors){
+  const target=relationVector(colors);if(!target)return 0;
+  let atlasBest=0;
+  for(const item of inspirationAtlas()){
+    const v=relationVector(item.sample);if(!v)continue;
+    const score=Math.exp(-relationVectorDistance(target,v)*1.45)*laneAestheticPrior(item.lane);
+    if(score>atlasBest)atlasBest=score;
+  }
+  return Math.max(atlasBest,fashionAffinity(colors)*.95,igPatternAffinity(colors)*.90);
+}
+function paletteAestheticScore(colors){
+  const core=paletteAestheticCore(colors);
+  const reference=aestheticReferenceAffinity(colors);
+  return clamp(core.score*.82+reference*.18);
+}
 function archetypeExpected(archetype,seedHex){
   const sample=archetype?.sample;
   if(!Array.isArray(sample)||sample.length<3)return null;
@@ -3640,12 +3698,15 @@ function archetypeCombos(inputs){
     }
     const surprise=paletteSurpriseScore(colors);
     const quality=orderedPaletteScore(colors);
+    const aesthetic=paletteAestheticScore(colors);
+    const sourceVector=relationVector(archetype.sample),resultVector=relationVector(colors);
+    const fidelity=sourceVector&&resultVector?Math.exp(-relationVectorDistance(sourceVector,resultVector)*1.35):0;
     rows.push({
       colors,palette:orderedPalette(colors),
       added:inputs.length===1?[colors[1],colors[2]]:[colors[2]],
-      score:quality*.42+surprise*2.05+(archetype.novelty||.7)*.8+compatibility*.35,
-      surprise,
-      meta:{label:archetype.label,sub:archetype.note,lane:archetype.lane||'editorial',novelty:archetype.novelty||.7,source:'atlas'}
+      score:aesthetic*3.2+quality*.18+fidelity*.72+surprise*.24+(archetype.novelty||.7)*.12+compatibility*.25,
+      surprise,aesthetic,
+      meta:{label:archetype.label,sub:archetype.note,lane:archetype.lane||'editorial',novelty:archetype.novelty||.7,source:'atlas',fidelity}
     });
   }
   return rows.sort((a,b)=>b.score-a.score);
@@ -3659,16 +3720,18 @@ function igLane(pattern){
 function recommendationLane(item){return item?.meta?.lane||'editorial'}
 function inspirationUtility(item,out=[]){
   const paletteColors=[item.palette.base,item.palette.structure,item.palette.accent];
+  const aesthetic=Number.isFinite(item.aesthetic)?item.aesthetic:paletteAestheticScore(paletteColors);
   const surprise=Number.isFinite(item.surprise)?item.surprise:paletteSurpriseScore(paletteColors);
   const diversity=out.length?Math.min(...out.map(x=>recommendationDistance(item,x))):1;
   const novelty=Number(item.meta?.novelty)||0;
   const repeatedLabel=out.some(x=>x.meta?.label===item.meta?.label);
-  return item.score*.32+surprise*2.15+diversity*1.55+novelty*.55-(repeatedLabel?.4:0);
+  const beautyGuard=clamp((aesthetic-.48)/.34);
+  return aesthetic*4.5+diversity*1.18+surprise*.55*beautyGuard+novelty*.14+item.score*.12-(repeatedLabel?.28:0);
 }
 function inspirationVariations(original,limit=6){
   const seed=original?.[0];if(!seed)return[];
   const baseVector=relationVector(original);
-  const candidates=archetypeCombos([seed]).map(x=>({...x,score:x.score+relationVectorDistance(baseVector,relationVector(x.colors))*.2}));
+  const candidates=archetypeCombos([seed]).map(x=>({...x,sourceDistance:relationVectorDistance(baseVector,relationVector(x.colors))}));
   return selectDiverseRecommendations(candidates,limit);
 }
 function applyStyleDelta(seedHex,delta){
@@ -3814,17 +3877,28 @@ function recommendationDistance(a,b){
 
 function selectDiverseRecommendations(candidates,limit=5){
   const unique=[],signatures=new Set();
-  for(const item of candidates){
-    const signature=[item.palette.base,item.palette.structure,item.palette.accent].join('|');
+  for(const raw of candidates){
+    const signature=[raw.palette.base,raw.palette.structure,raw.palette.accent].join('|');
     if(signatures.has(signature))continue;
-    signatures.add(signature);unique.push(item);
+    signatures.add(signature);
+    const colors=[raw.palette.base,raw.palette.structure,raw.palette.accent];
+    const aesthetic=Number.isFinite(raw.aesthetic)?raw.aesthetic:paletteAestheticScore(colors);
+    unique.push({...raw,aesthetic});
   }
-  const remaining=[...unique],out=[];
-  const lanes=['editorial','atmospheric','fashion','expressive','unexpected'];
-  const takeBest=pool=>{
+  const eligible=unique.filter(item=>item.aesthetic>=laneAestheticFloor(recommendationLane(item)));
+  if(eligible.length<limit){
+    const fallback=unique
+      .filter(item=>!eligible.includes(item)&&item.aesthetic>=.48)
+      .sort((a,b)=>b.aesthetic-a.aesthetic);
+    eligible.push(...fallback.slice(0,limit-eligible.length));
+  }
+  const remaining=(eligible.length?eligible:[...unique].sort((a,b)=>b.aesthetic-a.aesthetic).slice(0,limit)),out=[];
+  const takeBest=()=>{
     let best=null,bestUtility=-Infinity;
-    for(const item of pool){
-      const utility=inspirationUtility(item,out);
+    const usedLanes=new Set(out.map(recommendationLane));
+    for(const item of remaining){
+      const laneBonus=usedLanes.has(recommendationLane(item))?0:.24;
+      const utility=inspirationUtility(item,out)+laneBonus;
       if(utility>bestUtility){best=item;bestUtility=utility}
     }
     if(!best)return false;
@@ -3832,12 +3906,7 @@ function selectDiverseRecommendations(candidates,limit=5){
     const index=remaining.indexOf(best);if(index>=0)remaining.splice(index,1);
     return true;
   };
-  for(const lane of lanes){
-    if(out.length>=limit)break;
-    const pool=remaining.filter(x=>recommendationLane(x)===lane);
-    if(pool.length)takeBest(pool);
-  }
-  while(remaining.length&&out.length<limit)takeBest(remaining);
+  while(remaining.length&&out.length<limit)takeBest();
   return out;
 }
 
@@ -3851,23 +3920,23 @@ function recommendationCombos(){
   const candidates=[
     ...archetypeCombos(inputs),
     ...fashionReferenceCombos(inputs).map(x=>{
-      const refined=inspirationRefineGenerated(x.colors,inputs.length),surprise=paletteSurpriseScore(refined);
+      const refined=inspirationRefineGenerated(x.colors,inputs.length),surprise=paletteSurpriseScore(refined),aesthetic=paletteAestheticScore(refined);
       return{
         added:inputs.length===1?[refined[1],refined[2]]:[refined[2]],
         palette:orderedPalette(refined),
-        score:orderedPaletteScore(refined)*.48+x.score*.18+surprise*1.35,
-        surprise,
-        meta:{label:'時裝關係',sub:'Fashion reference · 保留原始張力',lane:'fashion',novelty:.62}
+        score:aesthetic*2.8+orderedPaletteScore(refined)*.20+x.score*.08+surprise*.22,
+        surprise,aesthetic,
+        meta:{label:'時裝關係',sub:'Fashion reference · 美感優先',lane:'fashion',novelty:.62}
       };
     }),
     ...igStyleCombos(inputs).map(x=>{
-      const refined=inspirationRefineGenerated(x.colors,inputs.length),surprise=paletteSurpriseScore(refined),lane=igLane(x.pattern);
+      const refined=inspirationRefineGenerated(x.colors,inputs.length),surprise=paletteSurpriseScore(refined),lane=igLane(x.pattern),aesthetic=paletteAestheticScore(refined);
       return{
         added:inputs.length===1?[refined[1],refined[2]]:[refined[2]],
         palette:orderedPalette(refined),
-        score:orderedPaletteScore(refined)*.48+x.score*.18+surprise*1.4,
-        surprise,
-        meta:{label:x.pattern.label,sub:'Styling pattern · 保留色相距離',lane,novelty:lane==='expressive'?.78:.5}
+        score:aesthetic*2.7+orderedPaletteScore(refined)*.20+x.score*.08+surprise*.24,
+        surprise,aesthetic,
+        meta:{label:x.pattern.label,sub:'Styling pattern · 美感優先',lane,novelty:lane==='expressive'?.72:.48}
       };
     })
   ];
@@ -3875,14 +3944,14 @@ function recommendationCombos(){
   if(inputs.length===2){
     for(const x of pool){
       const trio=qualityRefineGenerated([inputs[0],inputs[1],x],2);
-      const meta=classifyCandidate(trio[2],inputs),surprise=paletteSurpriseScore(trio);
-      candidates.push({added:[trio[2]],palette:orderedPalette(trio),score:trioScore(trio)*.42+surprise*1.25,surprise,meta});
+      const meta=classifyCandidate(trio[2],inputs),surprise=paletteSurpriseScore(trio),aesthetic=paletteAestheticScore(trio);
+      candidates.push({added:[trio[2]],palette:orderedPalette(trio),score:aesthetic*2.6+trioScore(trio)*.20+surprise*.22,surprise,aesthetic,meta});
     }
   }else{
     for(let i=0;i<pool.length;i++){
       for(let j=i+1;j<Math.min(pool.length,i+16);j++){
-        const trio=qualityRefineGenerated([inputs[0],pool[i],pool[j]],1),surprise=paletteSurpriseScore(trio);
-        candidates.push({added:[trio[1],trio[2]],palette:orderedPalette(trio),score:trioScore(trio)*.4+surprise*1.3,surprise,meta:{label:'生成關係',sub:'從單色延伸',lane:surprise>.72?'unexpected':'editorial',novelty:surprise}});
+        const trio=qualityRefineGenerated([inputs[0],pool[i],pool[j]],1),surprise=paletteSurpriseScore(trio),aesthetic=paletteAestheticScore(trio);
+        candidates.push({added:[trio[1],trio[2]],palette:orderedPalette(trio),score:aesthetic*2.55+trioScore(trio)*.18+surprise*.20,surprise,aesthetic,meta:{label:'生成關係',sub:'從單色延伸 · 美感門檻',lane:surprise>.76?'unexpected':'editorial',novelty:surprise}});
       }
     }
   }
@@ -3930,7 +3999,7 @@ function renderRecommendations(){
     return;
   }
   $('#intelHeading').textContent=inputs.length===2?'推薦第三色':'推薦完整三色';
-  $('#intelDescription').textContent=preferenceIsMature()?'Atlas × Fashion × IG × Novelty × 本機偏好':'Atlas × Fashion × IG × Novelty × 色域保護';
+  $('#intelDescription').textContent=preferenceIsMature()?'Aesthetic Gate × Atlas × Fashion × IG × 本機偏好':'Aesthetic Gate × Atlas × Fashion × IG × Novelty';
   const recs=recommendationCombos();
   box.innerHTML='';
   recs.forEach((r,i)=>{
