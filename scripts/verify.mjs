@@ -316,7 +316,7 @@ for(const fn of ['fashionAffinity','fashionTransferPool','fashionReferenceCombos
 }
 pass('fashion recommendation functions present');
 
-if(!html.includes("Atlas × Fashion × IG × Novelty × 色域保護")) fail('fashion recommendation description missing');
+if(!html.includes("Aesthetic Gate × Atlas × Fashion × IG × Novelty")) fail('fashion recommendation description missing');
 else pass('fashion recommendation UI description');
 
 
@@ -332,7 +332,7 @@ for(const fn of ['igPatternAffinity','igStyleTransferPool','igStyleCombos','appl
 }
 pass('IG style recommendation functions present');
 
-if(!html.includes("Atlas × Fashion × IG × Novelty × 色域保護")) fail('IG styling recommendation description missing');
+if(!html.includes("Aesthetic Gate × Atlas × Fashion × IG × Novelty")) fail('IG styling recommendation description missing');
 else pass('IG styling recommendation UI description');
 
 
@@ -341,7 +341,7 @@ for(const fn of ['gamutMapOKLCH','cohesionPass','qualityRefineGenerated','qualit
 }
 pass('V1.5 quality engine functions present');
 
-if(!html.includes('Atlas × Fashion × IG × Novelty × 色域保護')) fail('V1.5 intelligence description missing');
+if(!html.includes('Aesthetic Gate × Atlas × Fashion × IG × Novelty')) fail('V1.5 intelligence description missing');
 else pass('V1.5 intelligence description');
 
 if(!html.includes('主體／鮮明／柔和／深色／淺色')) fail('semantic photo swatch UI missing');
