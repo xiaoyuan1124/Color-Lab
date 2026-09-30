@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.11.1**
+**目前版本：V2.12.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,21 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.12.0 Professional Handoff
+
+把「配色好看」往真正可以交付給設計與開發工作流推進：
+
+- Compose 新增 CSS、JSON、Design Tokens 三種文字型交付格式
+- CSS 直接輸出 Base / Structure / Accent variables 與 75 / 18 / 7 比例
+- JSON 保留配色名稱、角色 HEX 與比例資料
+- Tokens 使用 Base / Structure / Accent semantic role，保留角色說明
+- 支援 iOS / Web Share file；不支援時回退為本機下載
+- 交付內容只使用目前畫面三色，不重新生成、不排序、不偷偷改色
+- Context Preview 新增 Light / Dark
+- Dark 是預覽專用衍生變體，只調整 Base / Structure 的明暗以模擬深色介面；Accent 保留目前原色
+- Dark 預覽不會回寫 Compose、不會影響收藏、匯出或 75 / 18 / 7 原始資料
+- App preview 增加導覽、內容層級、卡片與 CTA，從單純色塊示意往真實產品情境靠近
 
 ## V2.11.1 Inspire Session History
 
@@ -310,7 +325,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v2111-inspire-history`
+目前 cache generation：`color-lab-v2120-professional-handoff`
 
 ## Quality Gates
 
