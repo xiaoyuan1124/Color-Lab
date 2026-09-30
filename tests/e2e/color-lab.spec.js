@@ -68,3 +68,36 @@ test('Inspire batch history moves forward and back without wrapping', async ({ p
   await next.click();
   await expect(progress).toContainText('第 2 /');
 });
+
+test('professional handoff exports exact 75 / 18 / 7 role colors', async ({ page }) => {
+  const css = await page.evaluate(() => paletteArtifact('css').text);
+  expect(css).toContain('--color-base:');
+  expect(css).toContain('--color-structure:');
+  expect(css).toContain('--color-accent:');
+  expect(css).toContain('--color-base-ratio: 75%');
+  expect(css).toContain('--color-structure-ratio: 18%');
+  expect(css).toContain('--color-accent-ratio: 7%');
+
+  const json = JSON.parse(await page.evaluate(() => paletteArtifact('json').text));
+  const tokens = JSON.parse(await page.evaluate(() => paletteArtifact('tokens').text));
+  expect(json.ratios).toEqual({ base: 75, structure: 18, accent: 7 });
+  expect(tokens.color.base.$value).toBe(json.palette.base);
+  expect(tokens.color.structure.$value).toBe(json.palette.structure);
+  expect(tokens.color.accent.$value).toBe(json.palette.accent);
+});
+
+test('dark context preview never overwrites the current palette', async ({ page }) => {
+  await page.locator('#composeDeepDive').evaluate(el => { el.open = true; el.dispatchEvent(new Event('toggle')); });
+  const before = await page.evaluate(() => paletteArtifactBase());
+  const dark = page.locator('[data-preview-theme="dark"]');
+  await dark.click();
+
+  await expect(dark).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#contextThemeNote')).toContainText('不改原色');
+  const after = await page.evaluate(() => paletteArtifactBase());
+  expect(after.palette).toEqual(before.palette);
+
+  const preview = await page.evaluate(() => previewThemePalette());
+  expect(preview.derived).toBe(true);
+  expect(preview.accent).toBe(before.palette.accent);
+});
