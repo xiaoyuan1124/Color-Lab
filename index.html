@@ -2362,24 +2362,8 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
               <div class="real-preview" id="uiPreview"></div>
             </div>
 
-            <details class="custom-design-preview" id="customDesignPreviewDetails">
-              <summary>
-                <span><b>你的 SVG 設計</b><small>把目前三個原色套進自己的 flat-color SVG</small></span>
-                <span class="cdp-mark" aria-hidden="true">＋</span>
-              </summary>
-              <div class="cdp-body">
-                <p class="cdp-note">SVG 只在此裝置解析。系統會移除 script、事件、外部資源與不安全元素，再讓你把原始 fill / stroke 對應到 Base / Structure / Accent；預覽不會修改 Compose。</p>
-                <input id="customDesignInput" type="file" accept=".svg,image/svg+xml" hidden>
-                <div class="cdp-actions">
-                  <button type="button" id="customDesignChoose">選擇 SVG</button>
-                  <button type="button" id="customDesignClear" hidden>清除</button>
-                  <button type="button" id="customDesignExport" hidden>輸出套色 SVG</button>
-                </div>
-                <div class="cdp-status" id="customDesignStatus" aria-live="polite">尚未載入 SVG · 檔案只在此裝置解析</div>
-                <div class="cdp-mappings" id="customDesignMappings"></div>
-                <div class="cdp-canvas" id="customDesignCanvas" aria-live="polite"></div>
-              </div>
-            </details>
+            <div id="customDesignMount"></div>
+
           </div>
         </details>
 
@@ -5629,7 +5613,6 @@ $('#librarySort').value=librarySort;
 $('#librarySort').addEventListener('change',e=>{librarySort=e.target.value;localStorage.setItem('colorlab.librarySort',librarySort);renderSaved()});
 $('#libraryFolderFilter').addEventListener('change',e=>{libraryFolderFilter=e.target.value;renderSaved()});
 $('#comboName').addEventListener('input',e=>{currentComboName=e.target.value;persistDraft()});
-$('#customDesignPreviewDetails').addEventListener('toggle',e=>{if(e.currentTarget.open)renderCustomDesignPreview()});
 $('#composeDeepDive').addEventListener('toggle',e=>{
   if(e.currentTarget.open)requestAnimationFrame(()=>{
     renderRelationshipExplanation();renderColorRelationshipMap();renderToneExplorer();renderPaletteValidation();renderVision();renderContextPreview();
