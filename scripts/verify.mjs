@@ -92,13 +92,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2120")) fail('service worker cache version is not V2.12.0');
+if(!sw.includes("color-lab-v2130")) fail('service worker cache version is not V2.13.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.12.0') fail('package version must be 2.12.0');
+if(pkg.version!=='2.13.0') fail('package version must be 2.13.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.12.0')||!html.includes('<div class="version">V2.12.0</div>')||!html.includes("appVersion:'2.12.0'")) fail('V2.12.0 UI or backup version metadata missing');
-else pass('V2.12.0 version metadata');
+if(!html.includes('Color Lab V2.13.0')||!html.includes('<div class="version">V2.13.0</div>')||!html.includes("appVersion:'2.13.0'")) fail('V2.13.0 UI or backup version metadata missing');
+else pass('V2.13.0 version metadata');
 
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
@@ -326,6 +326,26 @@ if(!html.includes('id="contextThemeModes"')||
    !html.includes("Dark 預覽變體 · 不改原色")){
   fail('V2.12.0 Light / Dark preview contract missing');
 }else pass('V2.12.0 Light / Dark preview contract');
+
+if(!html.includes('id="accessibilityMatrix"')||
+   !html.includes('id="validationThemeModes"')||
+   !html.includes('data-validation-theme="original"')||
+   !html.includes('data-validation-theme="dark"')||
+   !html.includes('function contrastGrade(')||
+   !html.includes('function paletteValidationData(')||
+   !html.includes('function renderPaletteValidation(')||
+   !html.includes("r>=7?['aaa'")||
+   !html.includes("r>=4.5?['aa'")||
+   !html.includes("r>=3?['large'")){
+  fail('V2.13.0 three-color accessibility matrix contract missing');
+}else pass('V2.13.0 three-color accessibility matrix');
+
+if(!html.includes("function previewThemePalette(theme=previewTheme)")||
+   !html.includes("previewThemePalette('dark')")||
+   !html.includes("$('#validationThemeModes [data-validation-theme]').forEach")||
+   !html.includes("$('[data-validation-theme]').forEach")){
+  fail('V2.13.0 validation theme integration missing');
+}else pass('V2.13.0 original / dark validation integration');
 
 if(!html.includes("$$('#contextTabs [data-context]').forEach")||
    !html.includes("$$('#contextThemeModes [data-preview-theme]').forEach")||
