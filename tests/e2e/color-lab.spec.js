@@ -962,3 +962,84 @@ test('V2.25 explicit vision fix respects locked roles and only applies after con
   expect(applied.palette.accent).toBe(setup.before.palette.accent);
   expect(applied.palette.structure).toBe(setup.fix.color);
 });
+
+
+test('V2.26 Local Projects filters saved palettes without mutating their source colors', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    localStorage.setItem('colorlab.saved',JSON.stringify([
+      sanitizeSavedRecord({name:'Portfolio UI',projectId:'prj-alpha1',palette:{base:'#112233',structure:'#445566',accent:'#AABBCC'},selectedColors:['#112233','#445566','#AABBCC'],lockedSlots:[false,false,false],mode:'quiet',date:2}),
+      sanitizeSavedRecord({name:'Room',projectId:'prj-room01',palette:{base:'#E7DCC8',structure:'#274C55',accent:'#C65338'},selectedColors:['#E7DCC8','#274C55','#C65338'],lockedSlots:[false,false,false],mode:'quiet',date:1})
+    ]));
+    writeLocalProjects([
+      {id:'prj-alpha1',name:'PortfolioPilot',createdAt:1},
+      {id:'prj-room01',name:'Room Design',createdAt:2}
+    ]);
+    switchTab('library',false);renderSaved();
+    const before=readSavedData().map(x=>({name:x.name,palette:x.palette}));
+    return {before,projects:readLocalProjects()};
+  });
+  expect(result.projects.map(x=>x.name)).toEqual(['PortfolioPilot','Room Design']);
+  await expect(page.locator('#localProjectsPanel')).toBeVisible();
+  await expect(page.locator('#localProjectChips [data-project-filter="prj-alpha1"]')).toContainText('PortfolioPilot');
+  await page.locator('#localProjectChips [data-project-filter="prj-alpha1"]').click();
+  await expect(page.locator('#saved .library-piece')).toHaveCount(1);
+  await expect(page.locator('#saved')).toContainText('Portfolio UI');
+  const after=await page.evaluate(() => readSavedData().map(x=>({name:x.name,palette:x.palette})));
+  expect(after).toEqual(result.before);
+});
+
+test('V2.26 deleting a project only unassigns palettes and never deletes them', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    localStorage.setItem('colorlab.saved',JSON.stringify([
+      sanitizeSavedRecord({name:'A',projectId:'prj-delete1',palette:{base:'#112233',structure:'#445566',accent:'#AABBCC'},selectedColors:['#112233','#445566','#AABBCC'],mode:'quiet',date:2}),
+      sanitizeSavedRecord({name:'B',projectId:'',palette:{base:'#E7DCC8',structure:'#274C55',accent:'#C65338'},selectedColors:['#E7DCC8','#274C55','#C65338'],mode:'quiet',date:1})
+    ]));
+    writeLocalProjects([{id:'prj-delete1',name:'Delete Me',createdAt:1}]);
+    window.confirm=()=>true;
+    const before=readSavedData().map(x=>({name:x.name,palette:x.palette}));
+    deleteLocalProject('prj-delete1');
+    return {
+      before,
+      after:readSavedData().map(x=>({name:x.name,projectId:x.projectId,palette:x.palette})),
+      projects:readLocalProjects()
+    };
+  });
+  expect(result.after).toHaveLength(2);
+  expect(result.after.map(x=>({name:x.name,palette:x.palette}))).toEqual(result.before);
+  expect(result.after.find(x=>x.name==='A').projectId).toBe('');
+  expect(result.projects).toEqual([]);
+});
+
+test('V2.26 imported project ID collisions are remapped without misassigning palettes', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    const incoming=[{id:'prj-shared1',name:'Imported Project',createdAt:2}];
+    const saved=[{name:'Imported Palette',projectId:'prj-shared1'}];
+    const current=[{id:'prj-shared1',name:'Existing Project',createdAt:1}];
+    return mergeImportedProjectData(incoming,saved,current);
+  });
+  expect(result.projects).toHaveLength(2);
+  const existing=result.projects.find(x=>x.name==='Existing Project');
+  const imported=result.projects.find(x=>x.name==='Imported Project');
+  expect(existing.id).toBe('prj-shared1');
+  expect(imported.id).not.toBe('prj-shared1');
+  expect(result.saved[0].projectId).toBe(imported.id);
+});
+
+test('V2.26 project picker assigns a saved palette while preserving palette data', async ({ page }) => {
+  const before=await page.evaluate(() => {
+    localStorage.setItem('colorlab.saved',JSON.stringify([
+      sanitizeSavedRecord({name:'Brand',projectId:'',palette:{base:'#F4EFE6',structure:'#28343A',accent:'#D4513D'},selectedColors:['#F4EFE6','#28343A','#D4513D'],mode:'quiet',date:1})
+    ]));
+    writeLocalProjects([{id:'prj-brand01',name:'Brand Refresh',createdAt:1}]);
+    switchTab('library',false);renderSaved();
+    return readSavedData()[0].palette;
+  });
+  await page.locator('[data-saved-menu="0"]').click();
+  await expect(page.locator('[data-saved-action="project"]')).toBeVisible();
+  await page.locator('[data-saved-action="project"]').click();
+  await expect(page.locator('#projectPickerBackdrop')).toBeVisible();
+  await page.locator('[data-project-pick="prj-brand01"]').click();
+  const after=await page.evaluate(() => readSavedData()[0]);
+  expect(after.projectId).toBe('prj-brand01');
+  expect(after.palette).toEqual(before);
+});
