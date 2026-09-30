@@ -30,13 +30,12 @@ function sanitizeLocalProjects(value){
   return out;
 }
 function readLocalProjects(){
-  try{return sanitizeLocalProjects(JSON.parse(localStorage.getItem(LOCAL_PROJECTS_KEY)||'[]'))}
-  catch(_){return[]}
+  const state=storageJsonState(LOCAL_PROJECTS_KEY,Array.isArray);
+  return state.status==='valid'?sanitizeLocalProjects(state.value):[];
 }
-function writeLocalProjects(projects){
+function writeLocalProjects(projects,{silent=false}={}){
   const clean=sanitizeLocalProjects(projects);
-  localStorage.setItem(LOCAL_PROJECTS_KEY,JSON.stringify(clean));
-  return clean;
+  return storageWriteJson(LOCAL_PROJECTS_KEY,clean,{silent})?clean:null;
 }
 function localProjectNewId(){
   const raw=globalThis.crypto?.randomUUID?.().replace(/-/g,'').slice(0,18)||Date.now().toString(36)+Math.random().toString(36).slice(2,10);
@@ -82,7 +81,7 @@ function createLocalProject(){
   const projects=readLocalProjects();
   if(projects.some(x=>x.name.toLocaleLowerCase('zh-Hant')===name.toLocaleLowerCase('zh-Hant'))){toast('已經有同名專案');return}
   const project={id:localProjectNewId(),name,createdAt:Date.now()};
-  writeLocalProjects([project,...projects]);
+  if(!writeLocalProjects([project,...projects]))return;
   libraryProjectFilter=project.id;scheduleResilienceBackup();renderSaved();toast('已建立專案 '+name);
 }
 function renameLocalProject(id){
@@ -91,14 +90,18 @@ function renameLocalProject(id){
   const name=raw.trim().replace(/\s+/g,' ').slice(0,28);
   if(!name){toast('專案名稱不能是空白');return}
   if(projects.some(x=>x.id!==id&&x.name.toLocaleLowerCase('zh-Hant')===name.toLocaleLowerCase('zh-Hant'))){toast('已經有同名專案');return}
-  project.name=name;writeLocalProjects(projects);scheduleResilienceBackup();renderSaved();toast('專案已改名');
+  project.name=name;if(!writeLocalProjects(projects))return;scheduleResilienceBackup();renderSaved();toast('專案已改名');
 }
 function deleteLocalProject(id){
   const projects=readLocalProjects(),project=projects.find(x=>x.id===id);if(!project)return;
   if(!confirm('刪除專案「'+project.name+'」？配色不會被刪除，只會變成未歸類。'))return;
   const saved=readSavedData().map(item=>sanitizeProjectId(item.projectId)===id?{...item,projectId:''}:item);
-  localStorage.setItem('colorlab.saved',JSON.stringify(saved));
-  writeLocalProjects(projects.filter(x=>x.id!==id));
+  const nextProjects=sanitizeLocalProjects(projects.filter(x=>x.id!==id));
+  const tx=storageTransaction(['colorlab.saved',LOCAL_PROJECTS_KEY],()=>{
+    localStorage.setItem('colorlab.saved',JSON.stringify(saved));
+    localStorage.setItem(LOCAL_PROJECTS_KEY,JSON.stringify(nextProjects));
+  });
+  if(!tx.ok)return;
   if(libraryProjectFilter===id)libraryProjectFilter='';
   scheduleResilienceBackup();renderSaved();toast('專案已刪除，配色仍保留');
 }
@@ -152,7 +155,7 @@ function assignSavedProject(index,projectId){
   const id=sanitizeProjectId(projectId);
   if(id&&!readLocalProjects().some(x=>x.id===id))return;
   item.projectId=id;
-  localStorage.setItem('colorlab.saved',JSON.stringify(data));
+  if(!storageWriteJson('colorlab.saved',data))return;
   scheduleResilienceBackup();renderSaved();
   toast(id?'已移到 '+localProjectName(id):'已移到未歸類');
 }
