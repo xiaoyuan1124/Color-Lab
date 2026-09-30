@@ -191,18 +191,29 @@ check('V2.12 professional exports keep exact palette roles',
   html.includes("data-export-format=\"tokens\""),
   'exact palette + ratios + tokens');
 check('V2.12 dark preview is preview-only',
-  html.includes("function previewThemePalette()")&&
+  html.includes("function previewThemePalette(theme=previewTheme)")&&
   html.includes("accent:palette.accent")&&
   html.includes("function setPreviewTheme(next)")&&
   !html.includes("palette=previewThemePalette()"),
   'derived preview does not replace palette');
 
 check('V2.12 multi-control selectors return collections',
-  html.includes("$$('#contextTabs [data-context]').forEach")&&
-  html.includes("$$('#contextThemeModes [data-preview-theme]').forEach")&&
-  html.includes("$$('[data-preview-theme]').forEach")&&
-  html.includes("$$('[data-export-format]').forEach"),
+  html.includes("$('#contextTabs [data-context]').forEach")&&
+  html.includes("$('#contextThemeModes [data-preview-theme]').forEach")&&
+  html.includes("$('[data-preview-theme]').forEach")&&
+  html.includes("$('[data-export-format]').forEach"),
   'querySelectorAll helper for preview/export controls');
+
+check('V2.13 accessibility matrix covers all role pairs',
+  html.includes("const VALIDATION_ROLES=[['base','Base'],['structure','Structure'],['accent','Accent']]")&&
+  html.includes("['base','structure'],['base','accent'],['structure','accent']")&&
+  html.includes("r>=7?['aaa'")&&html.includes("r>=4.5?['aa'")&&html.includes("r>=3?['large'"),
+  '3 role pairs + WCAG thresholds');
+check('V2.13 dark validation is derived only',
+  html.includes("previewThemePalette('dark')")&&
+  html.includes("data-validation-theme=\"dark\"")&&
+  !html.includes("palette=paletteValidationData("),
+  'dark matrix never overwrites palette');
 
 
 check('V2.11 candidate session stores original color',
