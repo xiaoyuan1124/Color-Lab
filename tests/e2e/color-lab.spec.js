@@ -424,3 +424,77 @@ test('V2.18 context preview stylesheet is local and loaded', async ({ page }) =>
   expect(style.loaded).toBe(true);
   expect(style.rules).toBeGreaterThan(20);
 });
+
+test('V2.19 photo strategies use detected clusters, dedupe perceptually, and separate Muted from Vivid', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    const mk=(hex,proportion,edgeShare=0)=>({hex,proportion,edgeShare,...toOKLCH(hex)});
+    const clusters=[
+      mk('#D8C7A7',.40),mk('#D7C6A8',.06),
+      mk('#27383A',.22),mk('#D94A3B',.08),
+      mk('#9B806D',.12),mk('#526F91',.08),mk('#D84C3C',.04)
+    ];
+    const roles=[{label:'主體',hex:'#D8C7A7',proportion:.40},{label:'鮮明',hex:'#D94A3B',proportion:.08}];
+    const distinct=photoDistinctClusters(clusters);
+    const balanced=photoPaletteSelection(clusters,roles,'balanced');
+    const muted=photoPaletteSelection(clusters,roles,'muted');
+    const vivid=photoPaletteSelection(clusters,roles,'vivid');
+    const source=new Set(clusters.map(x=>x.hex.toUpperCase()));
+    return{
+      raw:clusters.length,distinct:distinct.length,
+      balanced,muted,vivid,
+      allFromSource:[balanced,muted,vivid].every(x=>x.colors.every(c=>source.has(c))),
+      mutedAccentC:toOKLCH(muted.colors[2]).c,
+      vividAccentC:toOKLCH(vivid.colors[2]).c
+    };
+  });
+  expect(result.distinct).toBeLessThan(result.raw);
+  expect(result.allFromSource).toBe(true);
+  for(const item of [result.balanced,result.muted,result.vivid]){
+    expect(item.colors).toHaveLength(3);
+    expect(new Set(item.colors).size).toBe(3);
+    expect(item.minDistance).toBeGreaterThanOrEqual(0.045);
+  }
+  expect(result.vividAccentC).toBeGreaterThanOrEqual(result.mutedAccentC);
+});
+
+test('V2.19 strategy switching is preview-only until explicit photo apply', async ({ page }) => {
+  const before=await page.evaluate(() => paletteArtifactBase());
+  await page.evaluate(() => {
+    const mk=(hex,proportion,edgeShare=0)=>({hex,proportion,edgeShare,...toOKLCH(hex)});
+    lastPhotoClusters=[
+      mk('#D8C7A7',.40),mk('#27383A',.22),mk('#D94A3B',.08),
+      mk('#9B806D',.12),mk('#526F91',.10),mk('#F2E9DC',.08,.65)
+    ];
+    lastPhotoRoles=semanticRolesFromClusters(lastPhotoClusters);
+    document.querySelector('#photoAuto').hidden=false;
+    renderPhotoPalette(lastPhotoRoles);
+    renderPhotoStrategyPreview(lastPhotoClusters,lastPhotoRoles);
+  });
+
+  await expect(page.locator('#photoPalettePreview')).toBeVisible();
+  await expect(page.locator('.photo-palette-ratio i')).toHaveCount(3);
+  await page.locator('[data-photo-strategy="vivid"]').click();
+  await expect(page.locator('[data-photo-strategy="vivid"]')).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('#photoPalettePreview')).toContainText('Vivid');
+
+  const afterStrategy=await page.evaluate(() => paletteArtifactBase());
+  expect(afterStrategy.palette).toEqual(before.palette);
+
+  const expected=await page.evaluate(() => photoPaletteSelection(lastPhotoClusters,lastPhotoRoles,'vivid').colors);
+  await page.locator('#photoUsePalette').click();
+  const afterApply=await page.evaluate(() => paletteArtifactBase());
+  expect([afterApply.palette.base,afterApply.palette.structure,afterApply.palette.accent]).toEqual(expected);
+});
+
+test('V2.19 photo palette runtime and styles are local', async ({ page }) => {
+  await expect(page.locator('script[src="./runtime/photo-palette.js"]')).toHaveCount(1);
+  await expect(page.locator('link[href="./runtime/photo-palette.css"]')).toHaveCount(1);
+  const api=await page.evaluate(()=>({
+    selection:typeof photoPaletteSelection,
+    dedupe:typeof photoDistinctClusters,
+    strategy:photoPaletteStyle
+  }));
+  expect(api.selection).toBe('function');
+  expect(api.dedupe).toBe('function');
+  expect(['balanced','muted','vivid']).toContain(api.strategy);
+});
