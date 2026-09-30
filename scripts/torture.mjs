@@ -223,6 +223,23 @@ check('V2.13 dark validation is derived only',
   !appText.includes("palette=paletteValidationData("),
   'dark matrix never overwrites palette');
 
+check('V2.14 accessibility fix changes smaller visual role',
+  appText.includes("ROLE_RATIOS={base:75,structure:18,accent:7}")&&
+  appText.includes("function accessibilityChangeRole(a,b)")&&
+  appText.includes("ROLE_RATIOS[a]<=ROLE_RATIOS[b]?a:b"),
+  '75/18/7 role priority');
+check('V2.14 preview remains non-mutating until explicit apply',
+  appText.includes("function previewAccessibilitySuggestion(role,color)")&&
+  appText.includes("accessibilityPreview=")&&
+  appText.includes("function applyAccessibilitySuggestion(role,color)")&&
+  !appText.includes("palette[role]=accessibilityPreview"),
+  'preview state + explicit apply');
+check('V2.14 AA suggestion target is explicit',
+  appText.includes("function nearestAccessibleColor(fg,bg,target=4.5)")&&
+  appText.includes("contrastRatio(color,back)>=target")&&
+  appText.includes("perceptualDistance(current,color)"),
+  '4.5:1 + nearest perceptual change');
+
 
 check('V2.11 candidate session stores original color',
   html.includes("state.origin=palette[role]")&&
