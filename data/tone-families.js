@@ -1,0 +1,96 @@
+// Color Lab Tone Families V1
+// Each family defines a shared atmosphere: neutral anchor + role lightness/chroma rhythm.
+// System-generated colors may be adjusted toward these targets; user-entered colors remain untouched.
+window.TONE_FAMILIES={
+  morandi:{
+    id:"morandi",label:"Morandi",labelZh:"莫蘭迪",
+    anchor:"#A99F92",
+    light:[.76,.48,.62],chroma:[.055,.065,.085],
+    neutralMix:[.28,.34,.22],lightMix:[.26,.34,.24],chromaMix:[.58,.62,.50]
+  },
+  pastel:{
+    id:"pastel",label:"Soft Pastel",labelZh:"柔霧粉彩",
+    anchor:"#E6DDD4",
+    light:[.89,.73,.81],chroma:[.055,.070,.095],
+    neutralMix:[.20,.22,.16],lightMix:[.34,.36,.28],chromaMix:[.52,.54,.46]
+  },
+  earth:{
+    id:"earth",label:"Earth",labelZh:"大地",
+    anchor:"#9B8168",
+    light:[.72,.43,.58],chroma:[.075,.095,.125],
+    neutralMix:[.22,.26,.18],lightMix:[.27,.33,.24],chromaMix:[.48,.52,.44]
+  },
+  editorial:{
+    id:"editorial",label:"Editorial",labelZh:"編輯",
+    anchor:"#A4A19D",
+    light:[.82,.34,.60],chroma:[.045,.060,.135],
+    neutralMix:[.16,.20,.10],lightMix:[.28,.38,.22],chromaMix:[.42,.48,.36]
+  },
+  luxury:{
+    id:"luxury",label:"Quiet Luxury",labelZh:"靜奢",
+    anchor:"#B0A291",
+    light:[.79,.40,.61],chroma:[.050,.065,.095],
+    neutralMix:[.24,.28,.17],lightMix:[.28,.34,.24],chromaMix:[.54,.58,.46]
+  },
+  jewel:{
+    id:"jewel",label:"Jewel",labelZh:"寶石",
+    anchor:"#39353B",
+    light:[.42,.29,.51],chroma:[.125,.145,.190],
+    neutralMix:[.10,.12,.06],lightMix:[.24,.28,.20],chromaMix:[.34,.38,.28]
+  },
+  digital:{
+    id:"digital",label:"Digital",labelZh:"數位",
+    anchor:"#34383D",
+    light:[.24,.38,.63],chroma:[.035,.070,.215],
+    neutralMix:[.12,.15,.05],lightMix:[.22,.28,.18],chromaMix:[.38,.42,.22]
+  },
+  airy:{
+    id:"airy",label:"Airy",labelZh:"空氣",
+    anchor:"#D9E0DE",
+    light:[.91,.72,.83],chroma:[.030,.050,.075],
+    neutralMix:[.20,.24,.16],lightMix:[.36,.38,.30],chromaMix:[.56,.58,.48]
+  }
+};
+
+window.TONE_ARCHETYPE_MAP={
+  "paper-ink-vermilion":"editorial",
+  "bone-navy-acid":"editorial",
+  "fog-plum-brass":"luxury",
+  "chalk-cobalt-coral":"editorial",
+  "sand-charcoal-lilac":"morandi",
+  "silver-oxblood-sky":"editorial",
+  "plaster-walnut-oxide":"earth",
+  "linen-olive-cobalt":"earth",
+  "smoke-oak-saffron":"earth",
+  "sage-clay-ink":"earth",
+  "travertine-petrol-rust":"earth",
+  "mushroom-wine-glass":"morandi",
+  "chocolate-sky-silver":"luxury",
+  "navy-butter-coral":"editorial",
+  "burgundy-celadon-butter":"luxury",
+  "forest-orchid-cream":"luxury",
+  "tobacco-turquoise-ivory":"earth",
+  "graphite-red-cobalt":"digital",
+  "ultramarine-orange-bone":"editorial",
+  "magenta-olive-powder":"morandi",
+  "violet-acid-charcoal":"digital",
+  "cyan-rust-cream":"editorial",
+  "red-pink-brown":"luxury",
+  "teal-mustard-brick":"earth",
+  "black-lilac-lime":"digital",
+  "aubergine-celadon-orange":"jewel",
+  "cobalt-brown-pink":"luxury",
+  "mustard-purple-mint":"morandi",
+  "petrol-pink-copper":"luxury",
+  "olive-cerulean-raspberry":"morandi",
+  "parchment-ink-lapis":"editorial",
+  "shell-aubergine-olive":"morandi",
+  "ivory-petrol-blush":"luxury",
+  "mist-espresso-apricot":"airy",
+  "dustyblue-tobacco-pearl":"luxury",
+  "moss-cream-wine":"luxury",
+  "charcoal-camel-ice":"luxury",
+  "rosewood-powder-sage":"morandi",
+  "slate-oat-persimmon":"editorial",
+  "ink-sand-cobalt":"editorial"
+};

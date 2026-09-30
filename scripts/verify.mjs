@@ -7,6 +7,7 @@ const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
 const fashion=fs.readFileSync('data/fashion-palettes.js','utf8');
 const igStyles=fs.readFileSync('data/ig-style-patterns.js','utf8');
 const inspirationAtlas=fs.readFileSync('data/inspiration-atlas.js','utf8');
+const toneFamilies=fs.readFileSync('data/tone-families.js','utf8');
 
 const fail=(msg)=>{console.error('FAIL:',msg);process.exitCode=1};
 const pass=(msg)=>console.log('PASS:',msg);
@@ -70,7 +71,8 @@ const lazyScripts=[
   ['./vendor/poline.umd.js','poline'],
   ['./data/fashion-palettes.js','FASHION_PALETTES'],
   ['./data/ig-style-patterns.js','IG_STYLE_PATTERNS'],
-  ['./data/inspiration-atlas.js','INSPIRATION_ATLAS']
+  ['./data/inspiration-atlas.js','INSPIRATION_ATLAS'],
+  ['./data/tone-families.js','TONE_FAMILIES']
 ];
 for(const [src] of lazyScripts){
   if(html.includes('<script src="'+src+'"></script>')) fail('lazy dependency regressed to eager script: '+src);
@@ -79,24 +81,24 @@ for(const [src] of lazyScripts){
 }
 if(!html.includes('function ensureRecommendationReferences(')||
    !html.includes('function ensureInspirationResources(')){
-  fail('V2.8 lazy intelligence orchestration missing');
-}else pass('V2.8 lazy intelligence orchestration');
+  fail('V2.9 lazy intelligence orchestration missing');
+}else pass('V2.9 lazy intelligence orchestration');
 
 if(!html.includes('function fastInitialPalette(')||
    html.includes('renderModes();renderComboSlots();renderRecentColors();generate(false);')){
-  fail('V2.8 fast startup path missing');
-}else pass('V2.8 fast startup path');
+  fail('V2.9 fast startup path missing');
+}else pass('V2.9 fast startup path');
 
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v28")) fail('service worker cache version is not V2.8');
+if(!sw.includes("color-lab-v29")) fail('service worker cache version is not V2.9');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.8.0') fail('package version must be 2.8.0');
+if(pkg.version!=='2.9.0') fail('package version must be 2.9.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.8')||!html.includes('<div class="version">V2.8</div>')||!html.includes("appVersion:'2.8.0'")) fail('V2.8 UI or backup version metadata missing');
-else pass('V2.8 version metadata');
+if(!html.includes('Color Lab V2.9')||!html.includes('<div class="version">V2.9</div>')||!html.includes("appVersion:'2.9.0'")) fail('V2.9 UI or backup version metadata missing');
+else pass('V2.9 version metadata');
 
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
@@ -200,18 +202,20 @@ if(!html.includes('background:transparent;\n  backdrop-filter:none;')||
 
 try { new Function(inspirationAtlas); pass('inspiration atlas syntax'); }
 catch(e){ fail('inspiration atlas syntax: '+e.message); }
+try { new Function(toneFamilies); pass('tone families syntax'); }
+catch(e){ fail('tone families syntax: '+e.message); }
 const atlasCount=(inspirationAtlas.match(/\{id:/g)||[]).length;
 if(atlasCount<40) fail('inspiration atlas too small: '+atlasCount);
 else pass('inspiration atlas size '+atlasCount);
 
 for(const fn of ['inspirationRefineGenerated','paletteSurpriseScore','paletteAestheticCore','paletteAestheticScore','laneAestheticFloor','archetypeCombos','inspirationUtility','inspirationVariations']){
-  if(!html.includes('function '+fn+'(')) fail('V2.8 inspiration function missing: '+fn);
+  if(!html.includes('function '+fn+'(')) fail('V2.9 inspiration function missing: '+fn);
 }
 if(html.includes("const lanes=['editorial','atmospheric','fashion','expressive','unexpected']")){
-  fail('V2.8 still forces one recommendation per lane');
+  fail('V2.9 still forces one recommendation per lane');
 }else if(!html.includes("item.aesthetic>=laneAestheticFloor(recommendationLane(item))")){
-  fail('V2.8 aesthetic eligibility gate missing');
-}else pass('V2.8 beauty-first diversity gate');
+  fail('V2.9 aesthetic eligibility gate missing');
+}else pass('V2.9 beauty-first diversity gate');
 if(!html.includes('...archetypeCombos(inputs)')||!html.includes('inspirationRefineGenerated(x.colors,inputs.length)')){
   fail('V2.7 relation-first recommendation sources missing');
 }else pass('V2.7 relation-first recommendation sources');
@@ -225,27 +229,44 @@ if(!html.includes('function scheduleNonCriticalStartup(')||
    !html.includes("requestIdleCallback(run,{timeout:1400})")||
    html.includes('renderModes();renderRecentColors();palette=fastInitialPalette()')||
    html.includes('renderCompare();updateLockToggle();setPhotoMode')){
-  fail('V2.8 non-critical startup deferral missing');
-}else pass('V2.8 non-critical startup deferral');
+  fail('V2.9 non-critical startup deferral missing');
+}else pass('V2.9 non-critical startup deferral');
 
 const startupRenderStart=html.indexOf('function render(){');
 const startupRenderEnd=html.indexOf('function scheduleSecondaryRender()',startupRenderStart);
 const startupRenderBlock=startupRenderStart>=0&&startupRenderEnd>startupRenderStart?html.slice(startupRenderStart,startupRenderEnd):'';
 if(startupRenderBlock.includes('renderRelationshipExplanation();scheduleSecondaryRender()')||
    !startupRenderBlock.includes("if(deep?.open)renderRelationshipExplanation()")){
-  fail('V2.8 hidden relationship rendering still blocks startup');
-}else pass('V2.8 hidden relationship rendering deferred');
+  fail('V2.9 hidden relationship rendering still blocks startup');
+}else pass('V2.9 hidden relationship rendering deferred');
 
 
 if(!html.includes('const beautyGuard=clamp((aesthetic-.48)/.34)')||
    !html.includes('return aesthetic*4.5+diversity*1.18')||
    !html.includes('Aesthetic Gate × Atlas × Fashion × IG')){
-  fail('V2.8 aesthetic-first utility or UI contract missing');
-}else pass('V2.8 aesthetic-first utility');
+  fail('V2.9 aesthetic-first utility or UI contract missing');
+}else pass('V2.9 aesthetic-first utility');
 
 if((inspirationAtlas.match(/tier:"core"/g)||[]).length<10){
-  fail('V2.8 high-confidence core anchors missing');
-}else pass('V2.8 high-confidence core anchors');
+  fail('V2.9 high-confidence core anchors missing');
+}else pass('V2.9 high-confidence core anchors');
+
+
+const toneFamilyCount=(toneFamilies.match(/id:"(?:morandi|pastel|earth|editorial|luxury|jewel|digital|airy)"/g)||[]).length;
+if(toneFamilyCount!==8) fail('V2.9 tone family database count '+toneFamilyCount);
+else pass('V2.9 tone family database size 8');
+
+for(const fn of ['toneFamilyById','inferToneFamilyId','toneMixColor','tonalHarmonizeGenerated','tonalCohesionScore','toneFamilyLabel']){
+  if(!html.includes('function '+fn+'(')) fail('V2.9 tonal function missing: '+fn);
+}
+if(!html.includes("item.tonal>=.52")||
+   !html.includes("Tonal Cohesion × Aesthetic Gate")||
+   !html.includes("loadScriptOnce('./data/tone-families.js','TONE_FAMILIES')")){
+  fail('V2.9 tonal cohesion recommendation contract missing');
+}else pass('V2.9 tonal cohesion recommendation contract');
+
+if(!sw.includes('./data/tone-families.js')) fail('V2.9 tone family offline cache missing');
+else pass('V2.9 tone family offline cache');
 
 
 if(manifest.display!=='standalone') fail('manifest display must be standalone');
@@ -534,7 +555,7 @@ if(!html.includes("personal*.45")||!html.includes("reference,accessibility,perso
   fail('V2.3 personal recommendation dimension missing');
 }else pass('V2.3 personal recommendation dimension');
 
-if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.8.0'")||
+if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.9.0'")||
    !html.includes("preference:sanitizePreferenceModel(preferenceState)")||
    !html.includes("preferenceEnabled")){
   fail('V2.3 backup v4 personalization payload missing');
@@ -608,7 +629,7 @@ if(!html.includes("return enabled?preferenceAffinityFromModel(model,colors):0;")
   fail('disabled personalization does not force zero affinity');
 }else pass('disabled personalization forces zero affinity');
 
-if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.8.0'")){
+if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.9.0'")){
   fail('V2.3 personalization setting persistence or backup v4 missing');
 }else pass('V2.3 setting persistence and backup v4');
 
@@ -689,4 +710,4 @@ if(!workflows.includes('group: color-lab-codeql-')||!workflows.includes('cancel-
 }else pass('CodeQL superseded-run concurrency');
 
 if(process.exitCode) process.exit(process.exitCode);
-console.log('Color Lab V2.8 verification complete.');
+console.log('Color Lab V2.9 verification complete.');

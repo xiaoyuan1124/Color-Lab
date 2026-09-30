@@ -9,6 +9,7 @@ const files={
   fashion:'data/fashion-palettes.js',
   ig:'data/ig-style-patterns.js',
   atlas:'data/inspiration-atlas.js',
+  tones:'data/tone-families.js',
   sw:'sw.js',
   manifest:'manifest.json'
 };
@@ -25,17 +26,17 @@ function pass(label,value,limit){
 
 const sizes=Object.fromEntries(Object.entries(files).map(([k,p])=>[k,size(p)]));
 const eager=0;
-const lazyIntelligence=sizes.poline+sizes.fashion+sizes.ig+sizes.atlas;
+const lazyIntelligence=sizes.poline+sizes.fashion+sizes.ig+sizes.atlas+sizes.tones;
 const lazyInteraction=sizes.iro+sizes.sortable;
 const core=Object.values(sizes).reduce((a,b)=>a+b,0);
 
 pass('index.html budget',sizes.index,235*KB);
 pass('eager intelligence budget',eager,1*KB);
-pass('lazy intelligence budget',lazyIntelligence,100*KB);
+pass('lazy intelligence budget',lazyIntelligence,112*KB);
 pass('lazy interaction tools budget',lazyInteraction,110*KB);
 pass('core runtime budget',core,440*KB);
 
-if(sizes.fashion<4*KB||sizes.ig<2*KB||sizes.atlas<5*KB){
+if(sizes.fashion<4*KB||sizes.ig<2*KB||sizes.atlas<5*KB||sizes.tones<2*KB){
   console.error('FAIL reference color libraries unexpectedly small');
   process.exitCode=1;
 }else{

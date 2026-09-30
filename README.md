@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.8**
+**目前版本：V2.9**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -144,6 +144,20 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
 
+## V2.9 Tonal Cohesion Engine
+
+V2.9 解決「Hue 關係合理，但三個色調不像同一個世界」的問題。
+
+- 新增 `data/tone-families.js`，包含 Morandi、Soft Pastel、Earth、Editorial、Quiet Luxury、Jewel、Digital、Airy 八種 Tone Family
+- 每個 Tone Family 都有自己的 neutral anchor、75/18/7 明度節奏、彩度節奏與角色混合強度
+- 40 組 Inspiration Atlas 原型都有 tone-family 對應；Fashion / IG / 一般生成候選會依實際色彩特徵自動推斷 Tone Family
+- 系統只調整尚未由使用者指定的顏色；使用者輸入或鎖定的角色不會為了統一色調而被偷偷改色
+- tonal harmonization 不是單純 saturation × 0.6，而是在 OKLCH 色彩空間中往共同 neutral anchor 輕微靠攏，再重新設定角色 Lightness / Chroma
+- 新增 Tonal Cohesion Score；候選除了 Aesthetic Gate，還要通過 tone-family cohesion 才有資格進前五
+- 推薦卡與靈感卡會標示目前使用的 Tone Family，讓「為什麼這組看起來像同一套」可以被理解
+
+核心原則：**Different hues. Same atmosphere.**
+
 ## V2.8 Aesthetic Gate
 
 V2.8 把推薦目標從「夠不一樣」改成「先好看，再驚喜」。
@@ -249,7 +263,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v28-aesthetic-gate`
+目前 cache generation：`color-lab-v29-tonal-cohesion`
 
 ## Quality Gates
 

@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 
 const html=fs.readFileSync('index.html','utf8');
+const toneSource=fs.readFileSync('data/tone-families.js','utf8');
 const scriptMatch=html.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/);
 if(!scriptMatch){
   console.error('FAIL inline app script not found');
@@ -80,12 +81,15 @@ const functionNames=[
   'hueToward','contrastRatio','ensureStructureContrast','cohesionPass','qualityRefineGenerated',
   'qualityMetrics','relationVector','relationVectorDistance',
   'photoDominanceScore','semanticRolesFromClusters','photoCompositionProfile','photoPaletteFromRoles','recommendationDirection','paletteSurpriseScore','paletteAestheticCore','laneAestheticFloor',
+  'toneFamilies','toneArchetypeMap','toneFamilyById','toneFamilyLabel','inferToneFamilyId','toneMixColor','tonalHarmonizeGenerated','tonalCohesionScore',
   'emptyPreferenceRole','emptyPreferenceRelation','emptyPreferenceModel','sanitizePreferenceRole','sanitizePreferenceRelation','preferenceRelationMetrics','sanitizePreferenceModel',
   'preferenceRoleAffinity','preferenceRelationAffinity','preferenceRoleDescriptor','preferenceSummaryFromModel','preferenceAffinityFromModel','preferenceAffinityForSetting','preferenceModelWithPalette','preferenceHueFamily'
 ];
 
 const sandbox={console};
+sandbox.window=sandbox;
 vm.createContext(sandbox);
+vm.runInContext(toneSource,sandbox,{timeout:1000});
 vm.runInContext(
   'const oklchCache=new Map();const luminanceCache=new Map();\n'+functionNames.map(extractFunction).join('\n')+
   '\nthis.API={'+functionNames.join(',')+'};',
@@ -156,6 +160,27 @@ check('textFor fixes medium olive contrast regression',
   A.contrastRatio('#838A7B',midText)>=4.5,
   midText+' ratio='+A.contrastRatio('#838A7B',midText));
 
+
+
+const tonalRaw=['#C84335','#315EAA','#5E6648'];
+const tonalMorandi=A.tonalHarmonizeGenerated(tonalRaw,0,'morandi');
+check('tonal harmonizer emits valid Morandi trio',
+  tonalMorandi.length===3&&tonalMorandi.every(validHex),
+  JSON.stringify(tonalMorandi));
+check('tonal harmonizer improves family cohesion',
+  A.tonalCohesionScore(tonalMorandi,'morandi')>A.tonalCohesionScore(tonalRaw,'morandi')+.12,
+  A.tonalCohesionScore(tonalRaw,'morandi')+' -> '+A.tonalCohesionScore(tonalMorandi,'morandi'));
+const tonalPreserve=A.tonalHarmonizeGenerated(tonalRaw,1,'morandi');
+check('tonal harmonizer preserves user Color 1',
+  tonalPreserve[0]===tonalRaw[0],
+  JSON.stringify(tonalPreserve));
+check('tonal harmonizer keeps hue identity recognizable',
+  A.hueDistance(A.toOKLCH(tonalRaw[1]).h,A.toOKLCH(tonalMorandi[1]).h)<35&&
+  A.hueDistance(A.toOKLCH(tonalRaw[2]).h,A.toOKLCH(tonalMorandi[2]).h)<35,
+  JSON.stringify(tonalMorandi));
+check('tone family inference maps muted atmosphere to Morandi or Earth',
+  ['morandi','earth'].includes(A.inferToneFamilyId(['#D9D0C2','#5A4133','#B75635'],'atmospheric')),
+  A.inferToneFamilyId(['#D9D0C2','#5A4133','#B75635'],'atmospheric'));
 
 const elegantEditorial=A.paletteAestheticCore(['#EFE8DC','#25282A','#C84335']).score;
 const elegantMaterial=A.paletteAestheticCore(['#D8C7A7','#275C64','#B95A37']).score;
