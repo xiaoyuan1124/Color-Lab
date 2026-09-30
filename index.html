@@ -2388,9 +2388,6 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
             <div class="handoff-more-actions">
               <button type="button" class="utility-btn" data-export-format="tailwind">Tailwind</button>
               <button type="button" class="utility-btn" data-export-format="swiftui">SwiftUI</button>
-              <button type="button" class="utility-btn" data-export-format="scss">SCSS</button>
-              <button type="button" class="utility-btn" data-export-format="flutter">Flutter</button>
-              <button type="button" class="utility-btn" data-export-format="jetpack">Jetpack</button>
               <button type="button" class="utility-btn" data-export-format="svg">SVG Sheet</button>
             </div>
           </details>
@@ -5599,7 +5596,8 @@ $('#copyPalette').onclick=()=>{navigator.clipboard?.writeText(paletteText()).the
 $('#sharePalette').onclick=openShareSnapshot;
 $$('[data-preview-theme]').forEach(b=>b.addEventListener('click',()=>setPreviewTheme(b.dataset.previewTheme)));
 $$('[data-validation-theme]').forEach(b=>b.addEventListener('click',()=>setValidationTheme(b.dataset.validationTheme)));
-$$('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
+initCrossPlatformHandoff();
+$('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
 $('#librarySearch').addEventListener('input',renderSaved);
 $('#librarySort').value=librarySort;
 $('#librarySort').addEventListener('change',e=>{librarySort=e.target.value;localStorage.setItem('colorlab.librarySort',librarySort);renderSaved()});
