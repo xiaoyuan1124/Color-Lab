@@ -242,8 +242,8 @@ if(startupRenderBlock.includes('renderRelationshipExplanation();scheduleSecondar
 
 
 if(!html.includes('const beautyGuard=clamp((aesthetic-.48)/.34)')||
-   !html.includes('return aesthetic*4.5+diversity*1.18')||
-   !html.includes('Aesthetic Gate × Atlas × Fashion × IG')){
+   !html.includes('return aesthetic*3.85+tonal*2.10')||
+   !html.includes('Tonal Cohesion × Aesthetic Gate × Atlas')){
   fail('V2.9 aesthetic-first utility or UI contract missing');
 }else pass('V2.9 aesthetic-first utility');
 
@@ -337,7 +337,7 @@ for(const fn of ['fashionAffinity','fashionTransferPool','fashionReferenceCombos
 }
 pass('fashion recommendation functions present');
 
-if(!html.includes("Aesthetic Gate × Atlas × Fashion × IG × Novelty")) fail('fashion recommendation description missing');
+if(!html.includes("Tonal Cohesion × Aesthetic Gate × Atlas × Fashion × IG")) fail('fashion recommendation description missing');
 else pass('fashion recommendation UI description');
 
 
@@ -353,7 +353,7 @@ for(const fn of ['igPatternAffinity','igStyleTransferPool','igStyleCombos','appl
 }
 pass('IG style recommendation functions present');
 
-if(!html.includes("Aesthetic Gate × Atlas × Fashion × IG × Novelty")) fail('IG styling recommendation description missing');
+if(!html.includes("Tonal Cohesion × Aesthetic Gate × Atlas × Fashion × IG")) fail('IG styling recommendation description missing');
 else pass('IG styling recommendation UI description');
 
 
@@ -362,7 +362,7 @@ for(const fn of ['gamutMapOKLCH','cohesionPass','qualityRefineGenerated','qualit
 }
 pass('V1.5 quality engine functions present');
 
-if(!html.includes('Aesthetic Gate × Atlas × Fashion × IG × Novelty')) fail('V1.5 intelligence description missing');
+if(!html.includes('Tonal Cohesion × Aesthetic Gate × Atlas × Fashion × IG')) fail('V1.5 intelligence description missing');
 else pass('V1.5 intelligence description');
 
 if(!html.includes('主體／鮮明／柔和／深色／淺色')) fail('semantic photo swatch UI missing');
