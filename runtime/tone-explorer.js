@@ -6,6 +6,7 @@ const TONE_EXPLORER_HUE_STEPS=[-90,-45,-20,20,45,90,180];
 function toneExplorerColors(){
   return [palette.base,palette.structure,palette.accent].map(x=>String(x).toUpperCase());
 }
+function toneExplorerSignature(colors=toneExplorerColors()){return colors.join('|')}
 function toneExplorerToneCandidate(colors,familyId){
   const family=toneFamilyById(familyId);if(!family)return colors.slice();
   return colors.map((hex,i)=>{
@@ -84,6 +85,7 @@ async function renderToneExplorer(){
     b.classList.toggle('active',on);b.setAttribute('aria-pressed',on?'true':'false');
   });
   const candidates=toneExplorerCandidates();
+  if(toneExplorerPreview&&toneExplorerSignature(toneExplorerPreview.origin)!==toneExplorerSignature())toneExplorerPreview=null;
   let preview='';
   if(toneExplorerPreview){
     const o=toneExplorerPreview.origin,p=toneExplorerPreview.colors;
