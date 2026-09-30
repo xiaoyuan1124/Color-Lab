@@ -11,7 +11,8 @@ const shareSnapshot=fs.readFileSync('runtime/share-snapshot.js','utf8');
 const visionAccessibility=fs.readFileSync('runtime/vision-accessibility.js','utf8');
 const localProjects=fs.readFileSync('runtime/local-projects.js','utf8');
 const referenceBoard=fs.readFileSync('runtime/reference-board.js','utf8');
-const appText=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard;
+const gradientStudio=fs.readFileSync('runtime/gradient-studio.js','utf8');
+const appText=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio;
 const toneSource=fs.readFileSync('data/tone-families.js','utf8');
 const inlineScripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
 const scriptMatch=inlineScripts.at(-1);
@@ -38,6 +39,8 @@ try{new Function(localProjects)}
 catch(e){console.error('FAIL local projects runtime syntax',e.message);process.exit(1)}
 try{new Function(referenceBoard)}
 catch(e){console.error('FAIL reference board runtime syntax',e.message);process.exit(1)}
+try{new Function(gradientStudio)}
+catch(e){console.error('FAIL gradient studio runtime syntax',e.message);process.exit(1)}
 
 function findFunctionBodyOpen(start){
   const paramsOpen=source.indexOf('(',start);
@@ -390,6 +393,26 @@ check('V2.27 export cannot mutate source palette',
   !referenceBoard.includes('palette.structure=')&&
   !referenceBoard.includes('palette.accent='),
   'reference board export is read-only');
+check('V2.28 gradient studio reads exact source handoff only',
+  gradientStudio.includes('const source=paletteArtifactBase()')&&
+  gradientStudio.includes("linear-gradient(")&&
+  !gradientStudio.includes('previewThemePalette(')&&
+  !gradientStudio.includes('visionPalette(')&&
+  !gradientStudio.includes('accessibilityPreview')&&
+  !gradientStudio.includes('toneExplorerPreview'),
+  'gradient derives from exact source handoff, not preview transforms');
+check('V2.28 gradient studio cannot mutate palette',
+  !gradientStudio.includes('selectedColors=')&&
+  !gradientStudio.includes('palette.base=')&&
+  !gradientStudio.includes('palette.structure=')&&
+  !gradientStudio.includes('palette.accent='),
+  'gradient studio stays preview-only');
+check('V2.28 gradient studio remains local-only',
+  !gradientStudio.includes('fetch(')&&
+  !gradientStudio.includes('XMLHttpRequest')&&
+  gradientStudio.includes("colorlab.gradientPair")&&
+  gradientStudio.includes("colorlab.gradientAngle"),
+  'only UI preferences are stored locally');
 
 check('V2.18 context preview ships five realistic scene contracts',
   appText.includes('class="cp2 cp2-app"')&&
