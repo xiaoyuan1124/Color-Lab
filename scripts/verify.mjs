@@ -9,7 +9,11 @@ const colorRelationship=fs.readFileSync('runtime/color-relationship.js','utf8');
 const colorRelationshipCss=fs.readFileSync('runtime/color-relationship.css','utf8');
 const roleScale=fs.readFileSync('runtime/role-scale.js','utf8');
 const roleScaleCss=fs.readFileSync('runtime/role-scale.css','utf8');
-const appSource=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale;
+const shareSnapshot=fs.readFileSync('runtime/share-snapshot.js','utf8');
+const shareSnapshotCss=fs.readFileSync('runtime/share-snapshot.css','utf8');
+const qrVendor=fs.readFileSync('vendor/qrcode.min.js','utf8');
+const qrLicense=fs.readFileSync('vendor/qrcode.LICENSE.txt','utf8');
+const appSource=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot;
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -38,6 +42,10 @@ try { new Function(colorRelationship); pass('color relationship runtime syntax')
 catch(e){ fail('color relationship runtime syntax: '+e.message); }
 try { new Function(roleScale); pass('role scale runtime syntax'); }
 catch(e){ fail('role scale runtime syntax: '+e.message); }
+try { new Function(shareSnapshot); pass('share snapshot runtime syntax'); }
+catch(e){ fail('share snapshot runtime syntax: '+e.message); }
+try { new Function(qrVendor); pass('local QR vendor syntax'); }
+catch(e){ fail('local QR vendor syntax: '+e.message); }
 
 
 const forbiddenPatterns=[
@@ -112,13 +120,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2220")) fail('service worker cache version is not V2.22.0');
+if(!sw.includes("color-lab-v2230")) fail('service worker cache version is not V2.23.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.22.0') fail('package version must be 2.22.0');
+if(pkg.version!=='2.23.0') fail('package version must be 2.23.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.22.0')||!html.includes('<div class="version">V2.22.0</div>')||!html.includes("appVersion:'2.22.0'")) fail('V2.22.0 UI or backup version metadata missing');
-else pass('V2.22.0 version metadata');
+if(!html.includes('Color Lab V2.23.0')||!html.includes('<div class="version">V2.23.0</div>')||!html.includes("appVersion:'2.23.0'")) fail('V2.23.0 UI or backup version metadata missing');
+else pass('V2.23.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -320,6 +328,35 @@ if(!appSource.includes('const ROLE_SCALE_STOPS=[50,100,200,300,400,500,600,700,8
   fail('V2.22.0 exact-source anchor or read-only scale contract missing');
 }else pass('V2.22.0 exact source anchors + derived-only scales');
 
+if(!html.includes('<script src="./runtime/share-snapshot.js"></script>')||
+   !html.includes('<link rel="stylesheet" href="./runtime/share-snapshot.css">')||
+   !sw.includes('./runtime/share-snapshot.js')||!sw.includes('./runtime/share-snapshot.css')||!sw.includes('./vendor/qrcode.min.js')||
+   !appSource.includes('function shareSnapshotHash(')||!appSource.includes('function parseShareSnapshot(')||
+   !appSource.includes('function applyShareSnapshotFromLocation(')||!appSource.includes('function openShareSnapshot(')||
+   !shareSnapshotCss.includes('.share-snapshot-panel{')||!shareSnapshotCss.includes('.share-snapshot-qr{')){
+  fail('V2.23.0 Shareable Snapshot runtime + UI contract missing');
+}else pass('V2.23.0 Shareable Snapshot runtime + UI');
+
+if(!shareSnapshot.includes("'#clv=1&cl='")||
+   !shareSnapshot.includes("colors:[palette.base,palette.structure,palette.accent].map(normHex)")||
+   !shareSnapshot.includes("selectedColors=[...snap.colors]")||
+   !shareSnapshot.includes("lockedSlots=[false,false,false]")||
+   !html.includes('restoreDraft();applyShareSnapshotFromLocation();')||
+   shareSnapshot.includes('fetch(')||shareSnapshot.includes('XMLHttpRequest')){
+  fail('V2.23.0 exact-order stateless URL snapshot contract missing');
+}else pass('V2.23.0 exact-order stateless URL snapshots');
+
+if(!shareSnapshot.includes("loadScriptOnce('./vendor/qrcode.min.js','QRCode')")||
+   !qrLicense.includes('MIT License')||!qrLicense.includes('Copyright (c) 2012 davidshimjs')||
+   qrVendor.length>23000){
+  fail('V2.23.0 local QR dependency contract missing or oversized');
+}else pass('V2.23.0 local MIT QR runtime');
+
+if(html.includes('const LEARNING_CONCEPTS=')||html.includes('function showLearningConcept(')||
+   !colorRelationship.includes('const LEARNING_CONCEPTS=')||!colorRelationship.includes('function showLearningConcept(')){
+  fail('V2.23.0 learning concept modularization missing');
+}else pass('V2.23.0 learning concepts moved out of index budget');
+
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
    !html.includes("padding:10px 0 16px var(--app-gutter)")){
@@ -380,7 +417,7 @@ if(!html.includes('function recommendationDirection(')||!html.includes('rec-dire
   fail('V2.6 recommendation direction explanation missing');
 }else pass('V2.6 recommendation directions');
 
-if(!html.includes('const LEARNING_CONCEPTS=')||!html.includes('data-learn="hierarchy"')||!html.includes('function showLearningConcept(')){
+if(!appSource.includes('const LEARNING_CONCEPTS=')||!appSource.includes('data-learn="hierarchy"')||!appSource.includes('function showLearningConcept(')){
   fail('V2.6 contextual learning layer missing');
 }else pass('V2.6 contextual learning layer');
 
