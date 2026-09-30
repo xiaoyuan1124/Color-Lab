@@ -25,7 +25,7 @@ Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把�
 2. Poline 色彩路徑
 3. Fashion Reference Library
 4. Instagram Styling Relationship Library
-5. Aesthetic Gate（明暗節奏、彩度節制、色相結構、角色分工）
+5. Aesthetic Gate（明暗節奏、彩度意圖、色相結構、角色分工）
 6. Cohesion pass
 7. sRGB gamut protection
 8. Multi-factor quality ranking
