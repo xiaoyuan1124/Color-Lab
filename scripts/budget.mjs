@@ -6,6 +6,7 @@ const files={
   poline:'vendor/poline.umd.js',
   iro:'vendor/iro.min.js',
   sortable:'vendor/Sortable.min.js',
+  qr:'vendor/qrcode.min.js',
   fashion:'data/fashion-palettes.js',
   ig:'data/ig-style-patterns.js',
   atlas:'data/inspiration-atlas.js',
@@ -27,7 +28,7 @@ function pass(label,value,limit){
 const sizes=Object.fromEntries(Object.entries(files).map(([k,p])=>[k,size(p)]));
 const eager=0;
 const lazyIntelligence=sizes.poline+sizes.fashion+sizes.ig+sizes.atlas+sizes.tones;
-const lazyInteraction=sizes.iro+sizes.sortable;
+const lazyInteraction=sizes.iro+sizes.sortable+sizes.qr;
 const core=Object.values(sizes).reduce((a,b)=>a+b,0);
 
 pass('index.html budget',sizes.index,235*KB);
