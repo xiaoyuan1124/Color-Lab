@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.13.1**
+**目前版本：V2.14.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,20 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.14.0 Actionable Accessibility Fix
+
+Palette Validation 不再只指出「不合格」，而是給出可直接比較的修正方向：
+
+- 任一角色配對低於 WCAG AA 4.5:1 時，產生最接近目前顏色的 AA 建議色
+- 修正優先動較小比例角色：Base / Structure 改 Structure；含 Accent 的配對優先改 Accent
+- 演算法維持原色 Hue / Chroma，主要沿 OKLCH Lightness 搜尋，再以 perceptual distance 選最接近原色的達標候選
+- 每張建議顯示目前 HEX、建議 HEX、目前 contrast 與建議 contrast
+- 「預覽」只顯示建議套入 75 / 18 / 7 後的結果，不修改目前 palette
+- 只有使用者明確按「套用建議」才會把建議色寫入 Compose，並納入 Undo / Redo 歷史
+- 若原本只有 1–2 個自選色，明確套用時會固定當下三個角色，避免角色重排
+- Dark 驗證仍是 preview-only 衍生色，不提供直接套用建議；回 Light / 原色後才可修正來源 palette
+- 不改動 CSS / JSON / Tokens 匯出的原色，除非使用者已明確套用建議
 
 ## V2.13.1 Runtime Modularization
 
@@ -350,7 +364,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v2131-runtime-modularization`
+目前 cache generation：`color-lab-v2140-accessibility-fix`
 
 ## Quality Gates
 
