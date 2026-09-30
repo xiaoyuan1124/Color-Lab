@@ -6,7 +6,8 @@ const paletteTools=fs.readFileSync('runtime/palette-tools.js','utf8');
 const toneExplorer=fs.readFileSync('runtime/tone-explorer.js','utf8');
 const photoPalette=fs.readFileSync('runtime/photo-palette.js','utf8');
 const colorRelationship=fs.readFileSync('runtime/color-relationship.js','utf8');
-const appText=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship;
+const roleScale=fs.readFileSync('runtime/role-scale.js','utf8');
+const appText=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale;
 const toneSource=fs.readFileSync('data/tone-families.js','utf8');
 const inlineScripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
 const scriptMatch=inlineScripts.at(-1);
@@ -23,6 +24,8 @@ try{new Function(photoPalette)}
 catch(e){console.error('FAIL photo palette runtime syntax',e.message);process.exit(1)}
 try{new Function(colorRelationship)}
 catch(e){console.error('FAIL color relationship runtime syntax',e.message);process.exit(1)}
+try{new Function(roleScale)}
+catch(e){console.error('FAIL role scale runtime syntax',e.message);process.exit(1)}
 
 function findFunctionBodyOpen(start){
   const paramsOpen=source.indexOf('(',start);
@@ -275,6 +278,18 @@ check('V2.21 relationship map keeps semantic 75/18/7 order',
   colorRelationship.includes("{key:'structure',label:'Structure',ratio:18")&&
   colorRelationship.includes("{key:'accent',label:'Accent',ratio:7"),
   'base structure accent ratios');
+
+check('V2.22 role scale preserves exact source anchors',
+  roleScale.includes("if(i===anchor)return{stop,hex:source,source:true")&&
+  roleScale.includes("source:palette[key]")&&
+  roleScale.includes("--color-'+key+'-source: '+normHex(system[key].source)"),
+  'exact Base Structure Accent anchors');
+check('V2.22 role scale never mutates source palette',
+  !roleScale.includes('selectedColors=')&&
+  !roleScale.includes('palette.base=')&&
+  !roleScale.includes('palette.structure=')&&
+  !roleScale.includes('palette.accent='),
+  'derived-only role scale');
 
 check('V2.19 photo palette uses perceptual dedupe',
   appText.includes('function photoDistinctClusters(')&&
