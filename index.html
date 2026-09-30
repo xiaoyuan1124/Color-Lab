@@ -2216,7 +2216,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.26.0</div>
+    <div class="version">V2.27.0</div>
   </div>
 
   <main class="app-main">
@@ -2563,7 +2563,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.26.0</div>
+  <div class="footer app-footer">Color Lab V2.27.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2658,6 +2658,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <script src="./runtime/palette-tools.js"></script>
 <script src="./runtime/vision-accessibility.js"></script>
 <script src="./runtime/local-projects.js"></script>
+<script src="./runtime/reference-board.js"></script>
 <script src="./runtime/color-relationship.js"></script>
 <script src="./runtime/role-scale.js"></script>
 <script src="./runtime/share-snapshot.js"></script>
@@ -3120,7 +3121,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v5',appVersion:'2.26.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.27.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -5605,7 +5606,7 @@ $('#composeDeepDive').addEventListener('toggle',e=>{
   });
 });
 renderModes();palette=fastInitialPalette();renderComboSlots();render();updateLockToggle();
-historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();installShareSnapshotHashListener();initCustomDesignPreview();initLocalProjects();
+historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();installShareSnapshotHashListener();initCustomDesignPreview();initLocalProjects();initReferenceBoardExport();
 setCornerNavOpen(false);
 switchTab(localStorage.getItem('colorlab.tab')||'compose',false);updatePhotoTarget();
 scheduleNonCriticalStartup();
