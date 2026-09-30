@@ -1,5 +1,5 @@
-const CACHE='color-lab-v2130-palette-validation';
-const ASSETS=['./','./index.html','./manifest.json','./apple-touch-icon.png','./icon-192.png','./icon-512.png','./vendor/poline.umd.js','./vendor/iro.min.js','./vendor/Sortable.min.js','./data/fashion-palettes.js','./data/ig-style-patterns.js','./data/inspiration-atlas.js','./data/tone-families.js'];
+const CACHE='color-lab-v2131-runtime-modularization';
+const ASSETS=['./','./index.html','./manifest.json','./apple-touch-icon.png','./icon-192.png','./icon-512.png','./vendor/poline.umd.js','./vendor/iro.min.js','./vendor/Sortable.min.js','./data/fashion-palettes.js','./data/ig-style-patterns.js','./data/inspiration-atlas.js','./data/tone-families.js','./runtime/palette-tools.js'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(
