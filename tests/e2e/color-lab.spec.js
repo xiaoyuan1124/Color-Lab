@@ -43,3 +43,28 @@ test('corner fan navigation opens on demand and switches to Library', async ({ p
   await expect(libraryTab).toHaveAttribute('aria-selected', 'true');
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
 });
+
+test('Inspire batch history moves forward and back without wrapping', async ({ page }) => {
+  await page.locator('#cornerNavToggle').click();
+  await page.locator('#nav-inspire').click();
+  await expect(page.locator('.tab-view[data-view="inspire"]')).toBeVisible();
+
+  const progress = page.locator('#recommendationProgress');
+  const previous = page.locator('#previousRecommendations');
+  const next = page.locator('#nextRecommendations');
+
+  await expect(progress).toContainText('第 1 /');
+  await expect(previous).toBeDisabled();
+  await expect(next).toBeEnabled();
+
+  await next.click();
+  await expect(progress).toContainText('第 2 /');
+  await expect(previous).toBeEnabled();
+
+  await previous.click();
+  await expect(progress).toContainText('第 1 /');
+  await expect(previous).toBeDisabled();
+
+  await next.click();
+  await expect(progress).toContainText('第 2 /');
+});
