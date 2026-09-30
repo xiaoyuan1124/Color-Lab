@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.22.0**
+**目前版本：V2.23.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,20 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.23.0 Shareable Snapshot
+
+補上跨裝置與對外分享，但不引入帳號、後端或追蹤：
+
+- 分享連結使用 URL fragment（`#clv=1&cl=...`），依序保存 exact Base / Structure / Accent，瀏覽器不會把 fragment 傳給伺服器
+- Snapshot 額外保存目前 Context（App / Brand / Room / Outfit / Slides）與 Light / Dark 預覽狀態
+- 開啟分享連結時會在 initial render 前還原三個來源色，順序固定為 Color 1 → Base、Color 2 → Structure、Color 3 → Accent
+- 分享不攜帶收藏、照片、偏好模型、最近用色、備份資料或帳號資訊
+- 原本「分享」按鈕改為打開 Share Snapshot 面板，可複製可還原 URL 或使用系統分享
+- QR Code 完全在瀏覽器本機產生；使用 MIT 授權 qrcodejs，vendored 到 `vendor/qrcode.min.js`，不呼叫第三方 QR API
+- QR runtime 只有實際打開分享面板時才 lazy load，並加入 PWA offline cache
+- qrcodejs 約 19.9 KB 已正式納入 lazy interaction Size Budget，沒有調高既有 110 KiB 或 440 KiB 門檻
+- 為維持 235 KiB `index.html` hard budget，既有 Learning Concepts 搬到 `runtime/color-relationship.js`；產品行為不變
 
 ## V2.22.0 Role Scale / Tonal System
 
@@ -477,7 +491,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v2220-role-scale`
+目前 cache generation：`color-lab-v2230-shareable-snapshot`
 
 ## Quality Gates
 
