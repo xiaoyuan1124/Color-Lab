@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.11.0**
+**目前版本：V2.11.1**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,17 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.11.1 Inspire Session History
+
+把 Inspire 的「換一批」從單向分頁改成真正可回頭的探索 session：
+
+- 新增「上一批 / 下一批」，批次進度直接顯示第幾批
+- 同一個推薦條件會保留已走過的批次歷史，返回後再前進會回到相同批次
+- 未看完所有合格候選前不重複已拒絕批次
+- 走到最後一批後停止，不再突然跳回第一批
+- 使用者顏色、模式或推薦上下文改變時才重建新 session
+- 仍維持最多 30 組合格候選、一次只顯示 5 組的資訊密度
 
 ## V2.11.0 Candidate Explorer
 
@@ -299,7 +310,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v2110-candidate-explorer`
+目前 cache generation：`color-lab-v2111-inspire-history`
 
 ## Quality Gates
 

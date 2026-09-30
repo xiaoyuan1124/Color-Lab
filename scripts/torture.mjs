@@ -174,6 +174,17 @@ check('V2.10 legacy random five-option shuffle removed',
   'legacy cap removed');
 
 
+check('V2.11.1 Inspire batches are reversible',
+  html.includes('id="previousRecommendations"')&&
+  html.includes('function previousRecommendationBatch()')&&
+  html.includes('recommendationBatchHistoryIndex--'),
+  'previous batch + history cursor');
+check('V2.11.1 Inspire does not wrap rejected batches',
+  html.includes("if(nextOffset>=recs.length){toast('已看完這輪所有候選');return}")&&
+  !html.includes('if(recommendationBatchOffset>=recs.length)recommendationBatchOffset=0;'),
+  'stop at end instead of wrap');
+
+
 check('V2.11 candidate session stores original color',
   html.includes("state.origin=palette[role]")&&
   html.includes("if(state.index===0){state.index=-1;return state.origin||null}"),
