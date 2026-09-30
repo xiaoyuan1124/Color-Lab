@@ -222,7 +222,7 @@ if(!appSource.includes("labels={app:'App / Web',brand:'品牌',room:'室內',out
    !appSource.includes("原色情境 · 75 / 18 / 7")||
    !appSource.includes("Dark 預覽變體 · 不改原色")){
   fail('V2.18.0 realistic context scene contract missing');
-}else pass('V2.19.0 five realistic 75/18/7 contexts');
+}else pass('V2.18.0 five realistic 75/18/7 contexts');
 
 if(!html.includes('id="photoStrategyBar"')||
    !html.includes('data-photo-strategy="balanced"')||
