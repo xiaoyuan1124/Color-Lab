@@ -3202,8 +3202,8 @@ function setPreviewTheme(next){
 }
 function renderContextPreview(){
   const host=$('#uiPreview');if(!host)return;
-  $('#contextTabs [data-context]').forEach(b=>b.classList.toggle('active',b.dataset.context===previewContext));
-  $('#contextThemeModes [data-preview-theme]').forEach(b=>{
+  $$('#contextTabs [data-context]').forEach(b=>b.classList.toggle('active',b.dataset.context===previewContext));
+  $$('#contextThemeModes [data-preview-theme]').forEach(b=>{
     const active=b.dataset.previewTheme===previewTheme;
     b.classList.toggle('active',active);b.setAttribute('aria-pressed',active?'true':'false');
   });
@@ -5558,8 +5558,8 @@ $('#backupInput').addEventListener('change',e=>{const file=e.target.files&&e.tar
 $('#clearRecent').onclick=()=>{recentColors=[];localStorage.removeItem('colorlab.recent');renderRecentColors();toast('已清除最近用色')};
 $('#copyPalette').onclick=()=>{navigator.clipboard?.writeText(paletteText()).then(()=>toast('已複製三色')).catch(()=>toast('無法複製'))};
 $('#sharePalette').onclick=sharePalette;
-$('[data-preview-theme]').forEach(b=>b.addEventListener('click',()=>setPreviewTheme(b.dataset.previewTheme)));
-$('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
+$$('[data-preview-theme]').forEach(b=>b.addEventListener('click',()=>setPreviewTheme(b.dataset.previewTheme)));
+$$('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
 $('#librarySearch').addEventListener('input',renderSaved);
 $('#librarySort').value=librarySort;
 $('#librarySort').addEventListener('change',e=>{librarySort=e.target.value;localStorage.setItem('colorlab.librarySort',librarySort);renderSaved()});
