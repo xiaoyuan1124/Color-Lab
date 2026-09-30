@@ -309,6 +309,7 @@ test('V2.17 Tone Explorer preview is non-mutating, apply is explicit, and Undo r
     lockedSlots=[false,false,false];
     activeSlot=0;seed=selectedColors[0];
     generate(false);
+    historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();
   });
   await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
   await expect(page.locator('#toneExplorer')).toBeVisible();
