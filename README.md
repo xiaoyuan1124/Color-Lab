@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.27.0**
+**目前版本：V2.28.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,20 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.28.0 Gradient Studio
+
+補上常見配色工具的 Gradient 能力，但維持 Color Lab 的三角色契約，不把產品變成另一個泛用漸層產生器：
+
+- Compose「深入理解」新增第二層 Gradient Studio，不增加主導航或首屏資訊密度
+- 所有 gradient 都從 `paletteArtifactBase()` 讀取目前 exact Base / Structure / Accent
+- 提供 Base → Structure、Base → Accent、Structure → Accent 與三角色四種受控組合
+- 提供 0° / 45° / 90° / 135° 四種常用線性方向，不加入無限 slider 或不必要控制
+- 三角色模式使用 Base 0% / Structure 50% / Accent 100% 作為衍生視覺路徑，明確不宣稱等於 75 / 18 / 7 面積比例
+- 可直接複製可用的 CSS `background: linear-gradient(...)`
+- Gradient 預覽、配對、方向與 CSS 複製都不寫回 Compose、不改收藏、不改 Photo、不影響 Professional Export
+- 只記住本機的 gradient pair / angle UI 偏好，不保存新的色彩資料
+- runtime / stylesheet 完全本機並加入 PWA offline cache，不新增後端、CDN 或付費 API
 
 ## V2.27.0 Reference / Moodboard Export
 
