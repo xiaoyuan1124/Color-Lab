@@ -1127,7 +1127,7 @@ test('V2.27 Reference Board export stays behind the existing handoff disclosure'
   await expect(page.locator('#exportReferenceBoard')).not.toBeVisible();
   await page.locator('#handoffMore summary').click();
   await expect(page.locator('#exportReferenceBoard')).toBeVisible();
-  await expect(page.locator('#handoffMore .handoff-more-actions .utility-btn')).toHaveCount(4);
+  await expect(page.locator('#handoffMore .handoff-more-actions .utility-btn')).toHaveCount(7);
 });
 
 
