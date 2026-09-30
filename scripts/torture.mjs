@@ -229,6 +229,22 @@ check('V2.13 dark validation is derived only',
 const quietAesthetic=A.paletteAestheticCore(['#E9E1D2','#25313A','#4D739B']);
 const vividAesthetic=A.paletteAestheticCore(['#286B69','#D0A32E','#A94B38']);
 const noisyAesthetic=A.paletteAestheticCore(['#FF4B55','#FF5A4D','#FF6A45']);
+check('V2.18 context preview ships five realistic scene contracts',
+  appText.includes('class="cp2 cp2-app"')&&
+  appText.includes('class="cp2 cp2-brand"')&&
+  appText.includes('class="cp2 cp2-room"')&&
+  appText.includes('class="cp2 cp2-outfit"')&&
+  appText.includes('class="cp2 cp2-slide"'),
+  'app brand room outfit slides');
+check('V2.18 room and outfit remain source-color previews',
+  appText.includes("const themed=['app','brand','slides'].includes(previewContext)")&&
+  appText.includes("!themed?'原色情境 · 75 / 18 / 7'"),
+  'only app/brand/slides use derived theme');
+check('V2.18 context preview stays non-mutating',
+  appText.includes("const p=themed?previewThemePalette():{...palette,derived:false}")&&
+  !appText.includes("palette=p.derived"),
+  'context render only reads palette');
+
 check('V2.17 Tone Explorer keeps preview separate from palette',
   appText.includes("toneExplorerPreview={...item,origin:toneExplorerColors()}")&&
   appText.includes("function clearToneExplorerPreview()")&&
