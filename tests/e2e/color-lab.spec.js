@@ -461,6 +461,7 @@ test('V2.19 strategy switching is preview-only until explicit photo apply', asyn
   const before=await page.evaluate(() => paletteArtifactBase());
   await page.evaluate(() => {
     switchTab('photo',false);
+    photoPanel.classList.add('show');
     const mk=(hex,proportion,edgeShare=0)=>({hex,proportion,edgeShare,...toOKLCH(hex)});
     lastPhotoClusters=[
       mk('#D8C7A7',.40),mk('#27383A',.22),mk('#D94A3B',.08),
