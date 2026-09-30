@@ -1242,3 +1242,105 @@ test('V2.29 framework formats remain inside the existing compact handoff disclos
   await expect(page.locator('[data-export-format="jetpack"]')).toBeVisible();
   await expect(page.locator('#handoffMore .handoff-more-actions .utility-btn')).toHaveCount(7);
 });
+
+
+test('V2.30 valid empty collections remain authoritative while missing or corrupt storage requests recovery', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    localStorage.setItem('colorlab.saved','[]');
+    localStorage.setItem(LOCAL_PROJECTS_KEY,'[]');
+    const emptySaved=storageNeedsRecovery('colorlab.saved',Array.isArray);
+    const emptyProjects=storageNeedsRecovery(LOCAL_PROJECTS_KEY,Array.isArray);
+
+    localStorage.removeItem('colorlab.saved');
+    const missingSaved=storageNeedsRecovery('colorlab.saved',Array.isArray);
+    localStorage.setItem('colorlab.saved','{broken');
+    const corruptSaved=storageNeedsRecovery('colorlab.saved',Array.isArray);
+
+    localStorage.setItem('colorlab.saved','{}');
+    const wrongShapeSaved=storageNeedsRecovery('colorlab.saved',Array.isArray);
+    return {emptySaved,emptyProjects,missingSaved,corruptSaved,wrongShapeSaved};
+  });
+  expect(result).toEqual({
+    emptySaved:false,
+    emptyProjects:false,
+    missingSaved:true,
+    corruptSaved:true,
+    wrongShapeSaved:true
+  });
+});
+
+test('V2.30 saved-palette write failure is fail-closed and never reports a false save', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    localStorage.setItem('colorlab.saved','[]');
+    selectedColors=['#E7DCC8','#274C55','#C65338'];
+    lockedSlots=[false,false,false];activeSlot=0;seed=selectedColors[0];generate(false);
+
+    const proto=Storage.prototype,original=proto.setItem;
+    proto.setItem=function(key,value){
+      if(key==='colorlab.saved')throw new DOMException('quota','QuotaExceededError');
+      return original.call(this,key,value);
+    };
+    let threw=false;
+    try{save()}catch(_){threw=true}
+    proto.setItem=original;
+
+    return{
+      threw,
+      saved:JSON.parse(localStorage.getItem('colorlab.saved')||'[]'),
+      toast:document.getElementById('toast')?.textContent||''
+    };
+  });
+  expect(result.threw).toBe(false);
+  expect(result.saved).toEqual([]);
+  expect(result.toast).toContain('本機儲存失敗');
+});
+
+test('V2.30 project deletion rolls back palette assignment when the second storage write fails', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    const project={id:'prj-rollback1',name:'Rollback Project',createdAt:1};
+    const saved=sanitizeSavedRecord({
+      name:'Keep Me',projectId:project.id,
+      palette:{base:'#112233',structure:'#445566',accent:'#AABBCC'},
+      selectedColors:['#112233','#445566','#AABBCC'],mode:'quiet',date:1
+    });
+    localStorage.setItem('colorlab.saved',JSON.stringify([saved]));
+    localStorage.setItem(LOCAL_PROJECTS_KEY,JSON.stringify([project]));
+    window.confirm=()=>true;
+
+    const proto=Storage.prototype,original=proto.setItem;
+    proto.setItem=function(key,value){
+      if(key===LOCAL_PROJECTS_KEY&&value==='[]')throw new DOMException('quota','QuotaExceededError');
+      return original.call(this,key,value);
+    };
+    let threw=false;
+    try{deleteLocalProject(project.id)}catch(_){threw=true}
+    proto.setItem=original;
+
+    return{
+      threw,
+      saved:JSON.parse(localStorage.getItem('colorlab.saved')),
+      projects:JSON.parse(localStorage.getItem(LOCAL_PROJECTS_KEY)),
+      toast:document.getElementById('toast')?.textContent||''
+    };
+  });
+  expect(result.threw).toBe(false);
+  expect(result.saved).toHaveLength(1);
+  expect(result.saved[0].projectId).toBe('prj-rollback1');
+  expect(result.projects).toEqual([{id:'prj-rollback1',name:'Rollback Project',createdAt:1}]);
+  expect(result.toast).toContain('變更已取消');
+});
+
+test('V2.30 safe storage read falls back when browser storage access throws', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    const proto=Storage.prototype,original=proto.getItem;
+    proto.getItem=function(key){
+      if(key==='colorlab.previewTheme')throw new DOMException('blocked','SecurityError');
+      return original.call(this,key);
+    };
+    let value,threw=false;
+    try{value=storageReadRaw('colorlab.previewTheme','light')}catch(_){threw=true}
+    proto.getItem=original;
+    return{value,threw};
+  });
+  expect(result).toEqual({value:'light',threw:false});
+});
