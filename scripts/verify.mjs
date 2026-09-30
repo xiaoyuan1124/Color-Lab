@@ -269,7 +269,7 @@ if(!sw.includes('./data/tone-families.js')) fail('V2.11.0 tone family offline ca
 else pass('V2.11.0 tone family offline cache');
 
 
-for(const fn of ['roleAlternativeContext','roleAlternativePool','nextRoleAlternative','recommendationBatch','nextRecommendationBatch']){
+for(const fn of ['roleAlternativeContext','candidateExploreConfig','isPerceptualDuplicate','roleAlternativePool','prepareRoleCandidateSession','moveRoleAlternative','recommendationBatch','nextRecommendationBatch']){
   if(!html.includes('function '+fn+'(')) fail('V2.11.0 exploration function missing: '+fn);
 }
 if(html.includes("Math.floor(Math.random()*Math.min(5,opts.length))")){
