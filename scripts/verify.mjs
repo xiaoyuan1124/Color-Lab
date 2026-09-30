@@ -654,9 +654,10 @@ for(const key of ['hierarchy','distinctiveness','cohesion','focus','practicality
 }
 pass('V1.9 quality dimensions present');
 
-if(!html.includes('const out=selectDiverseRecommendations(candidates,30)')){
-  fail('V2.11.0 deep recommendation selector not active');
-}else pass('V2.11.0 deep recommendation selector active');
+if(!html.includes('selectDiverseRecommendations(candidates,30)')||
+   !html.includes('prioritizeUnseenRecommendations(selectDiverseRecommendations(candidates,30))')){
+  fail('V2.15.0 deep recommendation selector / fresh-first wrapper not active');
+}else pass('V2.15.0 deep recommendation selector + fresh-first wrapper');
 
 
 for(const fn of ['photoCompositionProfile','renderPhotoInsight']){
