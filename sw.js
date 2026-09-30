@@ -1,5 +1,5 @@
-const CACHE='color-lab-v2290-cross-platform-handoff';
-const ASSETS=['./','./index.html','./manifest.json','./apple-touch-icon.png','./icon-192.png','./icon-512.png','./vendor/poline.umd.js','./vendor/iro.min.js','./vendor/Sortable.min.js','./data/fashion-palettes.js','./data/ig-style-patterns.js','./data/inspiration-atlas.js','./data/tone-families.js','./runtime/palette-tools.js','./runtime/tone-explorer.js','./runtime/context-preview.css','./runtime/photo-palette.js','./runtime/photo-palette.css','./runtime/color-relationship.js','./runtime/color-relationship.css','./runtime/role-scale.js','./runtime/role-scale.css','./runtime/share-snapshot.js','./runtime/share-snapshot.css','./runtime/custom-design-preview.js','./runtime/custom-design-preview.css','./runtime/vision-accessibility.js','./runtime/vision-accessibility.css','./runtime/local-projects.js','./runtime/local-projects.css','./runtime/reference-board.js','./runtime/gradient-studio.js','./runtime/gradient-studio.css','./vendor/qrcode.min.js'];
+const CACHE='color-lab-v2300-stability-hardening';
+const ASSETS=['./','./index.html','./manifest.json','./apple-touch-icon.png','./icon-192.png','./icon-512.png','./vendor/poline.umd.js','./vendor/iro.min.js','./vendor/Sortable.min.js','./data/fashion-palettes.js','./data/ig-style-patterns.js','./data/inspiration-atlas.js','./data/tone-families.js','./runtime/storage-hardening.js','./runtime/palette-tools.js','./runtime/tone-explorer.js','./runtime/context-preview.css','./runtime/photo-palette.js','./runtime/photo-palette.css','./runtime/color-relationship.js','./runtime/color-relationship.css','./runtime/role-scale.js','./runtime/role-scale.css','./runtime/share-snapshot.js','./runtime/share-snapshot.css','./runtime/custom-design-preview.js','./runtime/custom-design-preview.css','./runtime/vision-accessibility.js','./runtime/vision-accessibility.css','./runtime/local-projects.js','./runtime/local-projects.css','./runtime/reference-board.js','./runtime/gradient-studio.js','./runtime/gradient-studio.css','./vendor/qrcode.min.js'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(
@@ -40,6 +40,21 @@ self.addEventListener('fetch',event=>{
   }
 
   if(sameOrigin){
+    const codeAsset=/\/(?:runtime|data|vendor)\//.test(url.pathname)||/\.(?:js|css)$/.test(url.pathname);
+    if(codeAsset){
+      event.respondWith(
+        fetch(request)
+          .then(response=>{
+            if(response&&response.ok){
+              const copy=response.clone();
+              caches.open(CACHE).then(cache=>cache.put(request,copy)).catch(()=>{});
+            }
+            return response;
+          })
+          .catch(()=>caches.match(request))
+      );
+      return;
+    }
     event.respondWith(
       caches.match(request).then(cached=>{
         if(cached)return cached;

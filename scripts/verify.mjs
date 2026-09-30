@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 
 const html=fs.readFileSync('index.html','utf8');
+const storageHardening=fs.readFileSync('runtime/storage-hardening.js','utf8');
 const paletteTools=fs.readFileSync('runtime/palette-tools.js','utf8');
 const toneExplorer=fs.readFileSync('runtime/tone-explorer.js','utf8');
 const photoPalette=fs.readFileSync('runtime/photo-palette.js','utf8');
@@ -22,7 +23,7 @@ const gradientStudio=fs.readFileSync('runtime/gradient-studio.js','utf8');
 const gradientStudioCss=fs.readFileSync('runtime/gradient-studio.css','utf8');
 const qrVendor=fs.readFileSync('vendor/qrcode.min.js','utf8');
 const qrLicense=fs.readFileSync('vendor/qrcode.LICENSE.txt','utf8');
-const appSource=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio;
+const appSource=html+'\n'+storageHardening+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio;
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -41,6 +42,8 @@ else {
   try { new Function(inline[1]); pass('inline JavaScript syntax'); }
   catch(e){ fail('inline JavaScript syntax: '+e.message); }
 }
+try { new Function(storageHardening); pass('storage hardening runtime syntax'); }
+catch(e){ fail('storage hardening runtime syntax: '+e.message); }
 try { new Function(paletteTools); pass('palette tools runtime syntax'); }
 catch(e){ fail('palette tools runtime syntax: '+e.message); }
 try { new Function(toneExplorer); pass('tone explorer runtime syntax'); }
@@ -139,13 +142,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2290")) fail('service worker cache version is not V2.29.0');
+if(!sw.includes("color-lab-v2300")) fail('service worker cache version is not V2.30.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.29.0') fail('package version must be 2.29.0');
+if(pkg.version!=='2.30.0') fail('package version must be 2.30.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.29.0')||!html.includes('<div class="version">V2.29.0</div>')||!html.includes("appVersion:'2.29.0'")) fail('V2.29.0 UI or backup version metadata missing');
-else pass('V2.29.0 version metadata');
+if(!html.includes('Color Lab V2.30.0')||!html.includes('<div class="version">V2.30.0</div>')||!html.includes("appVersion:'2.30.0'")) fail('V2.30.0 UI or backup version metadata missing');
+else pass('V2.30.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -543,6 +546,40 @@ if(!paletteTools.includes("'$color-base: '+data.palette.base")||
   fail('V2.29.0 exact-source framework handoff contract missing');
 }else pass('V2.29.0 framework handoff uses exact source palette');
 
+if(!html.includes('<script src="./runtime/storage-hardening.js"></script>')||
+   !sw.includes('./runtime/storage-hardening.js')||
+   !storageHardening.includes('function storageReadRaw(')||
+   !storageHardening.includes('function storageWriteJson(')||
+   !storageHardening.includes('function storageJsonState(')||
+   !storageHardening.includes('function storageTransaction(')||
+   !storageHardening.includes('function storageRestore(')){
+  fail('V2.30.0 storage hardening runtime contract missing');
+}else pass('V2.30.0 safe local storage runtime + offline cache');
+
+if(!storageHardening.includes('function storageNeedsRecovery(')||
+   !html.includes("const needsProjects=storageNeedsRecovery(LOCAL_PROJECTS_KEY,Array.isArray)")||
+   !html.includes("const needsSaved=storageNeedsRecovery('colorlab.saved',Array.isArray)")||
+   html.includes('const needsSaved=currentSaved.length===0')||
+   !storageHardening.includes("storageTransaction(keys,()=>")||
+   !localProjects.includes("storageTransaction(['colorlab.saved',LOCAL_PROJECTS_KEY]")||
+   !localProjects.includes("if(!storageWriteJson('colorlab.saved',data))return")){
+  fail('V2.30.0 resilience tombstone or rollback-safe write contract missing');
+}else pass('V2.30.0 intentional-empty preservation + rollback-safe writes');
+
+if(!html.includes("storageReadRaw('colorlab.previewTheme','light')")||
+   !html.includes("storageReadRaw('colorlab.librarySort','recent')")||
+   !html.includes("storageReadRaw('colorlab.candidateExploreMode','harmony')")||
+   !html.includes("switchTab(storageReadRaw('colorlab.tab','compose'),false)")||
+   !gradientStudio.includes("storageReadRaw('colorlab.gradientPair','base-accent')")){
+  fail('V2.30.0 startup safe-storage fallback contract missing');
+}else pass('V2.30.0 storage-restricted startup fallbacks');
+
+if(!sw.includes("const codeAsset=/\\/(?:runtime|data|vendor)\\//")||
+   !sw.includes("if(codeAsset){")||
+   !sw.includes(".catch(()=>caches.match(request))")){
+  fail('V2.30.0 service worker code freshness contract missing');
+}else pass('V2.30.0 network-first code assets + offline fallback');
+
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
    !html.includes("padding:10px 0 16px var(--app-gutter)")){
@@ -855,7 +892,7 @@ const requiredMarkers=[
   'touch-action:none'
 ];
 for(const marker of requiredMarkers){
-  if(!html.includes(marker)) fail('feature marker missing: '+marker);
+  if(!appSource.includes(marker)) fail('feature marker missing: '+marker);
 }
 pass('V1.1 feature markers');
 
@@ -968,7 +1005,7 @@ if(!html.includes("dh>38&&before.c>.035")){
   fail('generated accent chroma guard missing');
 }else pass('generated accent chroma guard');
 
-if(!html.includes("data.saved.length>1000")||!html.includes("color-lab-backup-v2")){
+if(!storageHardening.includes("data.saved.length>1000")||!storageHardening.includes("color-lab-backup-v2")){
   fail('backup v2 validation missing');
 }else pass('backup v2 validation');
 
@@ -1008,7 +1045,7 @@ if(startupWindow.includes("JSON.parse(localStorage.getItem('colorlab.compareA')"
   fail('unsafe startup localStorage JSON parse returned');
 }else pass('startup storage parsing hardened');
 
-if(!html.includes("reader.onerror=()=>toast('備份檔讀取失敗')")){
+if(!storageHardening.includes("reader.onerror=()=>toast('備份檔讀取失敗')")){
   fail('backup FileReader error handling missing');
 }else pass('backup FileReader error handling');
 
@@ -1130,7 +1167,7 @@ if(!html.includes("color-lab-backup-v5")||!html.includes("appVersion:'"+pkg.vers
 }else pass('personalization backup payload');
 
 for(const schema of ['color-lab-backup-v1','color-lab-backup-v2','color-lab-backup-v3','color-lab-backup-v4','color-lab-backup-v5']){
-  if(!html.includes(schema)) fail('backup compatibility missing: '+schema);
+  if(!appSource.includes(schema)) fail('backup compatibility missing: '+schema);
 }
 pass('backup v1/v2/v3/v4/v5 compatibility');
 
@@ -1205,7 +1242,7 @@ if(!html.includes("schema:'color-lab-shadow-v4'")||!html.includes("preferenceEna
   fail('V2.3 resilience shadow does not include personalization setting');
 }else pass('V2.3 resilience shadow includes personalization setting');
 
-if(!html.includes("typeof data.preferenceEnabled==='boolean'")){
+if(!storageHardening.includes("typeof data.preferenceEnabled==='boolean'")){
   fail('backup v4 personalization setting validation missing');
 }else pass('backup v4 personalization setting validation');
 

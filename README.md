@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.29.0**
+**目前版本：V2.30.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,20 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.30.0 Stability / Storage Hardening
+
+這一版不增加新的配色玩法，優先處理 Local-first App 真正可能造成資料不可靠或更新不一致的問題：
+
+- 新增獨立 `storage-hardening.js`，所有關鍵 localStorage 操作都有安全讀寫與失敗回報，不讓 Safari / PWA 儲存限制直接中斷 UI
+- 收藏、重新命名、標籤、分類、置頂、專案指派等關鍵變更只有在本機寫入成功後才顯示成功狀態
+- 刪除 Local Project 改成 rollback-safe transaction：project metadata 與 palette assignment 要嘛一起成功，要嘛一起回復
+- Backup 匯入改成 rollback-safe transaction；任何 localStorage 寫入失敗都取消整次匯入，避免 projects / palettes / preference 只寫入一半
+- Resilience restore 現在區分「key 不存在 / 損壞」與「使用者刻意保存空陣列」；合法的空收藏不會再被舊 IndexedDB shadow 復活
+- Local Projects 的損壞 JSON 會被視為可恢復狀態；合法空專案仍被尊重
+- App 啟動時的 preview theme、library sort、candidate mode、last tab 等偏好改成安全讀取，即使 localStorage 被瀏覽器限制也能以預設值啟動
+- Service Worker 對 JS / CSS / runtime / data / vendor 改採 network-first + cache fallback：在線時優先拿最新程式，離線時仍使用快取，降低新 HTML 搭到舊 runtime 的更新競態
+- IndexedDB resilience、PWA offline、exact source color、75 / 18 / 7 與零後端契約全部保留
 
 ## V2.29.0 Cross-platform Handoff
 

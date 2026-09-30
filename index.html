@@ -2217,7 +2217,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.29.0</div>
+    <div class="version">V2.30.0</div>
   </div>
 
   <main class="app-main">
@@ -2564,7 +2564,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.29.0</div>
+  <div class="footer app-footer">Color Lab V2.30.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2656,6 +2656,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 
 <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true">已複製</div>
 
+<script src="./runtime/storage-hardening.js"></script>
 <script src="./runtime/palette-tools.js"></script>
 <script src="./runtime/vision-accessibility.js"></script>
 <script src="./runtime/local-projects.js"></script>
@@ -2676,10 +2677,9 @@ const MODES={
   bold:{label:'大膽',baseL:.96,structureL:.16,accentShift:180,sat:.62}
 };
 function safeJsonRead(key,fallback=null){
-  try{
-    const raw=localStorage.getItem(key);
-    return raw==null?fallback:JSON.parse(raw);
-  }catch(_){return fallback}
+  const raw=storageReadRaw(key,null);
+  if(raw===null)return fallback;
+  try{return JSON.parse(raw)}catch(_){return fallback}
 }
 function readRecentColors(){
   const raw=safeJsonRead('colorlab.recent',[]);
@@ -2691,9 +2691,9 @@ let selectedColors=['#68705E',null,null],activeSlot=0,currentComboName='';
 let lockedSlots=[false,false,false];
 let compareA=sanitizeCompareRecord(safeJsonRead('colorlab.compareA',null));
 let compareB=sanitizeCompareRecord(safeJsonRead('colorlab.compareB',null));
-let visionMode='normal',previewContext='app',previewTheme=localStorage.getItem('colorlab.previewTheme')||'light',validationTheme='original',libraryTagFilter='';
+let visionMode='normal',previewContext='app',previewTheme=storageReadRaw('colorlab.previewTheme','light'),validationTheme='original',libraryTagFilter='';
 if(!['light','dark'].includes(previewTheme))previewTheme='light';
-let librarySort=localStorage.getItem('colorlab.librarySort')||'recent',libraryFolderFilter='';
+let librarySort=storageReadRaw('colorlab.librarySort','recent'),libraryFolderFilter='';
 let savedActionIndex=null,deferredInstallPrompt=null;
 let comboSortable=null,photoMode='point',regionStart=null;
 let iroPicker=null,pickerDraft='#68705E',iroSyncing=false,pickerReturnFocus=null;
@@ -2704,7 +2704,7 @@ let recommendationBatchOffset=0;
 let recommendationBatchHistory=[0],recommendationBatchHistoryIndex=0;
 const recommendationBatchSize=5,recommendationRecentLimit=24;
 let recommendationRecentFingerprints=readRecommendationRecent();
-let candidateExploreMode=localStorage.getItem('colorlab.candidateExploreMode')||'harmony';
+let candidateExploreMode=storageReadRaw('colorlab.candidateExploreMode','harmony');
 if(!['harmony','variation','bold'].includes(candidateExploreMode))candidateExploreMode='harmony';
 const roleShuffleState={
   base:{key:'',pool:[],index:-1,familyId:'',origin:''},
@@ -2774,15 +2774,11 @@ function textFor(bg){
 }
 function normHex(v){v=v.trim();if(!v.startsWith('#'))v='#'+v;return/^#[0-9a-fA-F]{6}$/.test(v)?v.toUpperCase():null}
 function readSavedData(){
-  try{
-    const raw=JSON.parse(localStorage.getItem('colorlab.saved')||'[]');
-    if(!Array.isArray(raw))return[];
-    const clean=raw.map(sanitizeSavedRecord).filter(Boolean).slice(0,300);
-    if(clean.length!==raw.length)localStorage.setItem('colorlab.saved',JSON.stringify(clean));
-    return clean;
-  }catch(_){
-    return[];
-  }
+  const state=storageJsonState('colorlab.saved',Array.isArray);
+  if(state.status!=='valid')return[];
+  const raw=state.value,clean=raw.map(sanitizeSavedRecord).filter(Boolean).slice(0,300);
+  if(clean.length!==raw.length)storageWriteJson('colorlab.saved',clean,{silent:true});
+  return clean;
 }
 let resilienceTimer=null,resilienceReady=false;
 function openResilienceDB(){
@@ -2827,9 +2823,9 @@ async function restoreResilienceIfNeeded(){
   try{
     const currentSaved=readSavedData();
     const rawPreference=safeJsonRead('colorlab.preferenceV1',null);
-    const rawPreferenceEnabled=localStorage.getItem('colorlab.preferenceEnabled');
-    const needsProjects=localStorage.getItem(LOCAL_PROJECTS_KEY)===null;
-    const needsSaved=currentSaved.length===0;
+    const rawPreferenceEnabled=storageReadRaw('colorlab.preferenceEnabled',null);
+    const needsProjects=storageNeedsRecovery(LOCAL_PROJECTS_KEY,Array.isArray);
+    const needsSaved=storageNeedsRecovery('colorlab.saved',Array.isArray);
     const needsPreference=rawPreference===null;
     const needsPreferenceEnabled=rawPreferenceEnabled===null;
 
@@ -2851,44 +2847,44 @@ async function restoreResilienceIfNeeded(){
     let restoredSaved=false,restoredPreference=false,restoredProjects=false;
 
     if(needsProjects&&Array.isArray(snap.projects)){
-      writeLocalProjects(snap.projects);restoredProjects=true;
+      restoredProjects=!!writeLocalProjects(snap.projects,{silent:true});
     }
 
     if(needsPreference&&snap.preference){
       preferenceState=sanitizePreferenceModel(snap.preference);
-      localStorage.setItem('colorlab.preferenceV1',JSON.stringify(preferenceState));
-      invalidatePreferenceScoring();
-      restoredPreference=true;
+      if(storageWriteJson('colorlab.preferenceV1',preferenceState,{silent:true})){
+        invalidatePreferenceScoring();restoredPreference=true;
+      }
     }
     if(needsPreferenceEnabled&&typeof snap.preferenceEnabled==='boolean'){
       preferenceEnabled=snap.preferenceEnabled;
-      localStorage.setItem('colorlab.preferenceEnabled',JSON.stringify(preferenceEnabled));
-      invalidatePreferenceScoring();
-      restoredPreference=true;
+      if(storageWriteJson('colorlab.preferenceEnabled',preferenceEnabled,{silent:true})){
+        invalidatePreferenceScoring();restoredPreference=true;
+      }
     }
 
     if(needsSaved&&Array.isArray(snap.saved)&&snap.saved.length){
       const restored=snap.saved.map(sanitizeSavedRecord).filter(Boolean).slice(0,300);
       if(restored.length){
-        localStorage.setItem('colorlab.saved',JSON.stringify(restored));
+        if(!storageWriteJson('colorlab.saved',restored,{silent:true}))throw new Error('restore-storage-failed');
         restoredSaved=true;
 
         if(Array.isArray(snap.recent)&&safeJsonRead('colorlab.recent',null)===null){
           recentColors=snap.recent.filter(x=>typeof x==='string'&&normHex(x)).map(x=>normHex(x)).slice(0,20);
-          localStorage.setItem('colorlab.recent',JSON.stringify(recentColors));
+          storageWriteJson('colorlab.recent',recentColors,{silent:true});
         }
         if(snap.compareA&&safeJsonRead('colorlab.compareA',null)===null){
           const safeA=sanitizeCompareRecord(snap.compareA);
-          if(safeA){compareA=safeA;localStorage.setItem('colorlab.compareA',JSON.stringify(compareA))}
+          if(safeA&&storageWriteJson('colorlab.compareA',safeA,{silent:true}))compareA=safeA
         }
         if(snap.compareB&&safeJsonRead('colorlab.compareB',null)===null){
           const safeB=sanitizeCompareRecord(snap.compareB);
-          if(safeB){compareB=safeB;localStorage.setItem('colorlab.compareB',JSON.stringify(compareB))}
+          if(safeB&&storageWriteJson('colorlab.compareB',safeB,{silent:true}))compareB=safeB
         }
         if(snap.draft&&safeJsonRead('colorlab.draft',null)===null){
           const d=sanitizeDraftRecord(snap.draft);
           if(d){
-            localStorage.setItem('colorlab.draft',JSON.stringify(d));
+            storageWriteJson('colorlab.draft',d,{silent:true});
             selectedColors=[...d.selectedColors];lockedSlots=[...d.lockedSlots];
             activeSlot=d.activeSlot;mode=d.mode;currentComboName=d.comboName;
             seed=selectedColors[activeSlot]||selectedColors.find(Boolean)||'#68705E';
@@ -2917,7 +2913,7 @@ function snapshotState(){
 }
 function stateKey(s){return JSON.stringify(s)}
 function persistDraft(){
-  try{localStorage.setItem('colorlab.draft',JSON.stringify(snapshotState()))}catch(_){}
+  storageWriteJson('colorlab.draft',snapshotState(),{silent:true});
   scheduleResilienceBackup();
 }
 function restoreDraft(){
@@ -2966,7 +2962,7 @@ function updateHistoryButtons(){
 function rememberColor(hex){
   const h=normHex(hex);if(!h)return;
   recentColors=[h,...recentColors.filter(x=>x!==h)].slice(0,10);
-  localStorage.setItem('colorlab.recent',JSON.stringify(recentColors));
+  storageWriteJson('colorlab.recent',recentColors,{silent:true});
   renderRecentColors();
 }
 function renderRecentColors(){
@@ -3032,7 +3028,7 @@ function deleteSaved(index){
   const data=readSavedData();if(!data[index])return;
   const name=(data[index].name&&data[index].name.trim())||'未命名配色';
   if(!confirm('刪除「'+name+'」？'))return;
-  data.splice(index,1);localStorage.setItem('colorlab.saved',JSON.stringify(data));scheduleResilienceBackup();renderSaved();toast('已刪除');
+  data.splice(index,1);if(!storageWriteJson('colorlab.saved',data))return;scheduleResilienceBackup();renderSaved();toast('已刪除');
 }
 
 
@@ -3053,8 +3049,8 @@ function compareSnapshot(){
 }
 function saveCompare(which){
   const snap=compareSnapshot();
-  if(which==='A'){compareA=snap;localStorage.setItem('colorlab.compareA',JSON.stringify(snap))}
-  else{compareB=snap;localStorage.setItem('colorlab.compareB',JSON.stringify(snap))}
+  if(which==='A'){if(!storageWriteJson('colorlab.compareA',snap))return;compareA=snap}
+  else{if(!storageWriteJson('colorlab.compareB',snap))return;compareB=snap}
   scheduleResilienceBackup();
   renderCompare();toast('已設為方案 '+which);
 }
@@ -3123,7 +3119,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v5',appVersion:'2.29.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.30.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -3187,50 +3183,6 @@ function sanitizeCompareRecord(x){
   if(!record)return null;
   return {name:record.name,palette:record.palette,colors:record.selectedColors,mode:record.mode,date:record.date};
 }
-function importBackupFile(file){
-  if(!file)return;
-  if(file.size>5*1024*1024){toast('備份檔過大');return}
-  const reader=new FileReader();
-  reader.onerror=()=>toast('備份檔讀取失敗');
-  reader.onload=()=>{
-    try{
-      const data=JSON.parse(String(reader.result||''));
-      if(!['color-lab-backup-v1','color-lab-backup-v2','color-lab-backup-v3','color-lab-backup-v4','color-lab-backup-v5'].includes(data.schema)||!Array.isArray(data.saved)||data.saved.length>1000)throw new Error('invalid');
-      if(['color-lab-backup-v3','color-lab-backup-v4','color-lab-backup-v5'].includes(data.schema)&&(!data.preference||Number(data.preference.version)!==1))throw new Error('invalid');
-      if(['color-lab-backup-v4','color-lab-backup-v5'].includes(data.schema)&&typeof data.preferenceEnabled!=='boolean')throw new Error('invalid');
-      if(data.schema==='color-lab-backup-v5'&&(!Array.isArray(data.projects)||data.projects.length>60))throw new Error('invalid');
-      const currentRaw=readSavedData();
-      const current=currentRaw.map(sanitizeSavedRecord).filter(Boolean);
-      const importedSaved=data.saved.map(sanitizeSavedRecord).filter(Boolean);
-      const projectMerge=data.schema==='color-lab-backup-v5'?mergeImportedProjectData(data.projects,importedSaved,readLocalProjects()):{projects:readLocalProjects(),saved:importedSaved};
-      if(data.schema==='color-lab-backup-v5')writeLocalProjects(projectMerge.projects);
-      const importedForMerge=projectMerge.saved;
-      const merged=mergeSavedPaletteRecords(current,importedForMerge);
-      localStorage.setItem('colorlab.saved',JSON.stringify(merged.slice(0,300)));
-      if(Array.isArray(data.recent)){const imported=data.recent.filter(x=>typeof x==='string'&&normHex(x)).map(x=>normHex(x));recentColors=[...new Set([...recentColors,...imported])].slice(0,20);localStorage.setItem('colorlab.recent',JSON.stringify(recentColors))}
-      if(data.compareA){const safeA=sanitizeCompareRecord(data.compareA);if(safeA){compareA=safeA;localStorage.setItem('colorlab.compareA',JSON.stringify(compareA))}}
-      if(data.compareB){const safeB=sanitizeCompareRecord(data.compareB);if(safeB){compareB=safeB;localStorage.setItem('colorlab.compareB',JSON.stringify(compareB))}}
-      if(data.draft){
-        const cleanDraft=sanitizeDraftRecord(data.draft);
-        if(cleanDraft)localStorage.setItem('colorlab.draft',JSON.stringify(cleanDraft));
-      }
-      if(data.preference){
-        preferenceState=sanitizePreferenceModel(data.preference);
-        localStorage.setItem('colorlab.preferenceV1',JSON.stringify(preferenceState));
-      }
-      if(typeof data.preferenceEnabled==='boolean'){
-        preferenceEnabled=data.preferenceEnabled;
-        localStorage.setItem('colorlab.preferenceEnabled',JSON.stringify(preferenceEnabled));
-      }
-      if(data.preference||typeof data.preferenceEnabled==='boolean'){
-        invalidatePreferenceScoring();updatePreferenceStatus(false);
-      }
-      scheduleResilienceBackup();renderSaved();renderRecentColors();renderCompare();toast('備份已匯入');
-    }catch(_){toast('不是有效的 Color Lab 備份')}
-  };
-  reader.readAsText(file);
-}
-
 async function openStudioPicker(){
   if(lockedSlots[activeSlot]){toast('先解除鎖定');return}
   pickerReturnFocus=document.activeElement instanceof HTMLElement?document.activeElement:null;
@@ -3263,7 +3215,7 @@ function normalizeTags(v){
 function editSavedTags(index){
   const data=readSavedData(),item=data[index];if(!item)return;
   const next=prompt('標籤 用逗號分隔',(item.tags||[]).join(', '));if(next===null)return;
-  item.tags=normalizeTags(next);localStorage.setItem('colorlab.saved',JSON.stringify(data));scheduleResilienceBackup();renderSaved();toast('標籤已更新');
+  item.tags=normalizeTags(next);if(!storageWriteJson('colorlab.saved',data))return;scheduleResilienceBackup();renderSaved();toast('標籤已更新');
 }
 function renderLibraryFilters(data){
   const host=$('#libraryFilters');if(!host)return;
@@ -4182,7 +4134,7 @@ function recommendationFingerprint(item){
 }
 function readRecommendationRecent(){
   try{
-    const value=JSON.parse(localStorage.getItem('colorlab.inspireRecentV1')||'[]');
+    const value=JSON.parse(storageReadRaw('colorlab.inspireRecentV1','[]'));
     return Array.isArray(value)?value.filter(x=>typeof x==='string').slice(-recommendationRecentLimit):[];
   }catch(_){return[]}
 }
@@ -4695,7 +4647,7 @@ function resetRoleCandidateSessions(){
 function setCandidateExploreMode(next){
   if(!['harmony','variation','bold'].includes(next)||next===candidateExploreMode)return;
   candidateExploreMode=next;
-  localStorage.setItem('colorlab.candidateExploreMode',next);
+  storageWriteRaw('colorlab.candidateExploreMode',next,{silent:true});
   resetRoleCandidateSessions();
   render();
   toast('探索方向：'+candidateExploreConfig(next).label);
@@ -4906,12 +4858,12 @@ function save(){
   if(existing>=0){
     const old=data.splice(existing,1)[0];
     data.unshift({...old,...record,tags:Array.isArray(old.tags)?old.tags:[],folder:old.folder||'',projectId:sanitizeProjectId(old.projectId),pinned:!!old.pinned});
-    localStorage.setItem('colorlab.saved',JSON.stringify(data.slice(0,300)));
+    if(!storageWriteJson('colorlab.saved',data.slice(0,300)))return;
     learnPalettePreference(palette,.35);
     renderSaved();persistDraft();scheduleResilienceBackup();toast('這組配色已收藏 已移到最上方');return;
   }
   data.unshift(record);
-  localStorage.setItem('colorlab.saved',JSON.stringify(data.slice(0,300)));
+  if(!storageWriteJson('colorlab.saved',data.slice(0,300)))return;
   learnPalettePreference(palette,1);
   renderSaved();
   persistDraft();
@@ -4921,13 +4873,13 @@ function save(){
 
 function toggleSavedPin(index){
   const data=readSavedData(),item=data[index];if(!item)return;
-  item.pinned=!item.pinned;localStorage.setItem('colorlab.saved',JSON.stringify(data));scheduleResilienceBackup();renderSaved();
+  item.pinned=!item.pinned;if(!storageWriteJson('colorlab.saved',data))return;scheduleResilienceBackup();renderSaved();
   toast(item.pinned?'已置頂':'已取消置頂');
 }
 function editSavedFolder(index){
   const data=readSavedData(),item=data[index];if(!item)return;
   const next=prompt('分類名稱 留空代表未分類',item.folder||'');if(next===null)return;
-  item.folder=next.trim().slice(0,20);localStorage.setItem('colorlab.saved',JSON.stringify(data));scheduleResilienceBackup();renderSaved();toast(item.folder?'已移到 '+item.folder:'已移出分類');
+  item.folder=next.trim().slice(0,20);if(!storageWriteJson('colorlab.saved',data))return;scheduleResilienceBackup();renderSaved();toast(item.folder?'已移到 '+item.folder:'已移出分類');
 }
 function openSavedActions(index){
   const data=readSavedData(),item=data[index];if(!item)return;
@@ -4988,7 +4940,7 @@ function renameSaved(index){
   const next=prompt('配色名稱',oldName);
   if(next===null)return;
   item.name=next.trim()||'未命名配色';
-  localStorage.setItem('colorlab.saved',JSON.stringify(data));
+  if(!storageWriteJson('colorlab.saved',data))return;
   scheduleResilienceBackup();renderSaved();
   toast('已改名');
 }
@@ -5479,7 +5431,7 @@ function switchTab(name,scrollTop=true){
     b.classList.toggle('active',on);
     b.setAttribute('aria-selected',on?'true':'false');
   });
-  localStorage.setItem('colorlab.tab',name);
+  storageWriteRaw('colorlab.tab',name,{silent:true});
   updatePhotoTarget();
   if(name==='library'){renderSaved();updateInstallCard()}
   if(name==='photo'){setPhotoMode(photoMode);updatePhotoColorSpaceNote()}
@@ -5590,7 +5542,7 @@ $('#importBackup').onclick=()=>$('#backupInput').click();
 $('#resetPreference').onclick=resetPreferenceModel;
 $('#togglePreference').onclick=togglePreferenceModel;
 $('#backupInput').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(file)importBackupFile(file);e.target.value=''});
-$('#clearRecent').onclick=()=>{recentColors=[];localStorage.removeItem('colorlab.recent');renderRecentColors();toast('已清除最近用色')};
+$('#clearRecent').onclick=()=>{recentColors=[];storageRemoveRaw('colorlab.recent',{silent:true});renderRecentColors();toast('已清除最近用色')};
 $('#copyPalette').onclick=()=>{navigator.clipboard?.writeText(paletteText()).then(()=>toast('已複製三色')).catch(()=>toast('無法複製'))};
 $('#sharePalette').onclick=openShareSnapshot;
 $$('[data-preview-theme]').forEach(b=>b.addEventListener('click',()=>setPreviewTheme(b.dataset.previewTheme)));
@@ -5599,7 +5551,7 @@ initCrossPlatformHandoff();
 $$('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
 $('#librarySearch').addEventListener('input',renderSaved);
 $('#librarySort').value=librarySort;
-$('#librarySort').addEventListener('change',e=>{librarySort=e.target.value;localStorage.setItem('colorlab.librarySort',librarySort);renderSaved()});
+$('#librarySort').addEventListener('change',e=>{librarySort=e.target.value;storageWriteRaw('colorlab.librarySort',librarySort,{silent:true});renderSaved()});
 $('#libraryFolderFilter').addEventListener('change',e=>{libraryFolderFilter=e.target.value;renderSaved()});
 $('#comboName').addEventListener('input',e=>{currentComboName=e.target.value;persistDraft()});
 $('#composeDeepDive').addEventListener('toggle',e=>{
@@ -5613,7 +5565,7 @@ $('#composeDeepDive').addEventListener('toggle',e=>{
 renderModes();palette=fastInitialPalette();renderComboSlots();render();updateLockToggle();
 historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();installShareSnapshotHashListener();initCustomDesignPreview();initLocalProjects();initReferenceBoardExport();initGradientStudio();
 setCornerNavOpen(false);
-switchTab(localStorage.getItem('colorlab.tab')||'compose',false);updatePhotoTarget();
+switchTab(storageReadRaw('colorlab.tab','compose'),false);updatePhotoTarget();
 scheduleNonCriticalStartup();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
