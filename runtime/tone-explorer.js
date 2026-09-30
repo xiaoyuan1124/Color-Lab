@@ -40,7 +40,7 @@ function toneExplorerCandidates(){
       sub:'保留明度 / 彩度節奏',colors:toneExplorerHueCandidate(origin,delta)
     }));
   }
-  return toneFamilies().map(family=>({
+  return Object.values(toneFamilies()).map(family=>({
     key:'tone-'+family.id,label:toneFamilyLabel(family.id),
     sub:'Hue 固定 · '+family.label,
     colors:toneExplorerToneCandidate(origin,family.id),familyId:family.id
