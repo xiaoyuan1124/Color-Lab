@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.15.0**
+**目前版本：V2.16.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,20 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.16.0 Aesthetic Gate 2.0
+
+審美評分從「低彩度比較安全」改成「能量是否被角色與秩序控制」：
+
+- 移除 highChroma 計數懲罰、supportCalm 低彩度加分與固定 chromaDiscipline 階梯
+- 新增 roleClarity：看三個角色是否真的有可感知的分工，而不是只看彩度大小
+- 新增 energy：判斷 palette 的整體色彩能量，不把高能量本身視為缺點
+- 新增 energyStructure：高彩度時要求明暗節奏、Base / Structure 層級、Hue 結構、Accent 意圖與角色距離成立
+- 新增 chromaIntent / vividIntent：高彩度只要有清楚結構就能得到正向分數
+- 高彩度過載現在只在「能量高但結構差」時扣分
+- expressive / unexpected reference prior 不再先天低於 atmospheric / quiet 類型
+- 保留最低美感門檻；不是放寬 Gate，而是讓 Gate 對 muted 與 vivid 使用同一個「關係成立」標準
+- Torture benchmark 同時驗證 quiet-good、vivid-good 與 vivid-noisy 三類 palette
 
 ## V2.15.0 Inspire History + Anti-repeat
 
@@ -375,7 +389,7 @@ Service Worker 採用：
 - 所有 runtime 資源均為本地檔案
 - 無 CDN runtime dependency
 
-目前 cache generation：`color-lab-v2150-inspire-memory`
+目前 cache generation：`color-lab-v2160-aesthetic-gate-2`
 
 ## Quality Gates
 
