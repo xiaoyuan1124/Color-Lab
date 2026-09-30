@@ -623,7 +623,7 @@ if(!html.includes("personal*.45")||!html.includes("reference,accessibility,perso
   fail('V2.3 personal recommendation dimension missing');
 }else pass('V2.3 personal recommendation dimension');
 
-if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.11.0'")||
+if(!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'"+pkg.version+"'")||
    !html.includes("preference:sanitizePreferenceModel(preferenceState)")||
    !html.includes("preferenceEnabled")){
   fail('V2.3 backup v4 personalization payload missing');
@@ -697,7 +697,7 @@ if(!html.includes("return enabled?preferenceAffinityFromModel(model,colors):0;")
   fail('disabled personalization does not force zero affinity');
 }else pass('disabled personalization forces zero affinity');
 
-if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'2.11.0'")){
+if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backup-v4")||!html.includes("appVersion:'"+pkg.version+"'")){
   fail('V2.3 personalization setting persistence or backup v4 missing');
 }else pass('V2.3 setting persistence and backup v4');
 
