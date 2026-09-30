@@ -5596,7 +5596,7 @@ $('#sharePalette').onclick=openShareSnapshot;
 $$('[data-preview-theme]').forEach(b=>b.addEventListener('click',()=>setPreviewTheme(b.dataset.previewTheme)));
 $$('[data-validation-theme]').forEach(b=>b.addEventListener('click',()=>setValidationTheme(b.dataset.validationTheme)));
 initCrossPlatformHandoff();
-$('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
+$$('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
 $('#librarySearch').addEventListener('input',renderSaved);
 $('#librarySort').value=librarySort;
 $('#librarySort').addEventListener('change',e=>{librarySort=e.target.value;localStorage.setItem('colorlab.librarySort',librarySort);renderSaved()});
