@@ -4,7 +4,8 @@ import vm from 'node:vm';
 const html=fs.readFileSync('index.html','utf8');
 const paletteTools=fs.readFileSync('runtime/palette-tools.js','utf8');
 const toneExplorer=fs.readFileSync('runtime/tone-explorer.js','utf8');
-const appText=html+'\n'+paletteTools+'\n'+toneExplorer;
+const photoPalette=fs.readFileSync('runtime/photo-palette.js','utf8');
+const appText=html+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette;
 const toneSource=fs.readFileSync('data/tone-families.js','utf8');
 const scriptMatch=html.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/);
 if(!scriptMatch){
@@ -16,6 +17,8 @@ try{new Function(paletteTools)}
 catch(e){console.error('FAIL palette tools runtime syntax',e.message);process.exit(1)}
 try{new Function(toneExplorer)}
 catch(e){console.error('FAIL tone explorer runtime syntax',e.message);process.exit(1)}
+try{new Function(photoPalette)}
+catch(e){console.error('FAIL photo palette runtime syntax',e.message);process.exit(1)}
 
 function findFunctionBodyOpen(start){
   const paramsOpen=source.indexOf('(',start);
@@ -229,6 +232,25 @@ check('V2.13 dark validation is derived only',
 const quietAesthetic=A.paletteAestheticCore(['#E9E1D2','#25313A','#4D739B']);
 const vividAesthetic=A.paletteAestheticCore(['#286B69','#D0A32E','#A94B38']);
 const noisyAesthetic=A.paletteAestheticCore(['#FF4B55','#FF5A4D','#FF6A45']);
+check('V2.19 photo palette uses perceptual dedupe',
+  appText.includes('function photoDistinctClusters(')&&
+  appText.includes('perceptualDistance(x.hex,item.hex)>=threshold'),
+  'perceptual duplicate threshold');
+check('V2.19 photo palette keeps three explicit strategies',
+  appText.includes("photoPaletteStyle='balanced'")&&
+  appText.includes("style==='muted'")&&
+  appText.includes("style==='vivid'"),
+  'balanced muted vivid');
+check('V2.19 photo trio maps semantic 75/18/7 roles',
+  appText.includes("label:'主體'")&&appText.includes("label:'結構'")&&appText.includes("label:'焦點'")&&
+  appText.includes('photo-palette-ratio'),
+  'base structure accent preview');
+check('V2.19 strategy apply stays explicit',
+  appText.includes('function usePhotoPalette()')&&
+  appText.includes('photoPaletteSelection(lastPhotoClusters,lastPhotoRoles,photoPaletteStyle)')&&
+  !appText.includes('selectedColors=photoPaletteSelection('),
+  'selection only writes inside usePhotoPalette');
+
 check('V2.18 context preview ships five realistic scene contracts',
   appText.includes('class="cp2 cp2-app"')&&
   appText.includes('class="cp2 cp2-brand"')&&
