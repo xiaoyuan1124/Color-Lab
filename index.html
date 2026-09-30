@@ -636,6 +636,100 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 .health-item span{font-size:var(--text-xs);color:var(--text-2)}
 .health-item.good strong{color:var(--olive-11)}
 .health-item.warn strong{color:#875F43}
+.validation-lab{
+  padding:24px 0;
+  border-top:1px solid var(--border-subtle);
+  border-bottom:1px solid var(--border-subtle);
+}
+.validation-theme-modes{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:14px;
+}
+.validation-theme-modes button{
+  min-height:34px;
+  padding:0 12px;
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-pill);
+  background:transparent;
+  color:var(--text-2);
+  font-size:11px;
+  font-weight:700;
+}
+.validation-theme-modes button.active{
+  background:var(--olive-2);
+  border-color:var(--border-strong);
+  color:var(--olive-12);
+}
+.validation-theme-note{
+  margin-left:auto;
+  color:var(--text-3);
+  font-size:10px;
+}
+.validation-summary{
+  display:flex;
+  gap:8px 16px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+  color:var(--text-2);
+  font-size:11px;
+}
+.validation-summary strong{color:var(--text-1)}
+.validation-table-wrap{
+  overflow-x:auto;
+  border-top:1px solid var(--hairline);
+  border-bottom:1px solid var(--hairline);
+}
+.validation-table{
+  width:100%;
+  min-width:330px;
+  border-collapse:collapse;
+  table-layout:fixed;
+  font-size:10px;
+}
+.validation-table th,
+.validation-table td{
+  padding:10px 5px;
+  text-align:center;
+  border-bottom:1px solid var(--hairline);
+  border-right:1px solid var(--hairline);
+}
+.validation-table tr:last-child th,
+.validation-table tr:last-child td{border-bottom:0}
+.validation-table th:last-child,
+.validation-table td:last-child{border-right:0}
+.validation-table th{
+  color:var(--text-2);
+  font-weight:700;
+}
+.validation-table .row-head{text-align:left}
+.validation-cell strong{
+  display:block;
+  color:var(--text-1);
+  font-size:11px;
+}
+.validation-cell span{
+  display:block;
+  margin-top:2px;
+  color:var(--text-3);
+}
+.validation-cell.aaa span,
+.validation-cell.aa span{color:var(--olive-11)}
+.validation-cell.large span{color:#875F43}
+.validation-cell.fail span{color:#8A5C52}
+.validation-diagonal{color:var(--text-3)}
+.validation-advice{
+  display:grid;
+  gap:7px;
+  margin:14px 0 0;
+  padding:0;
+  list-style:none;
+  color:var(--text-2);
+  font-size:11px;
+  line-height:1.45;
+}
+.validation-advice strong{color:var(--text-1)}
 .real-preview-wrap{
   margin-top:var(--space-6);
   padding-top:var(--space-5);
@@ -2167,7 +2261,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.12.0</div>
+    <div class="version">V2.13.0</div>
   </div>
 
   <main class="app-main">
@@ -2249,6 +2343,18 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
                 <strong id="learningTitle"></strong>
                 <p id="learningText"></p>
               </div>
+            </div>
+
+            <div class="validation-lab">
+              <div class="micro-head"><span>可讀性矩陣</span><span>WCAG 2.x Contrast</span></div>
+              <div class="validation-theme-modes" id="validationThemeModes" role="group" aria-label="可讀性驗證模式">
+                <button type="button" data-validation-theme="original" aria-pressed="true">原色</button>
+                <button type="button" data-validation-theme="dark" aria-pressed="false">Dark 預覽</button>
+                <span class="validation-theme-note" id="validationThemeNote">不修改目前三色</span>
+              </div>
+              <div class="validation-summary" id="validationSummary"></div>
+              <div class="validation-table-wrap" id="accessibilityMatrix"></div>
+              <ul class="validation-advice" id="validationAdvice"></ul>
             </div>
 
             <div class="vision-lab">
@@ -2461,7 +2567,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.12.0</div>
+  <div class="footer app-footer">Color Lab V2.13.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2578,7 +2684,7 @@ let selectedColors=['#68705E',null,null],activeSlot=0,currentComboName='';
 let lockedSlots=[false,false,false];
 let compareA=sanitizeCompareRecord(safeJsonRead('colorlab.compareA',null));
 let compareB=sanitizeCompareRecord(safeJsonRead('colorlab.compareB',null));
-let visionMode='normal',previewContext='app',previewTheme=localStorage.getItem('colorlab.previewTheme')||'light',libraryTagFilter='';
+let visionMode='normal',previewContext='app',previewTheme=localStorage.getItem('colorlab.previewTheme')||'light',validationTheme='original',libraryTagFilter='';
 if(!['light','dark'].includes(previewTheme))previewTheme='light';
 let librarySort=localStorage.getItem('colorlab.librarySort')||'recent',libraryFolderFilter='';
 let savedActionIndex=null,deferredInstallPrompt=null;
@@ -2866,6 +2972,69 @@ function contrastRatio(a,b){
   const L1=lum(a),L2=lum(b),hi=Math.max(L1,L2),lo=Math.min(L1,L2);
   return (hi+.05)/(lo+.05);
 }
+function contrastGrade(ratio){
+  if(ratio>=7)return{key:'aaa',label:'AAA 文字'};
+  if(ratio>=4.5)return{key:'aa',label:'AA 文字'};
+  if(ratio>=3)return{key:'large',label:'大字 / UI'};
+  return{key:'fail',label:'僅裝飾'};
+}
+function paletteValidationData(theme='original'){
+  const colors=theme==='dark'?previewThemePalette('dark'):{...palette,derived:false};
+  const roles=[
+    {key:'base',label:'Base'},
+    {key:'structure',label:'Structure'},
+    {key:'accent',label:'Accent'}
+  ];
+  const pairs=[
+    ['base','structure'],
+    ['base','accent'],
+    ['structure','accent']
+  ].map(([a,b])=>{
+    const ratio=contrastRatio(colors[a],colors[b]);
+    return{a,b,ratio,grade:contrastGrade(ratio)};
+  });
+  return{theme,colors,roles,pairs,normal:pairs.filter(x=>x.ratio>=4.5).length,large:pairs.filter(x=>x.ratio>=3).length};
+}
+function validationPair(data,a,b){
+  return data.pairs.find(x=>(x.a===a&&x.b===b)||(x.a===b&&x.b===a));
+}
+function validationAdviceText(label,ratio){
+  if(ratio>=4.5)return'<strong>'+label+'</strong> 可作一般文字';
+  if(ratio>=3)return'<strong>'+label+'</strong> 僅建議大字或 UI 邊界';
+  return'<strong>'+label+'</strong> 不建議直接承擔文字閱讀';
+}
+function setValidationTheme(next){
+  if(!['original','dark'].includes(next))return;
+  validationTheme=next;
+  renderPaletteValidation();
+}
+function renderPaletteValidation(){
+  const host=$('#accessibilityMatrix'),summary=$('#validationSummary'),advice=$('#validationAdvice');
+  if(!host||!summary||!advice)return;
+  const data=paletteValidationData(validationTheme);
+  $('#validationThemeModes [data-validation-theme]').forEach(b=>{
+    const active=b.dataset.validationTheme===validationTheme;
+    b.classList.toggle('active',active);
+    b.setAttribute('aria-pressed',active?'true':'false');
+  });
+  const note=$('#validationThemeNote');
+  if(note)note.textContent=validationTheme==='dark'?'Dark 衍生值 · 不修改目前三色':'不修改目前三色';
+  summary.innerHTML='<span><strong>'+data.normal+' / 3</strong> 組可作一般文字</span><span><strong>'+data.large+' / 3</strong> 組達 3:1</span>';
+  const head='<thead><tr><th scope="col">文字 ↓ / 背景 →</th>'+data.roles.map(r=>'<th scope="col">'+r.label+'</th>').join('')+'</tr></thead>';
+  const body='<tbody>'+data.roles.map(row=>'<tr><th scope="row" class="row-head">'+row.label+'</th>'+data.roles.map(col=>{
+    if(row.key===col.key)return'<td class="validation-diagonal">—</td>';
+    const pair=validationPair(data,row.key,col.key),ratio=pair.ratio,grade=pair.grade;
+    return'<td class="validation-cell '+grade.key+'"><strong>'+ratio.toFixed(1)+':1</strong><span>'+grade.label+'</span></td>';
+  }).join('')+'</tr>').join('')+'</tbody>';
+  host.innerHTML='<table class="validation-table" aria-label="'+(validationTheme==='dark'?'Dark 預覽':'原色')+' 三色對比矩陣">'+head+body+'</table>';
+  const bs=validationPair(data,'base','structure').ratio;
+  const ba=validationPair(data,'base','accent').ratio;
+  const sa=validationPair(data,'structure','accent').ratio;
+  advice.innerHTML=
+    '<li>'+validationAdviceText('Structure / Base',bs)+'</li>'+
+    '<li>'+validationAdviceText('Accent / Base',ba)+'</li>'+
+    '<li>'+validationAdviceText('Accent / Structure',sa)+'</li>';
+}
 
 const LEARNING_CONCEPTS={
   hierarchy:{title:'Hierarchy｜層級',text:'明暗差不是越大越好。它的作用是讓視線知道誰是背景、誰負責結構。75% 與 18% 有足夠差異時，畫面會更容易閱讀。'},
@@ -2898,11 +3067,10 @@ function renderRelationshipExplanation(){
 }
 function renderPaletteHealth(){
   const host=$('#paletteHealth');if(!host)return;
-  const bs=contrastRatio(palette.base,palette.structure);
-  const ba=contrastRatio(palette.base,palette.accent);
+  const data=paletteValidationData('original');
   host.innerHTML=
-    '<div class="health-item '+(bs>=4.5?'good':'warn')+'"><strong>'+(bs>=4.5?'文字對比清楚':'文字對比偏低')+'</strong><span>Base / Structure '+bs.toFixed(1)+':1</span></div>'+
-    '<div class="health-item '+(ba>=3?'good':'warn')+'"><strong>'+(ba>=3?'點綴辨識清楚':'點綴較接近背景')+'</strong><span>Base / Accent '+ba.toFixed(1)+':1</span></div>';
+    '<div class="health-item '+(data.normal===3?'good':'warn')+'"><strong>'+data.normal+' / 3 組可作一般文字</strong><span>WCAG AA 4.5:1</span></div>'+
+    '<div class="health-item '+(data.large===3?'good':'warn')+'"><strong>'+data.large+' / 3 組達 UI 對比</strong><span>大字 / 非文字元件 3:1</span></div>';
 }
 function renderUIPreview(){renderContextPreview()}
 function paletteText(){
@@ -3058,7 +3226,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v4',appVersion:'2.12.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v4',appVersion:'2.13.0',exportedAt:new Date().toISOString(),saved:readSavedData(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -3181,8 +3349,8 @@ function renderVision(){
   [palette.base,palette.structure,palette.accent].forEach(hex=>{const d=document.createElement('div');d.style.background=transformVision(hex,visionMode);host.appendChild(d)});
   $$('#visionModes [data-vision]').forEach(b=>b.classList.toggle('active',b.dataset.vision===visionMode));
 }
-function previewThemePalette(){
-  if(previewTheme!=='dark')return{...palette,derived:false};
+function previewThemePalette(theme=previewTheme){
+  if(theme!=='dark')return{...palette,derived:false};
   const b=toOKLCH(palette.base),s=toOKLCH(palette.structure);
   return{
     base:gamutMapOKLCH(clamp(Math.min(.22,b.l*.28),.08,.22),Math.min(b.c*.62,.08),b.h),
@@ -4798,7 +4966,7 @@ function render(){
   [['base','75'],['structure','18'],['accent','7']].forEach(([k,t])=>{const d=document.createElement('div');d.style.background=palette[k];d.style.color=textFor(palette[k]);d.innerHTML=`<span>${t}</span>`;pv.appendChild(d)});
   renderPaletteHealth();
   const deep=$('#composeDeepDive');
-  if(deep?.open)renderRelationshipExplanation();
+  if(deep?.open){renderRelationshipExplanation();renderPaletteValidation();}
   scheduleSecondaryRender();
 }
 function scheduleSecondaryRender(){
@@ -4808,7 +4976,7 @@ function scheduleSecondaryRender(){
     const active=document.querySelector('.tab-view.active')?.dataset.view||'compose';
     if(active==='compose'){
       const deep=$('#composeDeepDive');
-      if(deep?.open){renderVision();renderContextPreview()}
+      if(deep?.open){renderVision();renderPaletteValidation();renderContextPreview()}
     }else if(active==='inspire'){
       ensureInspirationResources().then(()=>{if(token===secondaryRenderToken){renderIdeas();renderRecommendations()}});
     }
@@ -5558,8 +5726,9 @@ $('#backupInput').addEventListener('change',e=>{const file=e.target.files&&e.tar
 $('#clearRecent').onclick=()=>{recentColors=[];localStorage.removeItem('colorlab.recent');renderRecentColors();toast('已清除最近用色')};
 $('#copyPalette').onclick=()=>{navigator.clipboard?.writeText(paletteText()).then(()=>toast('已複製三色')).catch(()=>toast('無法複製'))};
 $('#sharePalette').onclick=sharePalette;
-$$('[data-preview-theme]').forEach(b=>b.addEventListener('click',()=>setPreviewTheme(b.dataset.previewTheme)));
-$$('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
+$('[data-preview-theme]').forEach(b=>b.addEventListener('click',()=>setPreviewTheme(b.dataset.previewTheme)));
+$('[data-validation-theme]').forEach(b=>b.addEventListener('click',()=>setValidationTheme(b.dataset.validationTheme)));
+$('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
 $('#librarySearch').addEventListener('input',renderSaved);
 $('#librarySort').value=librarySort;
 $('#librarySort').addEventListener('change',e=>{librarySort=e.target.value;localStorage.setItem('colorlab.librarySort',librarySort);renderSaved()});
@@ -5567,7 +5736,7 @@ $('#libraryFolderFilter').addEventListener('change',e=>{libraryFolderFilter=e.ta
 $('#comboName').addEventListener('input',e=>{currentComboName=e.target.value;persistDraft()});
 $('#composeDeepDive').addEventListener('toggle',e=>{
   if(e.currentTarget.open)requestAnimationFrame(()=>{
-    renderRelationshipExplanation();renderVision();renderContextPreview();
+    renderRelationshipExplanation();renderPaletteValidation();renderVision();renderContextPreview();
   });
 });
 renderModes();palette=fastInitialPalette();renderComboSlots();render();updateLockToggle();
