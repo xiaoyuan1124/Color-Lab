@@ -17,7 +17,8 @@ const toneFamilies=fs.readFileSync('data/tone-families.js','utf8');
 const fail=(msg)=>{console.error('FAIL:',msg);process.exitCode=1};
 const pass=(msg)=>console.log('PASS:',msg);
 
-const inline=html.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/);
+const inlineScripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+const inline=inlineScripts.at(-1);
 if(!inline) fail('inline app script missing');
 else {
   try { new Function(inline[1]); pass('inline JavaScript syntax'); }
@@ -244,7 +245,7 @@ if(!appSource.includes('function photoDistinctClusters(')||
    !appSource.includes("label:'主體'")||
    !appSource.includes("label:'結構'")||
    !appSource.includes("label:'焦點'")||
-   !appSource.includes('photoPalette-ratio')||
+   !appSource.includes('photo-palette-ratio')||
    !photoPaletteCss.includes('.photo-palette-ratio{')){
   fail('V2.19.0 semantic photo trio contract missing');
 }else pass('V2.19.0 Balanced / Muted / Vivid semantic trio');
