@@ -1104,6 +1104,7 @@ test('V2.27 Reference Board renders a 1600x1200 palette board when no photo is l
     selectedColors=['#E7DCC8','#274C55','#C65338'];
     activeSlot=0;seed=selectedColors[0];generate(false);
     if(typeof photoObjectURL!=='undefined')photoObjectURL=null;
+    if(typeof photoLoaded!=='undefined')photoLoaded=false;
     const before=paletteArtifactBase();
     const board=await drawReferenceBoard();
     const pixel=board.canvas.getContext('2d').getImageData(1100,300,1,1).data;
@@ -1121,14 +1122,14 @@ test('V2.27 Reference Board can include the current local photo without changing
   const result=await page.evaluate(async () => {
     selectedColors=['#F4EFE6','#28343A','#D4513D'];
     activeSlot=0;seed=selectedColors[0];generate(false);
-    photoObjectURL='blob:color-lab-reference-test';
+    photoLoaded=true;
     photoCanvas.width=120;photoCanvas.height=80;
     const ctx=photoCanvas.getContext('2d');ctx.fillStyle='#00CC66';ctx.fillRect(0,0,120,80);
     const before=paletteArtifactBase();
     const board=await drawReferenceBoard();
     const pixel=board.canvas.getContext('2d').getImageData(300,400,1,1).data;
     const hex='#'+[pixel[0],pixel[1],pixel[2]].map(v=>v.toString(16).padStart(2,'0')).join('').toUpperCase();
-    photoObjectURL=null;
+    photoLoaded=false;
     return {hasPhoto:board.data.hasPhoto,pixel:hex,before,after:paletteArtifactBase()};
   });
   expect(result.hasPhoto).toBe(true);
