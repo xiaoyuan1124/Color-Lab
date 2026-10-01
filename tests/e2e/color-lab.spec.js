@@ -2424,3 +2424,44 @@ test('V2.50 professional handoff matches Lab D50 reference and stays source-safe
   expect(text).toContain('CMYK = unprofiled sRGB reference');
   expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before);
 });
+
+
+test('V2.51 converts exact sRGB source colors to Display-P3 handoff without gamut claims', async ({ page }) => {
+  const ref=await page.evaluate(() => ({
+    red:hexToDisplayP3('#FF0000'),
+    redCss:displayP3CssFromHex('#FF0000'),
+    white:hexToDisplayP3('#FFFFFF'),
+    capability:displayP3Capability()
+  }));
+
+  expect(ref.red.r).toBeCloseTo(0.9174876,5);
+  expect(ref.red.g).toBeCloseTo(0.2002868,5);
+  expect(ref.red.b).toBeCloseTo(0.1385606,5);
+  expect(ref.red.inGamut).toBe(true);
+  expect(ref.redCss).toBe('color(display-p3 0.917488 0.200287 0.138561)');
+  expect(ref.white.r).toBeCloseTo(1,6);
+  expect(ref.white.g).toBeCloseTo(1,6);
+  expect(ref.white.b).toBeCloseTo(1,6);
+  expect(typeof ref.capability.syntax).toBe('boolean');
+  expect(typeof ref.capability.gamut).toBe('boolean');
+
+  await page.evaluate(() => {
+    selectedColors=['#FF0000','#445566','#AABBCC'];
+    lockedSlots=[false,false,false];activeSlot=0;seed=selectedColors[0];generate(false);
+  });
+  const before=await page.evaluate(() => paletteArtifactBase());
+
+  await page.locator('#handoffMore > summary').click();
+  await expect(page.locator('#professionalHandoff')).toBeVisible();
+  await expect(page.locator('#professionalHandoff')).toContainText('Display-P3');
+  await expect(page.locator('#professionalHandoff')).toContainText('sRGB HEX');
+  await expect(page.locator('#p3Capability')).not.toBeEmpty();
+
+  const css=await page.evaluate(() => professionalP3Css());
+  expect(css).toContain('--color-base: #FF0000;');
+  expect(css).toContain('@supports (color: color(display-p3 1 1 1))');
+  expect(css).toContain('@media (color-gamut: p3)');
+  expect(css).toContain('--color-base: color(display-p3 0.917488 0.200287 0.138561);');
+  expect(css).toContain('not gamut expansion');
+  expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before);
+});
