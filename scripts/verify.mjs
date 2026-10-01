@@ -162,7 +162,7 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2370")) fail('service worker cache version is not V2.36.0');
+if(!sw.includes("color-lab-v2370")) fail('service worker cache version is not V2.37.0');
 else pass('service worker cache version');
 
 if(pkg.version!=='2.37.0') fail('package version must be 2.37.0');
@@ -862,7 +862,7 @@ if(!html.includes("if(deep?.open)renderDeepDiveVisible()")||
   fail('V2.6.2 deferred deep-dive or contrast follow-up missing');
 }else pass('V2.6.2 deferred deep-dive and contrast follow-up');
 
-if(!html.includes("return contrastRatio(bg,dark)>=contrastRatio(bg,light)?dark:light")){
+if(!colorQuality.includes("return contrastRatio(bg,dark)>=contrastRatio(bg,light)?dark:light")){
   fail('V2.6.3 contrast-aware preview text chooser missing');
 }else pass('V2.6.3 contrast-aware preview text chooser');
 
@@ -1190,11 +1190,11 @@ if(!html.includes("recommendationCacheKey")||!html.includes("recommendationCache
   fail('recommendation cache missing');
 }else pass('recommendation cache present');
 
-if(!html.includes("function ensureStructureContrast(")||!html.includes("out[1]=ensureStructureContrast(out[0],out[1],2.55)")){
+if(!colorQuality.includes("function ensureStructureContrast(")||!colorQuality.includes("out[1]=ensureStructureContrast(out[0],out[1],2.55)")){
   fail('adaptive structure contrast guard missing');
 }else pass('adaptive structure contrast guard');
 
-if(!html.includes("dh>38&&before.c>.035")){
+if(!colorQuality.includes("dh>38&&before.c>.035")){
   fail('generated accent chroma guard missing');
 }else pass('generated accent chroma guard');
 
