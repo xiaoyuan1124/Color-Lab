@@ -254,3 +254,30 @@ test('WebKit V2.40 drops delayed Inspire actions after route changes', async ({ 
   });
   expect(result).toEqual({executed:false,ran:0,beforeOffset:result.beforeOffset,afterOffset:result.beforeOffset,active:'photo'});
 });
+
+
+test('WebKit V2.41 keeps Photo pointer ownership on the initiating touch', async ({ page }) => {
+  await page.evaluate(() => switchTab('photo',false));
+  const result=await page.evaluate(() => {
+    cancelPhotoPointerInteraction();
+    photoPanel.classList.add('show');
+    photoCanvas.width=80;photoCanvas.height=80;
+    const ctx=photoCanvas.getContext('2d');ctx.fillStyle='#445566';ctx.fillRect(0,0,80,80);
+    const rect=photoCanvas.getBoundingClientRect();
+    const p={x:rect.left+rect.width/2,y:rect.top+rect.height/2};
+    const fire=(type,pointerId)=>photoCanvas.dispatchEvent(new PointerEvent(type,{
+      bubbles:true,pointerType:'touch',pointerId,clientX:p.x,clientY:p.y
+    }));
+
+    fire('pointerdown',7);
+    fire('pointerdown',8);
+    fire('pointercancel',8);
+    const afterForeign={id:photoPointerId,picking:photoPicking};
+    fire('pointercancel',7);
+    const afterOwner={id:photoPointerId,picking:photoPicking,display:magnifier.style.display};
+    return{afterForeign,afterOwner};
+  });
+
+  expect(result.afterForeign).toEqual({id:7,picking:true});
+  expect(result.afterOwner).toEqual({id:null,picking:false,display:'none'});
+});
