@@ -198,3 +198,38 @@ test('WebKit V2.38 invalidates pending Inspire work after leaving the route', as
   expect(result).toEqual({ideas:0,recommendations:0,active:'compose',pending:false});
 });
 
+
+
+test('WebKit V2.39 releases decoded photo URLs while keeping canvas photo availability', async ({ page }) => {
+  await page.locator('#cornerNavToggle').click();
+  await page.locator('#nav-photo').click();
+  await page.evaluate(() => {
+    const original=URL.revokeObjectURL.bind(URL);
+    window.__v239Revoked=[];
+    URL.revokeObjectURL=url=>{window.__v239Revoked.push(url);return original(url)};
+  });
+
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="240" height="120"><rect width="120" height="120" fill="#E7DCC8"/><rect x="120" width="80" height="120" fill="#274C55"/><rect x="200" width="40" height="120" fill="#C65338"/></svg>';
+  await page.locator('#photoInput').setInputFiles({
+    name:'webkit-v239-photo.svg',
+    mimeType:'image/svg+xml',
+    buffer:Buffer.from(svg)
+  });
+
+  await expect.poll(() => page.evaluate(() => photoLoaded)).toBe(true);
+  const state=await page.evaluate(() => ({
+    objectURL:photoObjectURL,
+    imagePending:photoLoadImage!==null,
+    hasPhoto:referenceBoardHasPhoto(),
+    width:photoCanvas.width,
+    height:photoCanvas.height,
+    revoked:window.__v239Revoked.length
+  }));
+
+  expect(state.objectURL).toBeNull();
+  expect(state.imagePending).toBe(false);
+  expect(state.hasPhoto).toBe(true);
+  expect(state.width).toBeGreaterThan(0);
+  expect(state.height).toBeGreaterThan(0);
+  expect(state.revoked).toBeGreaterThanOrEqual(1);
+});
