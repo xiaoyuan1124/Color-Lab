@@ -2350,3 +2350,37 @@ test('V2.47 Library quick filters compose semantic AND search without mutating s
   const after=await page.evaluate(() => JSON.stringify(readSavedData()));
   expect(after).toBe(before);
 });
+
+
+test('V2.49 collapses secondary Library tools and reopens help without changing user data', async ({ page }) => {
+  const before=await page.evaluate(() => {
+    selectedColors=['#E7DCC8','#274C55','#C65338'];
+    lockedSlots=[false,false,false];activeSlot=0;seed=selectedColors[0];
+    storageWriteRaw(FIRST_RUN_GUIDE_KEY,'done',{silent:true});
+    generate(false);renderComboSlots();
+    switchTab('library',false);
+    return {
+      palette:paletteArtifactBase(),
+      guide:storageReadRaw(FIRST_RUN_GUIDE_KEY,'')
+    };
+  });
+
+  await expect(page.locator('#librarySettings')).toBeVisible();
+  await expect(page.locator('#exportBackup')).toBeHidden();
+  await expect(page.locator('#openHelpGuide')).toBeHidden();
+
+  await page.locator('#librarySettings > summary').click();
+  await expect(page.locator('#exportBackup')).toBeVisible();
+  await expect(page.locator('#openHelpGuide')).toBeVisible();
+  await page.locator('#openHelpGuide').click();
+
+  await expect(page.locator('.tab-view[data-view="compose"]')).toBeVisible();
+  await expect(page.locator('#firstRunGuide')).toBeVisible();
+  expect(await page.evaluate(() => storageReadRaw(FIRST_RUN_GUIDE_KEY,''))).toBe('done');
+  expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before.palette);
+
+  await page.locator('#dismissFirstRunGuide').click();
+  await expect(page.locator('#firstRunGuide')).toBeHidden();
+  expect(await page.evaluate(() => storageReadRaw(FIRST_RUN_GUIDE_KEY,''))).toBe('done');
+  expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before.palette);
+});
