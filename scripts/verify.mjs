@@ -251,6 +251,8 @@ if(!html.includes('搜尋名稱、HEX、標籤、色系或調性')||
    !html.includes('可搜尋：藍、紅、柔和、鮮明、深色、淺色')||
    !librarySearchCore.includes('function libraryColorSemanticTerms(')||
    !librarySearchCore.includes('function libraryPaletteSemanticTerms(')||
+   !librarySearchCore.includes('function librarySearchDocument(')||
+   !librarySearchCore.includes('function librarySearchDocumentMatches(')||
    !localProjects.includes('function librarySearchMatches(')||
    !html.includes('return librarySearchMatches(x,q);')){
   fail('V2.46.0 semantic Library search contract missing');
@@ -263,7 +265,7 @@ if(!librarySearchCore.includes("terms.push('中性','灰','灰色','neutral')")|
    !librarySearchCore.includes("terms.push('app','網頁','介面','ui','簡報')")||
    !librarySearchCore.includes("terms.push('室內','穿搭','interior','fashion')")||
    !librarySearchCore.includes("terms.push('品牌','brand','海報')")||
-   !localProjects.includes("return terms.every(term=>haystack.includes(term))")||
+   !librarySearchCore.includes("return terms.every(term=>haystack.includes(term))")||
    !html.includes('品牌、室內、穿搭、簡報')){
   fail('V2.46.0 color-family / tone / context / multi-token search semantics missing');
 }else pass('V2.46.0 color family + tone + context + AND search semantics');
