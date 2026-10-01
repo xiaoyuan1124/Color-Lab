@@ -2405,7 +2405,11 @@ test('V2.50 professional handoff matches Lab D50 reference and stays source-safe
   expect(reference.red.y).toBeCloseTo(100,6);
   expect(reference.red.k).toBeCloseTo(0,6);
 
-  await setExactPalette(page,['#7654CD','#445566','#FF0000']);
+  await page.evaluate(() => {
+    selectedColors=['#7654CD','#445566','#FF0000'];
+    lockedSlots=[false,false,false];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+  });
   const before=await page.evaluate(() => paletteArtifactBase());
   await page.locator('#handoffMore > summary').click();
   await expect(page.locator('#professionalHandoff')).toBeVisible();
