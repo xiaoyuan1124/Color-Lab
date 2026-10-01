@@ -2155,3 +2155,117 @@ test('V2.45 first-run guidance explains the Corner Fan navigation entry', async 
   await expect(page.locator('#firstRunGuide')).toBeVisible();
   await expect(page.locator('#firstRunGuide')).toContainText('右下角四點可切換配色、靈感、相片與收藏');
 });
+
+
+test('V2.46 exposes separate camera and gallery Photo sources through one load pipeline', async ({ page }) => {
+  await page.evaluate(() => switchTab('photo',false));
+  await expect(page.locator('#photoCameraTrigger')).toHaveText(/拍照取色/);
+  await expect(page.locator('#photoTrigger')).toHaveText('從相簿選擇');
+  await expect(page.locator('#photoCameraInput')).toHaveAttribute('accept','image/*');
+  await expect(page.locator('#photoCameraInput')).toHaveAttribute('capture','environment');
+  await expect(page.locator('#photoInput')).not.toHaveAttribute('capture',/.+/);
+
+  const wiring=await page.evaluate(() => ({
+    camera:document.getElementById('photoCameraTrigger').onclick===openPhotoCamera,
+    gallery:document.getElementById('photoTrigger').onclick===openPhotoPicker,
+    handler:handlePhotoInputChange.toString()
+  }));
+  expect(wiring.camera).toBe(true);
+  expect(wiring.gallery).toBe(true);
+  expect(wiring.handler).toContain('loadPhoto(file)');
+});
+
+test('V2.46 Library semantic search finds color family and tone without changing saved data', async ({ page }) => {
+  const before=await page.evaluate(() => {
+    const blue=sanitizeSavedRecord({
+      name:'Night Study',seed:'#14213D',selectedColors:['#14213D','#274060','#335C81'],
+      lockedSlots:[false,false,false],mode:'quiet',
+      palette:{base:'#14213D',structure:'#274060',accent:'#335C81'},date:1
+    });
+    const warm=sanitizeSavedRecord({
+      name:'Warm Study',seed:'#F7E1D7',selectedColors:['#F7E1D7','#8C3B2A','#E76F51'],
+      lockedSlots:[false,false,false],mode:'quiet',
+      palette:{base:'#F7E1D7',structure:'#8C3B2A',accent:'#E76F51'},date:2
+    });
+    localStorage.setItem('colorlab.saved',JSON.stringify([blue,warm]));
+    switchTab('library',false);renderSaved();
+    return JSON.stringify(readSavedData());
+  });
+
+  await page.locator('#librarySearch').fill('藍 深色');
+  await expect(page.locator('#saved .library-piece')).toHaveCount(1);
+  await expect(page.locator('#saved')).toContainText('Night Study');
+
+  await page.locator('#librarySearch').fill('紅');
+  await expect(page.locator('#saved')).toContainText('Warm Study');
+
+  const after=await page.evaluate(() => JSON.stringify(readSavedData()));
+  expect(after).toBe(before);
+});
+
+test('V2.46 semantic color terms follow OKLCH hue families and tone bands', async ({ page }) => {
+  const result=await page.evaluate(() => ({
+    red:libraryColorSemanticTerms('#E63946'),
+    blue:libraryColorSemanticTerms('#335C81'),
+    neutral:libraryColorSemanticTerms('#777777')
+  }));
+  expect(result.red).toContain('紅');
+  expect(result.blue).toContain('藍');
+  expect(result.neutral).toContain('中性');
+});
+
+
+test('V2.46 Library semantic search filters by color family, tone and use-case without changing saved data', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    const records=[
+      sanitizeSavedRecord({
+        name:'Archive One',
+        palette:{base:'#EAF0F8',structure:'#40556B',accent:'#6E8BA4'},
+        selectedColors:['#EAF0F8','#40556B','#6E8BA4'],
+        seed:'#EAF0F8',mode:'quiet',tags:[],folder:'',date:2
+      }),
+      sanitizeSavedRecord({
+        name:'Archive Two',
+        palette:{base:'#F5E8D5',structure:'#5B382A',accent:'#D46A32'},
+        selectedColors:['#F5E8D5','#5B382A','#D46A32'],
+        seed:'#F5E8D5',mode:'quiet',tags:[],folder:'',date:1
+      })
+    ];
+    localStorage.setItem('colorlab.saved',JSON.stringify(records));
+    const semantic=records.map(item=>libraryPaletteSemanticTerms(item));
+    return{semantic,before:JSON.stringify(readSavedData())};
+  });
+
+  expect(result.semantic[0]).toContain('藍');
+  expect(result.semantic[0]).toContain('室內');
+
+  await page.evaluate(() => switchTab('library',false));
+  await page.locator('#librarySearch').fill('藍 室內');
+  await expect(page.locator('#saved .library-piece')).toHaveCount(1);
+  await expect(page.locator('#saved')).toContainText('Archive One');
+  await expect(page.locator('#saved')).not.toContainText('Archive Two');
+
+  const after=await page.evaluate(() => JSON.stringify(readSavedData()));
+  expect(after).toBe(result.before);
+});
+
+test('V2.46 Library search keeps exact HEX and legacy metadata lookup alongside semantics', async ({ page }) => {
+  await page.evaluate(() => {
+    const record=sanitizeSavedRecord({
+      name:'Client Palette',
+      palette:{base:'#112233',structure:'#445566',accent:'#AABBCC'},
+      selectedColors:['#112233','#445566','#AABBCC'],
+      seed:'#112233',mode:'quiet',tags:['網站'],folder:'客戶',date:3
+    });
+    localStorage.setItem('colorlab.saved',JSON.stringify([record]));
+    switchTab('library',false);
+    renderSaved();
+  });
+
+  await page.locator('#librarySearch').fill('#AABBCC');
+  await expect(page.locator('#saved .library-piece')).toHaveCount(1);
+  await page.locator('#librarySearch').fill('網站');
+  await expect(page.locator('#saved .library-piece')).toHaveCount(1);
+  await page.locator('#librarySearch').fill('客戶');
+  await expect(page.locator('#saved .library-piece')).toHaveCount(1);
+});

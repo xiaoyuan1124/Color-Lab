@@ -2216,6 +2216,33 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 }
 
 
+/* V2.46 PHOTO + LIBRARY */
+.photo-source-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:var(--space-5);
+}
+.photo-source-actions .photo-select{margin:0}
+.photo-gallery-select{
+  min-height:52px;
+  border:1px solid var(--border-strong);
+  border-radius:15px;
+  background:transparent;
+  color:var(--text-1);
+  font-size:13px;
+  font-weight:700;
+}
+.library-search-note{
+  margin:7px 2px 0;
+  color:var(--text-3);
+  font-size:10px;
+  line-height:1.45;
+}
+@media(max-width:340px){
+  .photo-source-actions{grid-template-columns:1fr}
+}
+
 /* V2.45 RESULT-FIRST */
 .result-summary{
   display:grid;
@@ -2303,7 +2330,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.45.0</div>
+    <div class="version">V2.46.0</div>
   </div>
 
   <main class="app-main">
@@ -2596,7 +2623,11 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
       </header>
 
       <section class="photo-screen app-section first">
-        <button class="primary photo-select" id="photoTrigger" type="button">選擇照片 <span class="arrow">＋</span></button>
+        <div class="photo-source-actions" role="group" aria-label="照片來源">
+          <button class="primary photo-select" id="photoCameraTrigger" type="button">拍照取色 <span class="arrow">＋</span></button>
+          <button class="photo-gallery-select" id="photoTrigger" type="button">從相簿選擇</button>
+        </div>
+        <input id="photoCameraInput" type="file" accept="image/*" capture="environment" hidden>
         <input id="photoInput" type="file" accept="image/*" hidden>
 
         <div class="photo-mode-bar" id="photoModeBar">
@@ -2655,7 +2686,8 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 
       <section class="app-section first">
         <div class="library-search-wrap">
-          <input id="librarySearch" class="library-search" type="search" placeholder="搜尋名稱 HEX 或標籤" autocomplete="off" aria-label="搜尋收藏配色">
+          <input id="librarySearch" class="library-search" type="search" placeholder="搜尋名稱、HEX、標籤、色系或調性" autocomplete="off" aria-label="搜尋收藏配色">
+          <div class="library-search-note">可搜尋：藍、紅、柔和、鮮明、深色、淺色、品牌、室內、穿搭、簡報，也支援專案／分類／標籤</div>
         </div>
         <div class="tag-filters" id="libraryFilters"></div>
         <div class="library-organize">
@@ -2700,7 +2732,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.45.0</div>
+  <div class="footer app-footer">Color Lab V2.46.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2795,6 +2827,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 
 <script src="./runtime/storage-hardening.js"></script>
 <script src="./core/color-quality.js"></script>
+<script src="./core/library-search.js"></script>
 <script src="./runtime/palette-tools.js"></script>
 <script src="./runtime/vision-accessibility.js"></script>
 <script src="./runtime/local-projects.js"></script>
@@ -2810,7 +2843,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 /* Color Lab V2.35.0 PWA / iPhone Update Hardening
    User-mediated service worker activation prevents mixed-version sessions. */
 
-const COLORLAB_APP_VERSION='2.45.0';
+const COLORLAB_APP_VERSION='2.46.0';
 const PWA_UPDATE_CHECK_INTERVAL=20*60*1000;
 let pwaRegistration=null;
 let pwaUpdateReady=false;
@@ -3259,7 +3292,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v5',appVersion:'2.45.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.46.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -4619,7 +4652,7 @@ function renderSaved(){
     if(!localProjectMatches(x))return false;
     if(libraryFolderFilter&&(x.folder||'')!==libraryFolderFilter)return false;
     if(!q)return true;
-    return librarySearchText(x).includes(q);
+    return librarySearchMatches(x,q);
   });
   rows.sort((a,b)=>{
     if(librarySort==='pinned')return Number(!!b.x.pinned)-Number(!!a.x.pinned)||(b.x.date||0)-(a.x.date||0);
@@ -4676,7 +4709,7 @@ function detectPhotoColorCapability(){
   }catch(_){return'srgb'}
 }
 const photoDisplayCapability=detectPhotoColorCapability();
-const photoInput=$('#photoInput'),photoCanvas=$('#photoCanvas'),photoPanel=$('#photoPanel'),pickMarker=$('#pickMarker');
+const photoInput=$('#photoInput'),photoCameraInput=$('#photoCameraInput'),photoCanvas=$('#photoCanvas'),photoPanel=$('#photoPanel'),pickMarker=$('#pickMarker');
 const photoCtx=photoCanvas.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'});
 let lastPhotoRoles=[],lastPhotoClusters=[];
 const magnifier=$('#magnifier'),magnifierCanvas=$('#magnifierCanvas'),magnifierCtx=magnifierCanvas.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'}),pickReadout=$('#pickReadout');
@@ -4884,6 +4917,7 @@ function finishPhotoRegion(p){
   extractPhotoPalette({x,y,w,h});toast('已分析框選區域');
 }
 function openPhotoPicker(){photoInput.click()}
+function openPhotoCamera(){photoCameraInput.click()}
 function releasePhotoObjectURL(url){
   if(!url)return;
   try{URL.revokeObjectURL(url)}catch(_){}
@@ -4986,9 +5020,16 @@ function updatePhotoPick(clientX,clientY,commit=false){
 }
 $('#comboSlots').addEventListener('keydown',handleSlotKeyboard);
 $('#photoTrigger').onclick=openPhotoPicker;
+$('#photoCameraTrigger').onclick=openPhotoCamera;
 $('#photoChange').onclick=openPhotoPicker;
 $('#photoUsePalette').onclick=usePhotoPalette;
-photoInput.addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(file)loadPhoto(file);e.target.value=''});
+function handlePhotoInputChange(e){
+  const file=e.target.files&&e.target.files[0];
+  if(file)loadPhoto(file);
+  e.target.value='';
+}
+photoInput.addEventListener('change',handlePhotoInputChange);
+photoCameraInput.addEventListener('change',handlePhotoInputChange);
 
 photoCanvas.addEventListener('pointerdown',e=>{
   if(photoPointerId!==null&&photoPointerId!==e.pointerId)return;
