@@ -387,3 +387,31 @@ test('WebKit V2.46 semantic Library search remains local and source-safe', async
   expect(result.query).toBe(true);
   expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before);
 });
+
+
+test('WebKit V2.46 exposes camera capture and gallery as separate mobile Photo choices', async ({ page }) => {
+  await page.evaluate(() => switchTab('photo',false));
+  await expect(page.locator('#photoCameraTrigger')).toBeVisible();
+  await expect(page.locator('#photoTrigger')).toBeVisible();
+  await expect(page.locator('#photoCameraInput')).toHaveAttribute('capture','environment');
+  await expect(page.locator('#photoCameraInput')).toHaveAttribute('accept','image/*');
+  await expect(page.locator('#photoInput')).not.toHaveAttribute('capture',/.+/);
+});
+
+test('WebKit V2.46 semantic Library search works locally and does not mutate saved palettes', async ({ page }) => {
+  const before=await page.evaluate(() => {
+    const record=sanitizeSavedRecord({
+      name:'Mobile Archive',
+      palette:{base:'#EAF0F8',structure:'#40556B',accent:'#6E8BA4'},
+      selectedColors:['#EAF0F8','#40556B','#6E8BA4'],
+      seed:'#EAF0F8',mode:'quiet',tags:[],folder:'',date:1
+    });
+    localStorage.setItem('colorlab.saved',JSON.stringify([record]));
+    switchTab('library',false);renderSaved();
+    return JSON.stringify(readSavedData());
+  });
+
+  await page.locator('#librarySearch').fill('藍 室內');
+  await expect(page.locator('#saved .library-piece')).toHaveCount(1);
+  expect(await page.evaluate(() => JSON.stringify(readSavedData()))).toBe(before);
+});
