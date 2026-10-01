@@ -437,3 +437,29 @@ test('WebKit V2.46 semantic Library search works locally and does not mutate sav
   await expect(page.locator('#saved .library-piece')).toHaveCount(1);
   expect(await page.evaluate(() => JSON.stringify(readSavedData()))).toBe(before);
 });
+
+
+test('WebKit V2.49 reopens help from compact Library settings without mutating source colors', async ({ page }) => {
+  const before=await page.evaluate(() => {
+    selectedColors=['#112233','#445566','#AABBCC'];
+    lockedSlots=[false,false,false];activeSlot=0;seed=selectedColors[0];
+    storageWriteRaw(FIRST_RUN_GUIDE_KEY,'done',{silent:true});
+    generate(false);renderComboSlots();
+    switchTab('library',false);
+    return paletteArtifactBase();
+  });
+
+  await expect(page.locator('#librarySettings')).toBeVisible();
+  await expect(page.locator('#openHelpGuide')).toBeHidden();
+  await page.locator('#librarySettings > summary').click();
+  await expect(page.locator('#openHelpGuide')).toBeVisible();
+  await page.locator('#openHelpGuide').click();
+
+  await expect(page.locator('#firstRunGuide')).toBeVisible();
+  expect(await page.evaluate(() => storageReadRaw(FIRST_RUN_GUIDE_KEY,''))).toBe('done');
+  expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before);
+
+  await page.locator('#dismissFirstRunGuide').click();
+  await expect(page.locator('#firstRunGuide')).toBeHidden();
+  expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before);
+});

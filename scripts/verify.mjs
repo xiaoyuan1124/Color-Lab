@@ -165,13 +165,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2480")) fail('service worker cache version is not V2.48.0');
+if(!sw.includes("color-lab-v2490")) fail('service worker cache version is not V2.49.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.48.0') fail('package version must be 2.48.0');
+if(pkg.version!=='2.49.0') fail('package version must be 2.49.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.48.0')||!html.includes('<div class="version">V2.48.0</div>')||!html.includes("appVersion:'2.48.0'")) fail('V2.48.0 UI or backup version metadata missing');
-else pass('V2.48.0 version metadata');
+if(!html.includes('Color Lab V2.49.0')||!html.includes('<div class="version">V2.49.0</div>')||!html.includes("appVersion:'2.49.0'")) fail('V2.49.0 UI or backup version metadata missing');
+else pass('V2.49.0 version metadata');
 
 if(!html.includes('id="compareMore"')||
    !html.includes('<b>匯出</b>')||
@@ -260,6 +260,20 @@ if(!html.includes('id="photoSourceActions" role="group" aria-label="照片來源
    !html.includes('.photo-source-actions[hidden],.photo-mode-bar[hidden]{display:none!important}')){
   fail('V2.48.0 Photo task-first workflow contract missing');
 }else pass('V2.48.0 Photo task-first progressive disclosure');
+
+if(!html.includes('<details class="library-settings" id="librarySettings">')||
+   !html.includes('<span>資料與設定</span>')||
+   !html.includes('<small>備份 · 個人化 · 使用說明</small>')||
+   !html.includes('id="openHelpGuide">使用說明</button>')||
+   !html.includes('function dismissFirstRunGuide(')||
+   !html.includes('function showFirstRunGuide(')||
+   !html.includes("dismiss.onclick=dismissFirstRunGuide")||
+   !html.includes("$('#openHelpGuide').onclick=showFirstRunGuide")||
+   !html.includes("switchTab('compose',true)")||
+   !html.includes("guide.scrollIntoView({block:'start',behavior:'auto'})")||
+   !html.includes('.library-settings .library-tools{')){
+  fail('V2.49.0 reopenable help / compact Library settings contract missing');
+}else pass('V2.49.0 reopenable help + compact Library settings');
 
 if(!html.includes('搜尋名稱、HEX、標籤、色系或調性')||
    !html.includes('可搜尋：藍、紅、柔和、鮮明、深色、淺色')||

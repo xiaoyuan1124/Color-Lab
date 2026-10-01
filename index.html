@@ -1970,6 +1970,31 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
   color:var(--text-2);
   grid-column:auto;
 }
+.library-settings{
+  margin:0 0 var(--space-5);
+  border-top:1px solid var(--hairline);
+  border-bottom:1px solid var(--hairline);
+}
+.library-settings>summary{
+  min-height:54px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  list-style:none;
+  cursor:pointer;
+  color:var(--text-1);
+}
+.library-settings>summary::-webkit-details-marker{display:none}
+.library-settings>summary span{font-size:12px;font-weight:750}
+.library-settings>summary small{margin-left:auto;color:var(--text-3);font-size:10px;line-height:1.35;text-align:right}
+.library-settings>summary::after{content:"＋";margin-left:2px;color:var(--olive-11);font-size:16px;font-weight:400}
+.library-settings[open]>summary::after{content:"−"}
+.library-settings .library-tools{
+  margin:0;
+  padding:0 0 var(--space-3);
+  border-bottom:0;
+}
+#openHelpGuide{color:var(--olive-11)}
 .toast{bottom:calc(env(safe-area-inset-bottom) + 76px)}
 
 @media(max-width:390px){
@@ -2341,7 +2366,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.48.0</div>
+    <div class="version">V2.49.0</div>
   </div>
 
   <main class="app-main">
@@ -2737,12 +2762,19 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
           </div>
           <button type="button" class="utility-btn preference-toggle" id="togglePreference" aria-pressed="true">關閉個人化</button>
         </div>
-        <div class="library-tools">
-          <button type="button" class="utility-btn" id="exportBackup">匯出備份</button>
-          <button type="button" class="utility-btn" id="importBackup">匯入備份</button>
-          <button type="button" class="utility-btn" id="resetPreference">重置偏好</button>
-          <input id="backupInput" type="file" accept="application/json,.json" hidden>
-        </div>
+        <details class="library-settings" id="librarySettings">
+          <summary>
+            <span>資料與設定</span>
+            <small>備份 · 個人化 · 使用說明</small>
+          </summary>
+          <div class="library-tools">
+            <button type="button" class="utility-btn" id="exportBackup">匯出備份</button>
+            <button type="button" class="utility-btn" id="importBackup">匯入備份</button>
+            <button type="button" class="utility-btn" id="resetPreference">重置偏好</button>
+            <button type="button" class="utility-btn" id="openHelpGuide">使用說明</button>
+            <input id="backupInput" type="file" accept="application/json,.json" hidden>
+          </div>
+        </details>
         <div id="saved"></div>
 
         <div class="install-card" id="installCard" hidden>
@@ -2757,7 +2789,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.48.0</div>
+  <div class="footer app-footer">Color Lab V2.49.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2868,7 +2900,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 /* Color Lab V2.35.0 PWA / iPhone Update Hardening
    User-mediated service worker activation prevents mixed-version sessions. */
 
-const COLORLAB_APP_VERSION='2.48.0';
+const COLORLAB_APP_VERSION='2.49.0';
 const PWA_UPDATE_CHECK_INTERVAL=20*60*1000;
 let pwaRegistration=null;
 let pwaUpdateReady=false;
@@ -3317,7 +3349,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v5',appVersion:'2.48.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.49.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -5253,9 +5285,20 @@ document.addEventListener('click',e=>{
 });
 
 const FIRST_RUN_GUIDE_KEY='colorlab.firstRunGuideV1';
+function dismissFirstRunGuide(){
+  storageWriteRaw(FIRST_RUN_GUIDE_KEY,'done',{silent:true});
+  const guide=$('#firstRunGuide');if(guide)guide.hidden=true;
+}
+function showFirstRunGuide(){
+  const guide=$('#firstRunGuide');if(!guide)return;
+  switchTab('compose',true);
+  guide.hidden=false;
+  requestAnimationFrame(()=>guide.scrollIntoView({block:'start',behavior:'auto'}));
+}
 function initFirstRunGuide(){
   const guide=$('#firstRunGuide'),dismiss=$('#dismissFirstRunGuide');
   if(!guide||!dismiss)return;
+  dismiss.onclick=dismissFirstRunGuide;
   const seen=storageReadRaw(FIRST_RUN_GUIDE_KEY,'')==='done';
   const hadDraft=storageReadRaw('colorlab.draft',null)!==null;
   const hadSaved=readSavedData().length>0;
@@ -5267,10 +5310,6 @@ function initFirstRunGuide(){
     return;
   }
   guide.hidden=false;
-  dismiss.addEventListener('click',()=>{
-    storageWriteRaw(FIRST_RUN_GUIDE_KEY,'done',{silent:true});
-    guide.hidden=true;
-  },{once:true});
 }
 
 function scheduleNonCriticalStartup(){
@@ -5319,6 +5358,7 @@ $('#exportPaletteImage').onclick=exportPaletteImage;
 $('#exportBackup').onclick=exportBackup;
 $('#importBackup').onclick=()=>$('#backupInput').click();
 $('#resetPreference').onclick=resetPreferenceModel;
+$('#openHelpGuide').onclick=showFirstRunGuide;
 $('#togglePreference').onclick=togglePreferenceModel;
 $('#backupInput').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(file)importBackupFile(file);e.target.value=''});
 $('#clearRecent').onclick=()=>{recentColors=[];storageRemoveRaw('colorlab.recent',{silent:true});renderRecentColors();toast('已清除最近用色')};
