@@ -639,6 +639,29 @@ check('V2.43 user-facing action labels are concise and localized',
   html.includes('id="installAppBtn">加入主畫面</button>'),
   'high-frequency mobile actions no longer require product-specific or mixed-language interpretation');
 
+check('V2.44 first-run guidance is local, dismissible, and non-blocking',
+  html.includes('id="firstRunGuide" aria-label="第一次使用 Color Lab" hidden')&&
+  html.includes('id="dismissFirstRunGuide">知道了</button>')&&
+  appText.includes("const FIRST_RUN_GUIDE_KEY='colorlab.firstRunGuideV1'")&&
+  appText.includes('function initFirstRunGuide(')&&
+  appText.includes("storageWriteRaw(FIRST_RUN_GUIDE_KEY,'done',{silent:true})")&&
+  !html.includes('aria-modal="true" aria-labelledby="firstRun')&&
+  !html.includes('driver.js')&&!html.includes('intro.js')&&!html.includes('shepherd.js'),
+  'new-user guidance stays inline, local-only, and dependency-free');
+
+check('V2.44 returning users are not forced through onboarding',
+  appText.includes("const hadDraft=storageReadRaw('colorlab.draft',null)!==null")&&
+  appText.includes('const hadSaved=readSavedData().length>0')&&
+  appText.includes('const hadRecent=recentColors.length>0')&&
+  appText.includes('const returning=hadDraft||hadSaved||hadRecent')&&
+  appText.includes('if(seen||returning)'),
+  'existing draft, library, or recent-color state suppresses the first-run guide');
+
+check('V2.44 onboarding cannot mutate source palette state',
+  !/function initFirstRunGuide\([\s\S]{0,1400}selectedColors\s*=/.test(appText)&&
+  !/function initFirstRunGuide\([\s\S]{0,1400}palette\.(?:base|structure|accent)\s*=/.test(appText),
+  'first-run UI only reads storage and toggles its own visibility');
+
 check('V2.32 resilience lifecycle lives inside the storage runtime',
   storageHardening.includes('function openResilienceDB(')&&
   storageHardening.includes('async function writeResilienceSnapshot(')&&

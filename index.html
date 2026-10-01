@@ -2216,6 +2216,29 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 }
 
 
+/* V2.44 FIRST-RUN GUIDANCE */
+.first-run-guide{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:var(--space-4);
+  margin:calc(-1 * var(--space-4)) 0 var(--space-6);
+  padding:14px 0;
+  border-top:1px solid var(--hairline);
+  border-bottom:1px solid var(--hairline);
+}
+.first-run-guide[hidden]{display:none}
+.first-run-guide-copy{display:grid;gap:8px;min-width:0}
+.first-run-guide-copy strong{font-size:13px;line-height:1.35;color:var(--text-1)}
+.first-run-steps{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--text-2);font-size:11px;line-height:1.4}
+.first-run-steps span{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.first-run-steps b{display:grid;place-items:center;width:18px;height:18px;border:1px solid var(--border-subtle);border-radius:50%;font-size:9px;color:var(--olive-11)}
+.first-run-guide button{flex:0 0 auto;min-height:38px;border:1px solid var(--border-subtle);border-radius:var(--radius-pill);background:transparent;color:var(--text-1);padding:0 13px;font-size:11px;font-weight:700}
+@media(max-width:390px){
+  .first-run-guide{align-items:flex-start}
+  .first-run-steps{display:grid;gap:5px}
+}
+
 /* V2.35 PWA HEALTH */
 .pwa-health{position:fixed;left:max(16px,env(safe-area-inset-left));bottom:max(18px,calc(env(safe-area-inset-bottom) + 12px));z-index:82;max-width:min(320px,calc(100vw - 92px));display:flex;align-items:center;gap:14px;padding:12px 13px 12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--paper);box-shadow:0 12px 34px rgba(36,38,36,.12)}
 .pwa-health[hidden]{display:none}
@@ -2233,7 +2256,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.43.0</div>
+    <div class="version">V2.44.0</div>
   </div>
 
   <main class="app-main">
@@ -2248,6 +2271,18 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
           <button type="button" class="tool-btn strong" id="newComboBtn">新配色</button>
         </div>
       </header>
+
+      <aside class="first-run-guide" id="firstRunGuide" aria-label="第一次使用 Color Lab" hidden>
+        <div class="first-run-guide-copy">
+          <strong>第一次用？三步就能開始</strong>
+          <div class="first-run-steps">
+            <span><b>1</b>選 1–3 色</span>
+            <span><b>2</b>看 75 / 18 / 7</span>
+            <span><b>3</b>分析、收藏或匯出</span>
+          </div>
+        </div>
+        <button type="button" id="dismissFirstRunGuide">知道了</button>
+      </aside>
 
       <section class="seed-block">
         <div class="seed-stage">
@@ -2608,7 +2643,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.43.0</div>
+  <div class="footer app-footer">Color Lab V2.44.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2718,7 +2753,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 /* Color Lab V2.35.0 PWA / iPhone Update Hardening
    User-mediated service worker activation prevents mixed-version sessions. */
 
-const COLORLAB_APP_VERSION='2.43.0';
+const COLORLAB_APP_VERSION='2.44.0';
 const PWA_UPDATE_CHECK_INTERVAL=20*60*1000;
 let pwaRegistration=null;
 let pwaUpdateReady=false;
@@ -3143,7 +3178,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v5',appVersion:'2.43.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.44.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -5059,6 +5094,27 @@ document.addEventListener('click',e=>{
   if(cornerNavOpen&&!e.target.closest('#cornerNav'))setCornerNavOpen(false);
 });
 
+const FIRST_RUN_GUIDE_KEY='colorlab.firstRunGuideV1';
+function initFirstRunGuide(){
+  const guide=$('#firstRunGuide'),dismiss=$('#dismissFirstRunGuide');
+  if(!guide||!dismiss)return;
+  const seen=storageReadRaw(FIRST_RUN_GUIDE_KEY,'')==='done';
+  const hadDraft=storageReadRaw('colorlab.draft',null)!==null;
+  const hadSaved=readSavedData().length>0;
+  const hadRecent=recentColors.length>0;
+  const returning=hadDraft||hadSaved||hadRecent;
+  if(seen||returning){
+    guide.hidden=true;
+    if(!seen&&returning)storageWriteRaw(FIRST_RUN_GUIDE_KEY,'done',{silent:true});
+    return;
+  }
+  guide.hidden=false;
+  dismiss.addEventListener('click',()=>{
+    storageWriteRaw(FIRST_RUN_GUIDE_KEY,'done',{silent:true});
+    guide.hidden=true;
+  },{once:true});
+}
+
 function scheduleNonCriticalStartup(){
   const run=()=>{
     renderRecentColors();
@@ -5123,6 +5179,7 @@ renderModes();palette=fastInitialPalette();renderComboSlots();render();updateLoc
 historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();installShareSnapshotHashListener();initCustomDesignPreview();initLocalProjects();initReferenceBoardExport();initGradientStudio();initDeepDiveUx();initPwaHealth();
 setCornerNavOpen(false);
 switchTab(storageReadRaw('colorlab.tab','compose'),false);updatePhotoTarget();
+initFirstRunGuide();
 scheduleNonCriticalStartup();
 </script>
 <script src="./runtime/photo-palette.js"></script>

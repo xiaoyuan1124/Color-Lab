@@ -162,13 +162,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2430")) fail('service worker cache version is not V2.43.0');
+if(!sw.includes("color-lab-v2440")) fail('service worker cache version is not V2.44.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.43.0') fail('package version must be 2.43.0');
+if(pkg.version!=='2.44.0') fail('package version must be 2.44.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.43.0')||!html.includes('<div class="version">V2.43.0</div>')||!html.includes("appVersion:'2.43.0'")) fail('V2.43.0 UI or backup version metadata missing');
-else pass('V2.43.0 version metadata');
+if(!html.includes('Color Lab V2.44.0')||!html.includes('<div class="version">V2.44.0</div>')||!html.includes("appVersion:'2.44.0'")) fail('V2.44.0 UI or backup version metadata missing');
+else pass('V2.44.0 version metadata');
 
 if(!html.includes('id="compareMore"')||
    !html.includes('<b>匯出</b>')||
@@ -193,6 +193,25 @@ if(!html.includes('id="togglePreference" aria-pressed="true">關閉個人化</bu
    !html.includes('data-jump="compose">回到配色</button>')){
   fail('V2.43.0 explicit action wording contract missing');
 }else pass('V2.43.0 explicit mobile action wording');
+
+if(!html.includes('id="firstRunGuide" aria-label="第一次使用 Color Lab" hidden')||
+   !html.includes('id="dismissFirstRunGuide">知道了</button>')||
+   !html.includes('選 1–3 色')||
+   !html.includes('看 75 / 18 / 7')||
+   !html.includes('分析、收藏或匯出')||
+   !html.includes("const FIRST_RUN_GUIDE_KEY='colorlab.firstRunGuideV1'")||
+   !html.includes('function initFirstRunGuide(')||
+   !html.includes("const hadDraft=storageReadRaw('colorlab.draft',null)!==null")||
+   !html.includes('const hadSaved=readSavedData().length>0')||
+   !html.includes('const hadRecent=recentColors.length>0')||
+   !html.includes("storageWriteRaw(FIRST_RUN_GUIDE_KEY,'done',{silent:true})")||
+   !html.includes('initFirstRunGuide();')){
+  fail('V2.44.0 first-run guidance contract missing');
+}else pass('V2.44.0 local first-run guidance');
+
+if(html.includes('driver.js')||html.includes('intro.js')||html.includes('shepherd.js')){
+  fail('V2.44.0 onboarding must not add a third-party runtime dependency');
+}else pass('V2.44.0 zero-dependency onboarding');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -730,7 +749,7 @@ if(!html.includes('id="pwaHealthMount"')||
    html.includes("navigator.serviceWorker.register('./sw.js').catch(()=>{})")||
    sw.includes('./runtime/pwa-health.js')||
    sw.includes('./runtime/pwa-health.css')||
-   !pwaHealth.includes("const COLORLAB_APP_VERSION='2.43.0'")||
+   !pwaHealth.includes("const COLORLAB_APP_VERSION='"+pkg.version+"'")||
    !pwaHealthCss.includes('.pwa-health{')){
   fail('V2.35.0 shell-integrated PWA health / UI contract missing');
 }else pass('V2.35.0 shell-integrated PWA controller + compact UI');
