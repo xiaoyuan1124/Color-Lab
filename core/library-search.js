@@ -23,10 +23,17 @@ function libraryPaletteSemanticTerms(x){
   const colors=[x?.palette?.base,x?.palette?.structure,x?.palette?.accent].map(normHex).filter(Boolean);
   if(!colors.length)return[];
   const values=colors.map(toOKLCH);
+  const [base,structure,accent]=values;
   const avgC=values.reduce((sum,v)=>sum+v.c,0)/values.length;
+  const roleC=(base.c+structure.c)/2;
   const lightSpread=Math.max(...values.map(v=>v.l))-Math.min(...values.map(v=>v.l));
+  const baseStructureContrast=contrastRatio(colors[0],colors[1]);
   const terms=colors.flatMap(libraryColorSemanticTerms);
   terms.push(avgC<.055?'沉穩':avgC>.145?'有張力':'平衡');
   terms.push(lightSpread>.46?'高對比':lightSpread<.25?'低對比':'層級穩定');
+  if(baseStructureContrast>=4.5)terms.push('app','網頁','介面','ui','簡報');
+  else if(baseStructureContrast>=3)terms.push('簡報','海報');
+  if(avgC<.11)terms.push('室內','穿搭','interior','fashion');
+  if(accent.c>Math.max(.08,roleC*1.25))terms.push('品牌','brand','海報');
   return [...new Set(terms)];
 }
