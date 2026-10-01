@@ -66,21 +66,8 @@ function localProjectSearchText(item){
   const id=sanitizeProjectId(item?.projectId);
   return id?localProjectName(id):'';
 }
-function librarySearchText(x){
-  const tags=Array.isArray(x.tags)?x.tags:[];
-  return [
-    (x.name&&x.name.trim())||'未命名配色',
-    x.seed,x.palette?.base,x.palette?.structure,x.palette?.accent,
-    ...(x.selectedColors||[]),...tags,x.folder||'',localProjectSearchText(x),
-    ...libraryPaletteSemanticTerms(x)
-  ].filter(Boolean).join(' ').toLowerCase();
-}
-function librarySearchMatches(x,query){
-  const terms=String(query||'').trim().toLowerCase().split(/\s+/).filter(Boolean);
-  if(!terms.length)return true;
-  const haystack=librarySearchText(x);
-  return terms.every(term=>haystack.includes(term));
-}
+function librarySearchText(x){return librarySearchDocument(x,localProjectSearchText(x))}
+function librarySearchMatches(x,query){return librarySearchDocumentMatches(x,query,localProjectSearchText(x))}
 function createLocalProject(){
   const raw=prompt('新專案名稱');if(raw===null)return;
   const name=raw.trim().replace(/\s+/g,' ').slice(0,28);
