@@ -387,6 +387,7 @@ test('WebKit V2.48 keeps Photo source selection simple before and after load', a
 
   const state=await page.evaluate(() => {
     photoLoaded=true;
+    photoPanel.classList.add('show');
     syncPhotoWorkflowUi();
     return {
       retake:document.getElementById('photoRetake').onclick===openPhotoCamera,
