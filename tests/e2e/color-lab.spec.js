@@ -2269,3 +2269,51 @@ test('V2.46 Library search keeps exact HEX and legacy metadata lookup alongside 
   await page.locator('#librarySearch').fill('客戶');
   await expect(page.locator('#saved .library-piece')).toHaveCount(1);
 });
+
+
+test('V2.47 Library quick filters compose semantic AND search without mutating saved data', async ({ page }) => {
+  const before=await page.evaluate(() => {
+    const records=[
+      sanitizeSavedRecord({
+        name:'Blue Interior',
+        palette:{base:'#EAF0F8',structure:'#40556B',accent:'#6E8BA4'},
+        selectedColors:['#EAF0F8','#40556B','#6E8BA4'],
+        seed:'#EAF0F8',mode:'quiet',tags:[],folder:'',date:2
+      }),
+      sanitizeSavedRecord({
+        name:'Warm Poster',
+        palette:{base:'#F5E8D5',structure:'#5B382A',accent:'#D46A32'},
+        selectedColors:['#F5E8D5','#5B382A','#D46A32'],
+        seed:'#F5E8D5',mode:'quiet',tags:[],folder:'',date:1
+      })
+    ];
+    localStorage.setItem('colorlab.saved',JSON.stringify(records));
+    switchTab('library',false);
+    renderSaved();
+    return JSON.stringify(readSavedData());
+  });
+
+  await expect(page.locator('#libraryQuickSearch')).toBeVisible();
+  await page.locator('[data-library-quick-term="藍"]').click();
+  await page.locator('[data-library-quick-term="室內"]').click();
+
+  await expect(page.locator('#librarySearch')).toHaveValue('藍 室內');
+  await expect(page.locator('[data-library-quick-term="藍"]')).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('[data-library-quick-term="室內"]')).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('#saved .library-piece')).toHaveCount(1);
+  await expect(page.locator('#saved')).toContainText('Blue Interior');
+  await expect(page.locator('#saved')).not.toContainText('Warm Poster');
+
+  await page.locator('#librarySearch').fill('藍 室內');
+  await expect(page.locator('[data-library-quick-term="藍"]')).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('[data-library-quick-term="室內"]')).toHaveAttribute('aria-pressed','true');
+
+  await page.locator('#libraryQuickClear').click();
+  await expect(page.locator('#librarySearch')).toHaveValue('');
+  await expect(page.locator('#libraryQuickClear')).toBeHidden();
+  await expect(page.locator('[data-library-quick-term="藍"]')).toHaveAttribute('aria-pressed','false');
+  await expect(page.locator('#saved .library-piece')).toHaveCount(2);
+
+  const after=await page.evaluate(() => JSON.stringify(readSavedData()));
+  expect(after).toBe(before);
+});
