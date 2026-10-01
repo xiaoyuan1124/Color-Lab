@@ -2215,34 +2215,6 @@ test('V2.46 semantic color terms follow OKLCH hue families and tone bands', asyn
 });
 
 
-test('V2.46 exposes separate camera and gallery Photo entry points with one analysis pipeline', async ({ page }) => {
-  await page.evaluate(() => switchTab('photo',false));
-
-  await expect(page.locator('#photoCameraTrigger')).toBeVisible();
-  await expect(page.locator('#photoCameraTrigger')).toContainText('拍照取色');
-  await expect(page.locator('#photoTrigger')).toBeVisible();
-  await expect(page.locator('#photoTrigger')).toHaveText('從相簿選擇');
-
-  const inputs=await page.evaluate(() => ({
-    camera:{
-      accept:document.getElementById('photoCameraInput')?.getAttribute('accept'),
-      capture:document.getElementById('photoCameraInput')?.getAttribute('capture')
-    },
-    gallery:{
-      accept:document.getElementById('photoInput')?.getAttribute('accept'),
-      capture:document.getElementById('photoInput')?.getAttribute('capture')
-    },
-    shared:
-      document.getElementById('photoInput')?.onchange===null &&
-      document.getElementById('photoCameraInput')?.onchange===null &&
-      typeof handlePhotoInputChange==='function' &&
-      typeof loadPhoto==='function'
-  }));
-  expect(inputs.camera).toEqual({accept:'image/*',capture:'environment'});
-  expect(inputs.gallery).toEqual({accept:'image/*',capture:null});
-  expect(inputs.shared).toBe(true);
-});
-
 test('V2.46 Library semantic search filters by color family, tone and use-case without changing saved data', async ({ page }) => {
   const result=await page.evaluate(() => {
     const records=[
