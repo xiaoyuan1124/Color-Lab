@@ -2188,6 +2188,7 @@ test('V2.48 Photo reveals analysis tools only after a photo is loaded', async ({
 
   const state=await page.evaluate(() => {
     photoLoaded=true;
+    photoPanel.classList.add('show');
     syncPhotoWorkflowUi();
     return {
       retake:document.getElementById('photoRetake').onclick===openPhotoCamera,
