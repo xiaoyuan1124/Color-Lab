@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.32.0**
+**目前版本：V2.33.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,17 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.33.0 Photo Analysis Architecture
+
+延續架構瘦身，不新增照片功能，也不改任何取色/配色演算法：
+
+- 將 `photoCompositionProfile` 與 `photoCurrentRelationship` 從 `index.html` 移入既有 `runtime/photo-palette.js`
+- 兩個 helper 都是純分析函式：只讀 clusters / roles / current palette，不寫回 source colors
+- `index.html` 再縮小約 2.6 KB，降低單檔耦合並增加 235 KiB 預算餘裕
+- Photo palette strategy、取色、區域分析、75 / 18 / 7 套用行為與 UI 完全不變
+- runtime module budget 仍維持 140 KiB，不調高門檻
+- PWA 離線與 Service Worker asset path 不變，僅更新 cache version
 
 ## V2.32.0 Storage Architecture / Performance Hardening
 
