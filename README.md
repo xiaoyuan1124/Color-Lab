@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.31.0**
+**目前版本：V2.32.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,18 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.32.0 Storage Architecture / Performance Hardening
+
+這一版不改產品功能，專門把 Local-first 的資料層邊界做乾淨：
+
+- `openResilienceDB`、`writeResilienceSnapshot`、`scheduleResilienceBackup`、`restoreResilienceIfNeeded` 全部從 `index.html` 移入既有 `runtime/storage-hardening.js`
+- Backup import、localStorage 安全讀寫、rollback transaction 與 IndexedDB shadow recovery 現在集中在同一個 storage runtime
+- `index.html` 減少約 5 KB 持久化實作，降低主檔耦合並保留更多後續版本空間
+- classic-script runtime 只在實際呼叫時解析 UI / palette / project helpers，因此不新增初始化工作或額外網路依賴
+- 保留 V2.30 的 intentional-empty、storage quota rollback、project transaction、Backup V1–V5 相容與 IndexedDB recovery 行為
+- 不修改 palette engine、source colors、75 / 18 / 7、收藏資料格式、專案資料格式或 UI
+- runtime module size budget 持續固定，不靠放寬門檻換取重構通過
 
 ## V2.31.0 UX Cleanup
 
