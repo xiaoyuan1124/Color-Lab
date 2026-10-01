@@ -4554,7 +4554,7 @@ const photoInput=$('#photoInput'),photoCanvas=$('#photoCanvas'),photoPanel=$('#p
 const photoCtx=photoCanvas.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'});
 let lastPhotoRoles=[],lastPhotoClusters=[];
 const magnifier=$('#magnifier'),magnifierCanvas=$('#magnifierCanvas'),magnifierCtx=magnifierCanvas.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'}),pickReadout=$('#pickReadout');
-let photoObjectURL=null,photoLoadToken=0,photoLoadImage=null,photoLoaded=false,photoPicking=false,lastPicked=null;
+let photoObjectURL=null,photoLoadToken=0,photoLoadImage=null,photoLoaded=false,photoPicking=false,photoPointerId=null,photoMagnifierHideTimer=0,lastPicked=null;
 
 function renderPhotoPalette(items){
   const host=$('#photoAuto'),box=$('#photoSwatches');if(!host||!box)return;
@@ -4860,7 +4860,9 @@ $('#photoUsePalette').onclick=usePhotoPalette;
 photoInput.addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(file)loadPhoto(file);e.target.value=''});
 
 photoCanvas.addEventListener('pointerdown',e=>{
-  photoPicking=true;
+  if(photoPointerId!==null&&photoPointerId!==e.pointerId)return;
+  if(photoMagnifierHideTimer){clearTimeout(photoMagnifierHideTimer);photoMagnifierHideTimer=0}
+  photoPointerId=e.pointerId;photoPicking=true;
   try{photoCanvas.setPointerCapture(e.pointerId)}catch(_){}
   if(photoMode==='region'){
     regionStart=mapPhotoPoint(e.clientX,e.clientY);
@@ -4871,7 +4873,7 @@ photoCanvas.addEventListener('pointerdown',e=>{
   }
 });
 photoCanvas.addEventListener('pointermove',e=>{
-  if(!photoPicking)return;
+  if(!photoPicking||photoPointerId!==e.pointerId)return;
   e.preventDefault();
   if(photoMode==='region'){
     const p=mapPhotoPoint(e.clientX,e.clientY);updateRegionBox(regionStart,p);
@@ -4880,19 +4882,24 @@ photoCanvas.addEventListener('pointermove',e=>{
   }
 });
 function finishPhotoPick(e){
-  if(!photoPicking)return;
-  photoPicking=false;
+  if(!photoPicking||photoPointerId!==e.pointerId)return;
+  photoPicking=false;photoPointerId=null;
   if(photoMode==='region'){
     const p=mapPhotoPoint(e.clientX,e.clientY);updateRegionBox(regionStart,p);finishPhotoRegion(p);regionStart=null;
   }else{
     updatePhotoPick(e.clientX,e.clientY,true);
-    setTimeout(()=>magnifier.style.display='none',120);
+    photoMagnifierHideTimer=setTimeout(()=>{
+      photoMagnifierHideTimer=0;
+      if(!photoPicking)magnifier.style.display='none';
+    },120);
   }
   try{photoCanvas.releasePointerCapture(e.pointerId)}catch(_){}
 }
 photoCanvas.addEventListener('pointerup',finishPhotoPick);
-photoCanvas.addEventListener('pointercancel',()=>{
-  photoPicking=false;regionStart=null;
+photoCanvas.addEventListener('pointercancel',e=>{
+  if(photoPointerId!==e.pointerId)return;
+  photoPicking=false;photoPointerId=null;regionStart=null;
+  if(photoMagnifierHideTimer){clearTimeout(photoMagnifierHideTimer);photoMagnifierHideTimer=0}
   magnifier.style.display='none';$('#regionBox').style.display='none';
 });
 
