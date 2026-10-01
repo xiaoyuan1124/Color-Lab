@@ -4532,7 +4532,7 @@ function scheduleSecondaryRender(){
     if(token!==secondaryRenderToken)return;
     const active=document.querySelector('.tab-view.active')?.dataset.view||'compose';
     if(active==='inspire'){
-      ensureInspirationResources().then(()=>{if(token===secondaryRenderToken){renderIdeas();renderRecommendations()}});
+      ensureInspirationResources().then(()=>{if(token===secondaryRenderToken){renderIdeas();renderRecommendations()}}).catch(()=>{if(token===secondaryRenderToken)toast('推薦資源載入失敗，請稍後再試')});
     }
   };
   if('requestIdleCallback'in window)requestIdleCallback(run,{timeout:180});
@@ -5121,7 +5121,7 @@ function switchTab(name,scrollTop=true){
   if(name==='photo'){setPhotoMode(photoMode);updatePhotoColorSpaceNote()}
   if(name==='inspire'){
     renderCompare();
-    ensureInspirationResources().then(()=>requestAnimationFrame(()=>{renderIdeas();renderRecommendations()}));
+    ensureInspirationResources().then(()=>requestAnimationFrame(()=>{renderIdeas();renderRecommendations()})).catch(()=>toast('推薦資源載入失敗，請稍後再試'));
   }
   if(name==='compose'&&$('#composeDeepDive')?.open)requestAnimationFrame(renderDeepDiveVisible);
   setCornerNavOpen(false);
