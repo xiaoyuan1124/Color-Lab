@@ -348,3 +348,19 @@ test('WebKit V2.44 first-run guidance dismisses once and stays source-safe', asy
   await page.reload();
   await expect(page.locator('#firstRunGuide')).toBeHidden();
 });
+
+
+test('WebKit V2.45 result-first actions stay source-safe on mobile', async ({ page }) => {
+  await setExactPalette(page,['#112233','#445566','#AABBCC']);
+  await page.evaluate(() => { renderComboSlots(); render(); });
+  const before=await page.evaluate(() => paletteArtifactBase());
+
+  await expect(page.locator('#resultSummary')).toBeVisible();
+  await expect(page.locator('#resultQuickAnalyze')).toBeVisible();
+  await page.locator('#resultQuickAnalyze').click();
+  await expect(page.locator('#composeDeepDive')).toHaveAttribute('open','');
+  await page.locator('#resultQuickExport').click();
+  await expect(page.locator('#handoffMore')).toHaveAttribute('open','');
+
+  expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before);
+});
