@@ -5036,8 +5036,12 @@ $('#generate').onclick=async()=>{
   finally{button.disabled=false;button.textContent=label}
 };
 $('#save').onclick=save;
-$('#previousRecommendations').onclick=previousRecommendationBatch;
-$('#nextRecommendations').onclick=nextRecommendationBatch;
+$('#previousRecommendations').onclick=()=>ensureInspirationResources()
+  .then(()=>previousRecommendationBatch())
+  .catch(()=>toast('推薦資源載入失敗，請稍後再試'));
+$('#nextRecommendations').onclick=()=>ensureInspirationResources()
+  .then(()=>nextRecommendationBatch())
+  .catch(()=>toast('推薦資源載入失敗，請稍後再試'));
 document.addEventListener('click',e=>{
   const pm=e.target.closest('[data-photo-mode]');if(pm){setPhotoMode(pm.dataset.photoMode);return}
   const learn=e.target.closest('[data-learn]');if(learn){showLearningConcept(learn.dataset.learn);return}
