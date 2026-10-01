@@ -16,7 +16,6 @@
 <link rel="stylesheet" href="./runtime/custom-design-preview.css">
 <link rel="stylesheet" href="./runtime/vision-accessibility.css">
 <link rel="stylesheet" href="./runtime/ux-cleanup.css">
-<link rel="stylesheet" href="./runtime/pwa-health.css">
 <link rel="stylesheet" href="./runtime/gradient-studio.css">
 <link rel="stylesheet" href="./runtime/local-projects.css">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -2213,6 +2212,18 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
   white-space:nowrap;
 }
 
+
+/* V2.35 PWA HEALTH */
+.pwa-health{position:fixed;left:max(16px,env(safe-area-inset-left));bottom:max(18px,calc(env(safe-area-inset-bottom) + 12px));z-index:82;max-width:min(320px,calc(100vw - 92px));display:flex;align-items:center;gap:14px;padding:12px 13px 12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--paper);box-shadow:0 12px 34px rgba(36,38,36,.12)}
+.pwa-health[hidden]{display:none}
+.pwa-health>div{display:grid;gap:2px;min-width:0}
+.pwa-health b{font-size:12px;line-height:1.35}
+.pwa-health span{font-size:10px;line-height:1.45;color:var(--text-3)}
+.pwa-health button{border:0;border-radius:999px;background:var(--ink);color:#fff;min-height:36px;padding:8px 12px;font-size:11px;font-weight:700;white-space:nowrap}
+.pwa-health button:disabled{opacity:.58}
+.pwa-health[data-state="offline"]{box-shadow:none}
+@media(max-width:380px){.pwa-health{max-width:calc(100vw - 86px);gap:10px}.pwa-health button{padding-inline:10px}}
+
 </style>
 </head>
 <body>
@@ -2699,8 +2710,116 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <script src="./runtime/custom-design-preview.js"></script>
 <script src="./runtime/tone-explorer.js"></script>
 <script src="./runtime/ux-cleanup.js"></script>
-<script src="./runtime/pwa-health.js"></script>
 <script>
+/* Color Lab V2.35.0 PWA / iPhone Update Hardening
+   User-mediated service worker activation prevents mixed-version sessions. */
+
+const COLORLAB_APP_VERSION='2.35.0';
+const PWA_UPDATE_CHECK_INTERVAL=20*60*1000;
+let pwaRegistration=null;
+let pwaUpdateReady=false;
+let pwaUpdateRequested=false;
+let pwaControllerReloaded=false;
+let pwaLastUpdateCheck=0;
+let pwaBound=false;
+
+function pwaHealthEnsureUi(){
+  const mount=document.getElementById('pwaHealthMount');
+  if(!mount)return null;
+  if(document.getElementById('pwaHealthCard'))return document.getElementById('pwaHealthCard');
+  mount.innerHTML='<aside class="pwa-health" id="pwaHealthCard" hidden role="status" aria-live="polite"><div><b id="pwaHealthTitle"></b><span id="pwaHealthText"></span></div><button type="button" id="pwaHealthAction" hidden></button></aside>';
+  return document.getElementById('pwaHealthCard');
+}
+function pwaHealthShow(kind,title,text,actionLabel=''){
+  const card=pwaHealthEnsureUi();if(!card)return;
+  card.dataset.state=kind;
+  document.getElementById('pwaHealthTitle').textContent=title;
+  document.getElementById('pwaHealthText').textContent=text;
+  const action=document.getElementById('pwaHealthAction');
+  action.hidden=!actionLabel;
+  action.textContent=actionLabel||'';
+  card.hidden=false;
+}
+function pwaHealthHide(){
+  const card=document.getElementById('pwaHealthCard');if(card)card.hidden=true;
+}
+function pwaConnectivityState(){
+  if(navigator.onLine===false){
+    pwaHealthShow('offline','離線使用中','配色與收藏仍保存在此裝置');
+    return'offline';
+  }
+  if(pwaUpdateReady){
+    pwaHealthShow('update','新版已準備好','更新前會先保存目前工作','更新');
+    return'update';
+  }
+  pwaHealthHide();return'online';
+}
+function pwaMarkUpdateReady(registration=pwaRegistration){
+  if(!registration?.waiting)return false;
+  pwaRegistration=registration;
+  pwaUpdateReady=true;
+  pwaConnectivityState();
+  return true;
+}
+async function pwaApplyUpdate(){
+  const waiting=pwaRegistration?.waiting;
+  if(!waiting)return false;
+  const action=document.getElementById('pwaHealthAction');
+  if(action){action.disabled=true;action.textContent='更新中…'}
+  try{
+    if(typeof persistDraft==='function')persistDraft();
+    if(typeof writeResilienceSnapshot==='function')await writeResilienceSnapshot();
+  }catch(_){}
+  pwaUpdateRequested=true;
+  waiting.postMessage({type:'SKIP_WAITING'});
+  return true;
+}
+function pwaObserveRegistration(registration){
+  pwaRegistration=registration;
+  if(registration.waiting&&navigator.serviceWorker?.controller)pwaMarkUpdateReady(registration);
+  registration.addEventListener?.('updatefound',()=>{
+    const worker=registration.installing;if(!worker)return;
+    worker.addEventListener('statechange',()=>{
+      if(worker.state==='installed'&&navigator.serviceWorker?.controller)pwaMarkUpdateReady(registration);
+    });
+  });
+}
+async function pwaCheckForUpdate(force=false){
+  if(!pwaRegistration||navigator.onLine===false)return false;
+  const now=Date.now();
+  if(!force&&now-pwaLastUpdateCheck<PWA_UPDATE_CHECK_INTERVAL)return false;
+  pwaLastUpdateCheck=now;
+  try{await pwaRegistration.update();return true}catch(_){return false}
+}
+async function initPwaHealth(){
+  pwaHealthEnsureUi();
+  if(pwaBound){pwaConnectivityState();return pwaRegistration}
+  pwaBound=true;
+
+  window.addEventListener('online',()=>{pwaConnectivityState();pwaCheckForUpdate(true)});
+  window.addEventListener('offline',pwaConnectivityState);
+  window.addEventListener('pageshow',()=>pwaCheckForUpdate());
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pwaCheckForUpdate()});
+  document.getElementById('pwaHealthAction')?.addEventListener('click',pwaApplyUpdate);
+
+  if(!('serviceWorker'in navigator)){pwaConnectivityState();return null}
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(!pwaUpdateRequested||pwaControllerReloaded)return;
+    pwaControllerReloaded=true;
+    location.reload();
+  });
+  try{
+    const registration=await navigator.serviceWorker.register('./sw.js');
+    pwaObserveRegistration(registration);
+    pwaConnectivityState();
+    pwaCheckForUpdate();
+    return registration;
+  }catch(_){
+    pwaConnectivityState();
+    return null;
+  }
+}
+
 const MODES={
   quiet:{label:'安靜',baseL:.93,structureL:.27,accentShift:22,sat:.26},
   warm:{label:'溫暖',baseL:.92,structureShift:-18,accentShift:32,sat:.36},
