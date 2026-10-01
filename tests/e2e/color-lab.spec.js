@@ -2115,3 +2115,43 @@ test('V2.44 suppresses onboarding for returning users with an existing draft', a
   const palette=await page.evaluate(() => paletteArtifactBase());
   expect(palette.palette).toEqual({base:'#112233',structure:'#445566',accent:'#AABBCC'});
 });
+
+
+test('V2.45 shows a concise result summary and four primary actions without mutating source colors', async ({ page }) => {
+  await page.evaluate(() => {
+    selectedColors=['#E7DCC8','#274C55','#C65338'];
+    lockedSlots=[false,false,false];
+    activeSlot=0;seed=selectedColors[0];
+    generate(false);renderComboSlots();
+  });
+  const before=await page.evaluate(() => paletteArtifactBase());
+
+  await expect(page.locator('#resultSummary')).toBeVisible();
+  await expect(page.locator('#resultSummary strong')).toHaveText(/沉穩柔和|平衡自然|鮮明有張力/);
+  await expect(page.locator('#resultSummary')).toContainText(/明暗清楚|層級穩定|明暗柔和/);
+  await expect(page.locator('#resultPrimaryActions, .result-primary-actions')).toHaveCount(1);
+  for(const id of ['resultQuickSave','resultQuickCompare','resultQuickAnalyze','resultQuickExport']){
+    await expect(page.locator('#'+id)).toBeVisible();
+  }
+
+  await page.locator('#resultQuickAnalyze').click();
+  await expect(page.locator('#composeDeepDive')).toHaveAttribute('open','');
+  await page.locator('#resultQuickCompare').click();
+  await expect(page.locator('#compareMore')).toHaveAttribute('open','');
+  await page.locator('#resultQuickExport').click();
+  await expect(page.locator('#handoffMore')).toHaveAttribute('open','');
+
+  const after=await page.evaluate(() => paletteArtifactBase());
+  expect(after).toEqual(before);
+});
+
+test('V2.45 first-run guidance explains the Corner Fan navigation entry', async ({ page }) => {
+  await page.addInitScript(() => {
+    if(sessionStorage.getItem('v245FreshPrepared')==='1')return;
+    localStorage.clear();
+    sessionStorage.setItem('v245FreshPrepared','1');
+  });
+  await page.reload();
+  await expect(page.locator('#firstRunGuide')).toBeVisible();
+  await expect(page.locator('#firstRunGuide')).toContainText('右下角四點可切換配色、靈感、相片與收藏');
+});

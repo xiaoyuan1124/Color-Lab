@@ -662,6 +662,28 @@ check('V2.44 onboarding cannot mutate source palette state',
   !/function initFirstRunGuide\([\s\S]{0,1400}palette\.(?:base|structure|accent)\s*=/.test(appText),
   'first-run UI only reads storage and toggles its own visibility');
 
+check('V2.45 result-first summary is derived from the current palette only',
+  appText.includes('function paletteResultSummaryData(')&&
+  appText.includes('const values=[palette.base,palette.structure,palette.accent].map(toOKLCH)')&&
+  appText.includes("const validation=paletteValidationData('original')")&&
+  !/function paletteResultSummaryData\([\s\S]{0,1600}selectedColors\s*=/.test(appText)&&
+  !/function paletteResultSummaryData\([\s\S]{0,1600}palette\.(?:base|structure|accent)\s*=/.test(appText),
+  'summary reads the active palette and validation signals without mutating source state');
+
+check('V2.45 quick actions delegate to existing flows instead of duplicating state',
+  appText.includes("$('#resultQuickSave').onclick=()=>$('#save').click()")&&
+  appText.includes("$('#resultQuickCompare').onclick=()=>openResultDisclosure('compareMore')")&&
+  appText.includes("$('#resultQuickAnalyze').onclick=()=>openResultDisclosure('composeDeepDive')")&&
+  appText.includes("$('#resultQuickExport').onclick=()=>openResultDisclosure('handoffMore')")&&
+  appText.includes('function openResultDisclosure('),
+  'four first-layer actions reuse the established save / compare / analysis / export surfaces');
+
+check('V2.45 first-run copy makes Corner Fan discoverable without adding permanent navigation',
+  html.includes('右下角四點可切換配色、靈感、相片與收藏')&&
+  html.includes('class="corner-nav" id="cornerNav"')&&
+  !html.includes('class="bottom-tab'),
+  'navigation remains on-demand while first use explains the entry point');
+
 check('V2.32 resilience lifecycle lives inside the storage runtime',
   storageHardening.includes('function openResilienceDB(')&&
   storageHardening.includes('async function writeResilienceSnapshot(')&&

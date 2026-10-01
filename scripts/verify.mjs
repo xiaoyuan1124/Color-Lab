@@ -162,13 +162,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2440")) fail('service worker cache version is not V2.44.0');
+if(!sw.includes("color-lab-v2450")) fail('service worker cache version is not V2.45.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.44.0') fail('package version must be 2.44.0');
+if(pkg.version!=='2.45.0') fail('package version must be 2.45.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.44.0')||!html.includes('<div class="version">V2.44.0</div>')||!html.includes("appVersion:'2.44.0'")) fail('V2.44.0 UI or backup version metadata missing');
-else pass('V2.44.0 version metadata');
+if(!html.includes('Color Lab V2.45.0')||!html.includes('<div class="version">V2.45.0</div>')||!html.includes("appVersion:'2.45.0'")) fail('V2.45.0 UI or backup version metadata missing');
+else pass('V2.45.0 version metadata');
 
 if(!html.includes('id="compareMore"')||
    !html.includes('<b>匯出</b>')||
@@ -212,6 +212,28 @@ if(!html.includes('id="firstRunGuide" aria-label="第一次使用 Color Lab" hid
 if(html.includes('driver.js')||html.includes('intro.js')||html.includes('shepherd.js')){
   fail('V2.44.0 onboarding must not add a third-party runtime dependency');
 }else pass('V2.44.0 zero-dependency onboarding');
+
+if(!html.includes('id="resultSummary" aria-live="polite"')||
+   !html.includes('id="resultQuickSave">收藏</button>')||
+   !html.includes('id="resultQuickCompare">比較</button>')||
+   !html.includes('id="resultQuickAnalyze">進階分析</button>')||
+   !html.includes('id="resultQuickExport">匯出</button>')||
+   !html.includes('function paletteResultSummaryData(')||
+   !html.includes('function renderResultSummary(')||
+   !html.includes('function openResultDisclosure(')||
+   !html.includes("$('#resultQuickSave').onclick=()=>$('#save').click()")||
+   !html.includes("$('#resultQuickCompare').onclick=()=>openResultDisclosure('compareMore')")||
+   !html.includes("$('#resultQuickAnalyze').onclick=()=>openResultDisclosure('composeDeepDive')")||
+   !html.includes("$('#resultQuickExport').onclick=()=>openResultDisclosure('handoffMore')")||
+   !html.includes('右下角四點可切換配色、靈感、相片與收藏')){
+  fail('V2.45.0 result-first decision layer contract missing');
+}else pass('V2.45.0 result-first summary + four primary actions');
+
+if(!html.includes("const tone=avgC<.055?'沉穩柔和':avgC>.145?'鮮明有張力':'平衡自然'")||
+   !html.includes("const hierarchy=lightSpread>.46?'明暗清楚':lightSpread>.28?'層級穩定':'明暗柔和'")||
+   !html.includes("const readability=validation.normal>=2?'可讀性良好':validation.large>=2?'大字可用':'需檢查可讀性'")){
+  fail('V2.45.0 concise result language contract missing');
+}else pass('V2.45.0 concise evidence-derived result language');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
