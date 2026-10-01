@@ -93,3 +93,31 @@ test('WebKit can decode a local image into canvas and derive photo clusters', as
   await expect(page.locator('#photoPanel')).toHaveClass(/show/);
   await expect(page.locator('#photoPalettePreview')).toBeVisible();
 });
+
+
+test('WebKit PWA update prompt remains explicit and never mutates source colors', async ({ page }) => {
+  await setExactPalette(page,['#112233','#445566','#AABBCC']);
+  const result=await page.evaluate(() => {
+    const before=paletteArtifactBase();
+    pwaRegistration={waiting:{postMessage:()=>{}},addEventListener:()=>{}};
+    pwaUpdateReady=false;
+    pwaUpdateRequested=false;
+    pwaMarkUpdateReady(pwaRegistration);
+    return{
+      before,
+      after:paletteArtifactBase(),
+      ready:pwaUpdateReady,
+      requested:pwaUpdateRequested,
+      state:document.getElementById('pwaHealthCard')?.dataset.state||'',
+      title:document.getElementById('pwaHealthTitle')?.textContent||'',
+      action:document.getElementById('pwaHealthAction')?.textContent||''
+    };
+  });
+
+  expect(result.ready).toBe(true);
+  expect(result.requested).toBe(false);
+  expect(result.state).toBe('update');
+  expect(result.title).toBe('新版已準備好');
+  expect(result.action).toBe('更新');
+  expect(result.after).toEqual(result.before);
+});

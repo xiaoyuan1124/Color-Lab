@@ -1602,3 +1602,71 @@ test('V2.33 photo analysis runtime does not own source-palette mutation', async 
     expect(source).not.toContain('palette.accent=');
   }
 });
+
+
+test('V2.35 waiting worker stays inactive until explicit update and saves state before activation', async ({ page }) => {
+  const result=await page.evaluate(async () => {
+    const events=[];
+    const originalPersist=window.persistDraft;
+    const originalWrite=window.writeResilienceSnapshot;
+    window.persistDraft=()=>events.push('draft');
+    window.writeResilienceSnapshot=async()=>{events.push('snapshot')};
+
+    pwaRegistration=null;
+    pwaUpdateReady=false;
+    pwaUpdateRequested=false;
+    pwaControllerReloaded=false;
+    const fakeWorker={postMessage:message=>events.push(message.type)};
+    const fakeRegistration={waiting:fakeWorker,addEventListener:()=>{}};
+
+    const marked=pwaMarkUpdateReady(fakeRegistration);
+    const before={
+      marked,
+      ready:pwaUpdateReady,
+      requested:pwaUpdateRequested,
+      state:document.getElementById('pwaHealthCard')?.dataset.state||'',
+      title:document.getElementById('pwaHealthTitle')?.textContent||'',
+      action:document.getElementById('pwaHealthAction')?.textContent||'',
+      events:[...events]
+    };
+    const applied=await pwaApplyUpdate();
+    const after={applied,requested:pwaUpdateRequested,events:[...events]};
+
+    window.persistDraft=originalPersist;
+    window.writeResilienceSnapshot=originalWrite;
+    return{before,after};
+  });
+
+  expect(result.before.marked).toBe(true);
+  expect(result.before.ready).toBe(true);
+  expect(result.before.requested).toBe(false);
+  expect(result.before.state).toBe('update');
+  expect(result.before.title).toBe('新版已準備好');
+  expect(result.before.action).toBe('更新');
+  expect(result.before.events).toEqual([]);
+  expect(result.after.applied).toBe(true);
+  expect(result.after.requested).toBe(true);
+  expect(result.after.events).toEqual(['draft','snapshot','SKIP_WAITING']);
+});
+
+test('V2.35 offline state temporarily overrides but does not erase a pending update', async ({ page, context }) => {
+  await page.evaluate(() => {
+    pwaUpdateReady=true;
+    pwaRegistration={waiting:{postMessage:()=>{}},addEventListener:()=>{}};
+    pwaConnectivityState();
+  });
+  await expect(page.locator('#pwaHealthCard')).toHaveAttribute('data-state','update');
+
+  await context.setOffline(true);
+  await page.evaluate(() => pwaConnectivityState());
+  await expect(page.locator('#pwaHealthCard')).toHaveAttribute('data-state','offline');
+  await expect(page.locator('#pwaHealthTitle')).toHaveText('離線使用中');
+
+  await context.setOffline(false);
+  await page.evaluate(() => pwaConnectivityState());
+  await expect(page.locator('#pwaHealthCard')).toHaveAttribute('data-state','update');
+  await expect(page.locator('#pwaHealthTitle')).toHaveText('新版已準備好');
+  const state=await page.evaluate(() => ({ready:pwaUpdateReady,requested:pwaUpdateRequested}));
+  expect(state.ready).toBe(true);
+  expect(state.requested).toBe(false);
+});

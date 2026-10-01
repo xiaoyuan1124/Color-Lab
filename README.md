@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.34.0**
+**目前版本：V2.35.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,20 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.35.0 PWA / iPhone Update Hardening
+
+這一版不新增配色能力，專門處理安裝到主畫面後最容易出問題的「版本更新中途接管」：
+
+- Service Worker 不再在 install 階段自動 `skipWaiting()`，避免使用中的舊頁面突然被新版 worker 接管
+- 偵測到 waiting worker 時才顯示「新版已準備好」，不增加永久狀態列或首屏噪音
+- 使用者按「更新」後會先保存目前 draft 與 IndexedDB resilience snapshot，再要求新 worker 啟用
+- `controllerchange` 只在使用者主動更新後 reload 一次，避免 reload loop
+- 離線時顯示輕量「離線使用中」狀態；恢復連線後會重新檢查更新
+- App 回到前景與 pageshow 時會節流檢查更新，不會每次互動都發出 update request
+- 新增 PWA runtime / stylesheet 並加入離線快取；仍維持 Local-first、零後端與零付費 API
+- 保留 V2.30 的 network-first code asset + offline fallback，因此更新確認前仍可安全使用舊版，確認後才切換整個 runtime 世代
+- 此版本強化 Safari / PWA 更新安全，但仍不宣稱等同真實 iPhone 實機驗收
 
 ## V2.34.0 WebKit / Safari Compatibility Gate
 

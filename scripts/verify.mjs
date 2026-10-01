@@ -5,6 +5,10 @@ const webkitConfig=fs.readFileSync('playwright.webkit.config.js','utf8');
 const webkitCore=fs.readFileSync('tests/e2e/webkit-core.spec.js','utf8');
 const qualityWorkflow=fs.readFileSync('.github/workflows/quality.yml','utf8');
 const storageHardening=fs.readFileSync('runtime/storage-hardening.js','utf8');
+const pwaStart=html.indexOf('/* Color Lab V2.35.0 PWA / iPhone Update Hardening');
+const pwaEnd=html.indexOf('\nconst MODES={',pwaStart);
+const pwaHealth=pwaStart>=0&&pwaEnd>pwaStart?html.slice(pwaStart,pwaEnd):'';
+const pwaHealthCss=html;
 const uxCleanup=fs.readFileSync('runtime/ux-cleanup.js','utf8');
 const uxCleanupCss=fs.readFileSync('runtime/ux-cleanup.css','utf8');
 const paletteTools=fs.readFileSync('runtime/palette-tools.js','utf8');
@@ -49,6 +53,8 @@ else {
 }
 try { new Function(storageHardening); pass('storage hardening runtime syntax'); }
 catch(e){ fail('storage hardening runtime syntax: '+e.message); }
+try { new Function(pwaHealth); pass('pwa health runtime syntax'); }
+catch(e){ fail('pwa health runtime syntax: '+e.message); }
 try { new Function(uxCleanup); pass('ux cleanup runtime syntax'); }
 catch(e){ fail('ux cleanup runtime syntax: '+e.message); }
 try { new Function(paletteTools); pass('palette tools runtime syntax'); }
@@ -149,13 +155,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2340")) fail('service worker cache version is not V2.34.0');
+if(!sw.includes("color-lab-v2350")) fail('service worker cache version is not V2.35.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.34.0') fail('package version must be 2.34.0');
+if(pkg.version!=='2.35.0') fail('package version must be 2.35.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.34.0')||!html.includes('<div class="version">V2.34.0</div>')||!html.includes("appVersion:'2.34.0'")) fail('V2.34.0 UI or backup version metadata missing');
-else pass('V2.34.0 version metadata');
+if(!html.includes('Color Lab V2.35.0')||!html.includes('<div class="version">V2.35.0</div>')||!html.includes("appVersion:'2.35.0'")) fail('V2.35.0 UI or backup version metadata missing');
+else pass('V2.35.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -685,6 +691,38 @@ for(const marker of [
   if(!webkitCore.includes(marker))fail('V2.34.0 WebKit core coverage missing: '+marker);
 }
 pass('V2.34.0 WebKit core risk coverage');
+
+if(!html.includes('id="pwaHealthMount"')||
+   !html.includes('initPwaHealth();')||
+   html.includes('<script src="./runtime/pwa-health.js"></script>')||
+   html.includes('<link rel="stylesheet" href="./runtime/pwa-health.css">')||
+   html.includes("navigator.serviceWorker.register('./sw.js').catch(()=>{})")||
+   sw.includes('./runtime/pwa-health.js')||
+   sw.includes('./runtime/pwa-health.css')||
+   !pwaHealth.includes("const COLORLAB_APP_VERSION='2.35.0'")||
+   !pwaHealthCss.includes('.pwa-health{')){
+  fail('V2.35.0 shell-integrated PWA health / UI contract missing');
+}else pass('V2.35.0 shell-integrated PWA controller + compact UI');
+
+if(sw.includes(".then(()=>self.skipWaiting())")||
+   !sw.includes("if(event.data?.type==='SKIP_WAITING')self.skipWaiting()")||
+   !pwaHealth.includes("registration.waiting&&navigator.serviceWorker?.controller")||
+   !pwaHealth.includes("waiting.postMessage({type:'SKIP_WAITING'})")||
+   !pwaHealth.includes("navigator.serviceWorker.addEventListener('controllerchange'")||
+   !pwaHealth.includes("if(!pwaUpdateRequested||pwaControllerReloaded)return")||
+   !pwaHealth.includes("location.reload()")){
+  fail('V2.35.0 user-mediated service worker activation contract missing');
+}else pass('V2.35.0 user-mediated activation + single reload guard');
+
+if(!pwaHealth.includes("if(typeof persistDraft==='function')persistDraft()")||
+   !pwaHealth.includes("if(typeof writeResilienceSnapshot==='function')await writeResilienceSnapshot()")||
+   !pwaHealth.includes("window.addEventListener('offline',pwaConnectivityState)")||
+   !pwaHealth.includes("window.addEventListener('online',()=>{pwaConnectivityState();pwaCheckForUpdate(true)})")||
+   !pwaHealth.includes("PWA_UPDATE_CHECK_INTERVAL=20*60*1000")||
+   !pwaHealth.includes("document.visibilityState==='visible'")||
+   !webkitCore.includes('WebKit PWA update prompt remains explicit')){
+  fail('V2.35.0 safe-update persistence / connectivity / WebKit coverage contract missing');
+}else pass('V2.35.0 save-before-update + offline state + throttled checks + WebKit coverage');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
