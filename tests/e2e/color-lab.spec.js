@@ -1889,3 +1889,29 @@ test('V2.39 Photo loader ignores stale callbacks and releases request-local obje
   expect(result.afterError.revoked).toEqual(['blob:v239-1','blob:v239-2']);
   expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before);
 });
+
+
+test('V2.40 delayed Inspire action is invalidated after leaving the route', async ({ page }) => {
+  await page.evaluate(() => ensureInspirationResources());
+  await page.evaluate(() => switchTab('inspire',false));
+  await page.waitForTimeout(220);
+  const before=await page.evaluate(() => ({palette:paletteArtifactBase(),offset:recommendationBatchOffset,history:recommendationBatchHistoryIndex}));
+  const result=await page.evaluate(async () => {
+    const originalEnsure=ensureInspirationResources;
+    let resolveLoad=null,ran=0;
+    ensureInspirationResources=()=>new Promise(resolve=>{resolveLoad=resolve});
+    const pending=runInspirationAction(()=>{ran++;recommendationBatchOffset+=99});
+    switchTab('compose',false);
+    if(resolveLoad)resolveLoad([]);
+    const executed=await pending;
+    const state={executed,ran,offset:recommendationBatchOffset,history:recommendationBatchHistoryIndex,active:document.querySelector('.tab-view.active')?.dataset.view||''};
+    ensureInspirationResources=originalEnsure;
+    return state;
+  });
+  expect(result.executed).toBe(false);
+  expect(result.ran).toBe(0);
+  expect(result.offset).toBe(before.offset);
+  expect(result.history).toBe(before.history);
+  expect(result.active).toBe('compose');
+  expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before.palette);
+});
