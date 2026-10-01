@@ -1,7 +1,7 @@
 {
   "name": "color-lab-quality",
   "private": true,
-  "version": "2.33.0",
+  "version": "2.34.0",
   "type": "module",
   "scripts": {
     "test:verify": "node scripts/verify.mjs",
@@ -14,7 +14,8 @@
     "test:a11y": "playwright test tests/e2e/accessibility.spec.js",
     "test:visual-regression": "playwright test tests/e2e/visual-regression.spec.js",
     "test:browser:core": "playwright test tests/e2e/color-lab.spec.js tests/e2e/accessibility.spec.js",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "test:webkit:core": "playwright test --config=playwright.webkit.config.js"
   },
   "devDependencies": {
     "@lhci/cli": "0.15.1",
