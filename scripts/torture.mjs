@@ -489,9 +489,9 @@ check('V2.31 deep dive state stays local and non-mutating',
   !uxCleanup.includes('palette.accent='),
   'remembered section only; source palette untouched');
 check('V2.31 compose render avoids duplicate deep-dive work',
-  html.includes("if(deep?.open)renderDeepDiveVisible();")&&
+  html.includes("if(deep?.open)scheduleDeepDiveVisibleRender();")&&
   !html.includes("if(active==='compose'){\n      const deep=$('#composeDeepDive');\n      if(deep?.open)renderDeepDiveVisible()"),
-  'visible section renders once per compose palette render');
+  'visible section is routed through the coalesced Deep Dive scheduler');
 check('V2.35 update activation is user-mediated',
   !fs.readFileSync('sw.js','utf8').includes(".then(()=>self.skipWaiting())")&&
   fs.readFileSync('sw.js','utf8').includes("if(event.data?.type==='SKIP_WAITING')self.skipWaiting()")&&
