@@ -804,7 +804,7 @@ if(!fs.existsSync('scripts/visual-audit.mjs')) fail('V2.5 visual audit script mi
 else pass('V2.5 visual audit script present');
 
 
-if(!html.includes('function recommendationDirection(')||!html.includes('rec-direction')||!html.includes('direction.reason')){
+if(!recommendationEngine.includes('function recommendationDirection(')||!recommendationEngine.includes('rec-direction')||!recommendationEngine.includes('direction.reason')){
   fail('V2.6 recommendation direction explanation missing');
 }else pass('V2.6 recommendation directions');
 
@@ -918,7 +918,7 @@ else pass('V2.11.0 tone family offline cache');
 
 
 for(const fn of ['roleAlternativeContext','candidateExploreConfig','isPerceptualDuplicate','roleAlternativePool','prepareRoleCandidateSession','moveRoleAlternative','recommendationBatch','nextRecommendationBatch']){
-  if(!html.includes('function '+fn+'(')) fail('V2.11.0 exploration function missing: '+fn);
+  if(!appSource.includes('function '+fn+'(')) fail('V2.11.0 exploration function missing: '+fn);
 }
 if(html.includes("Math.floor(Math.random()*Math.min(5,opts.length))")){
   fail('V2.11.0 legacy five-color shuffle cap still active');
@@ -931,20 +931,20 @@ if(!html.includes('state.pool=roleAlternativePool(role,36,state.familyId)')||
 }else pass('V2.11.0 deep role alternative pool');
 
 if(!html.includes('const recommendationBatchSize=5')||
-   !html.includes('selectDiverseRecommendations(candidates,30)')||
+   !recommendationEngine.includes('selectDiverseRecommendations(candidates,30)')||
    !html.includes('id="nextRecommendations"')){
   fail('V2.11.0 recommendation batching contract missing');
 }else pass('V2.11.0 recommendation batching contract');
 
-if(!html.includes("progress.textContent=recs.length?'第 '+batchNumber+' / '+recommendationBatchCount(recs)+' 批 · '+start+'–'+end+' / '+recs.length+' 組'")){
+if(!recommendationEngine.includes("progress.textContent=recs.length?'第 '+batchNumber+' / '+recommendationBatchCount(recs)+' 批 · '+start+'–'+end+' / '+recs.length+' 組'")){
   fail('V2.11.1 recommendation batch progress missing');
 }else pass('V2.11.1 recommendation batch progress');
 
 if(!html.includes('id="previousRecommendations"')||
-   !html.includes('function resetRecommendationBatchSession(')||
-   !html.includes('function moveRecommendationBatch(direction=1)')||
-   !html.includes('recommendationBatchHistory=[0]')||
-   !html.includes("if(nextOffset>=recs.length){toast('已看完這輪所有候選');return}")){
+   !recommendationEngine.includes('function resetRecommendationBatchSession(')||
+   !recommendationEngine.includes('function moveRecommendationBatch(direction=1)')||
+   !recommendationEngine.includes('recommendationBatchHistory=[0]')||
+   !recommendationEngine.includes("if(nextOffset>=recs.length){toast('已看完這輪所有候選');return}")){
   fail('V2.11.1 Inspire history or anti-repeat contract missing');
 }else pass('V2.11.1 Inspire history and anti-repeat contract');
 
@@ -1252,7 +1252,7 @@ if(completeBody.includes('for(let i=0;i<pool.length;i++){')&&completeBody.includ
 
 
 for(const fn of ['paletteQualityProfile','recommendationDistance','selectDiverseRecommendations']){
-  if(!html.includes('function '+fn+'(')) fail('V1.9 quality function missing: '+fn);
+  if(!appSource.includes('function '+fn+'(')) fail('V1.9 quality function missing: '+fn);
 }
 pass('V1.9 quality ranking functions present');
 
@@ -1261,8 +1261,8 @@ for(const key of ['hierarchy','distinctiveness','cohesion','focus','practicality
 }
 pass('V1.9 quality dimensions present');
 
-if(!html.includes('selectDiverseRecommendations(candidates,30)')||
-   !html.includes('prioritizeUnseenRecommendations(selectDiverseRecommendations(candidates,30))')){
+if(!recommendationEngine.includes('selectDiverseRecommendations(candidates,30)')||
+   !recommendationEngine.includes('prioritizeUnseenRecommendations(selectDiverseRecommendations(candidates,30))')){
   fail('V2.15.0 deep recommendation selector / fresh-first wrapper not active');
 }else pass('V2.15.0 deep recommendation selector + fresh-first wrapper');
 
