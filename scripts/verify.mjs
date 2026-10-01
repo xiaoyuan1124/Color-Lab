@@ -168,13 +168,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2500")) fail('service worker cache version is not V2.50.0');
+if(!sw.includes("color-lab-v2510")) fail('service worker cache version is not V2.51.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.50.0') fail('package version must be 2.50.0');
+if(pkg.version!=='2.51.0') fail('package version must be 2.51.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.50.0')||!html.includes('<div class="version">V2.50.0</div>')||!html.includes("appVersion:'2.50.0'")) fail('V2.50.0 UI or backup version metadata missing');
-else pass('V2.50.0 version metadata');
+if(!html.includes('Color Lab V2.51.0')||!html.includes('<div class="version">V2.51.0</div>')||!html.includes("appVersion:'2.51.0'")) fail('V2.51.0 UI or backup version metadata missing');
+else pass('V2.51.0 version metadata');
 
 if(!html.includes('id="compareMore"')||
    !html.includes('<b>匯出</b>')||
@@ -303,6 +303,33 @@ if(!html.includes('id="professionalHandoff" aria-labelledby="professionalHandoff
    !html.includes("if($('#handoffMore')?.open)renderProfessionalHandoff()")){
   fail('V2.50.0 professional handoff UI/copy contract missing');
 }else pass('V2.50.0 professional handoff UI + copy contract');
+
+if(!colorHandoff.includes('HANDOFF_XYZ_D65_TO_P3')||
+   !colorHandoff.includes('function hexToDisplayP3(')||
+   !colorHandoff.includes('function displayP3CssFromHex(')||
+   !colorHandoff.includes("space:'display-p3'")||
+   !colorHandoff.includes('p3:hexToDisplayP3(h)')){
+  fail('V2.51.0 Display-P3 conversion core missing');
+}else pass('V2.51.0 exact sRGB to Display-P3 conversion core');
+
+if(!html.includes('id="copyP3Css">複製 P3 CSS</button>')||
+   !html.includes('id="p3Capability" role="status"')||
+   !html.includes('function displayP3Capability(')||
+   !html.includes("CSS?.supports?.('color','color(display-p3 1 0 0)')")||
+   !html.includes("matchMedia?.('(color-gamut: p3)')")||
+   !html.includes('function professionalP3Css(')||
+   !html.includes('@supports (color: color(display-p3 1 1 1))')||
+   !html.includes('@media (color-gamut: p3)')||
+   !html.includes('Source = exact sRGB HEX')||
+   !html.includes("$('#copyP3Css').onclick=copyProfessionalP3Css")){
+  fail('V2.51.0 P3 capability + fallback handoff contract missing');
+}else pass('V2.51.0 P3 capability detection + fallback CSS handoff');
+
+if(!html.includes('Display-P3 是目前 sRGB HEX 的等色換算')||
+   !html.includes('目前 source 仍是 sRGB HEX')||
+   !html.includes('not gamut expansion')){
+  fail('V2.51.0 truthful sRGB-source P3 wording missing');
+}else pass('V2.51.0 P3 handoff does not claim synthetic gamut expansion');
 
 if(!html.includes('搜尋名稱、HEX、標籤、色系或調性')||
    !html.includes('可搜尋：藍、紅、柔和、鮮明、深色、淺色')||

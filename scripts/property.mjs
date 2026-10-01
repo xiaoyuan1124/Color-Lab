@@ -4,6 +4,7 @@ import fc from 'fast-check';
 
 const html=fs.readFileSync('index.html','utf8');
 const colorQuality=fs.readFileSync('core/color-quality.js','utf8');
+const colorHandoff=fs.readFileSync('core/color-handoff.js','utf8');
 const photoPalette=fs.readFileSync('runtime/photo-palette.js','utf8');
 const scriptMatch=html.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/);
 if(!scriptMatch){
@@ -13,6 +14,7 @@ if(!scriptMatch){
 const source=scriptMatch[1];
 const testSource=colorQuality+'\n'+source;
 try{new Function(colorQuality)}catch(e){console.error('FAIL core color quality syntax',e.message);process.exit(1)}
+try{new Function(colorHandoff)}catch(e){console.error('FAIL core color handoff syntax',e.message);process.exit(1)}
 
 function extractFunction(name,code=source){
   const start=code.indexOf('function '+name+'(');
@@ -65,6 +67,16 @@ vm.runInContext(
 );
 const A=sandbox.API;
 
+const handoffSandbox={console};
+vm.createContext(handoffSandbox);
+vm.runInContext(
+  ['normHex','hexToRgb','srgbToLinear','linearToSrgb'].map(name=>extractFunction(name,colorQuality)).join('\n')+'\n'+
+  colorHandoff+'\nthis.H={hexToDisplayP3,displayP3CssFromHex};',
+  handoffSandbox,
+  {timeout:2000}
+);
+const H=handoffSandbox.H;
+
 const hexArb=fc
   .tuple(
     fc.integer({min:0,max:255}),
@@ -83,6 +95,17 @@ function property(name,arb,predicate,options={}){
   }),{numRuns:250,...options});
   console.log('PASS',name);
 }
+
+property('sRGB HEX always converts inside Display-P3 gamut',[hexArb],hex=>{
+  const p=H.hexToDisplayP3(hex);
+  return !!p&&p.inGamut&&[p.r,p.g,p.b].every(v=>Number.isFinite(v)&&v>=-1e-8&&v<=1+1e-8);
+});
+
+property('Display-P3 CSS handoff emits bounded numeric coordinates',[hexArb],hex=>{
+  const css=H.displayP3CssFromHex(hex);
+  const match=/^color\(display-p3 ([\d.]+) ([\d.]+) ([\d.]+)\)$/.exec(css||'');
+  return !!match&&match.slice(1).map(Number).every(v=>Number.isFinite(v)&&v>=0&&v<=1);
+});
 
 property('OKLCH round-trip stays perceptually close',[hexArb],hex=>{
   const o=A.toOKLCH(hex);
