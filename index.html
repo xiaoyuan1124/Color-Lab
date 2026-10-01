@@ -4824,10 +4824,7 @@ function scheduleSecondaryRender(){
   const run=()=>{
     if(token!==secondaryRenderToken)return;
     const active=document.querySelector('.tab-view.active')?.dataset.view||'compose';
-    if(active==='compose'){
-      const deep=$('#composeDeepDive');
-      if(deep?.open)renderDeepDiveVisible()
-    }else if(active==='inspire'){
+    if(active==='inspire'){
       ensureInspirationResources().then(()=>{if(token===secondaryRenderToken){renderIdeas();renderRecommendations()}});
     }
   };
