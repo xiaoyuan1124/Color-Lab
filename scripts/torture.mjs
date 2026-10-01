@@ -556,8 +556,9 @@ check('V2.38 Inspire rendering is pending-coalesced and route-invalidated',
   appText.includes('let secondaryRenderPending=false')&&
   appText.includes('secondaryRenderToken++')&&
   appText.includes('if(secondaryRenderPending)return')&&
-  appText.includes("if(active!=='inspire')return")&&
-  appText.includes("token!==secondaryRenderToken||!stillActive")&&
+  appText.includes('function inspirationRouteActive(')&&
+  appText.includes("if(!inspirationRouteActive())return")&&
+  appText.includes("if(token!==secondaryRenderToken||!inspirationRouteActive())return")&&
   appText.includes("if(name==='inspire')renderCompare();\n  scheduleSecondaryRender();")&&
   !appText.includes("ensureInspirationResources().then(()=>requestAnimationFrame(()=>{renderIdeas();renderRecommendations()}))"),
   'rapid route switches invalidate stale async Inspire work without changing recommendation semantics');
