@@ -5,8 +5,10 @@ const webkitConfig=fs.readFileSync('playwright.webkit.config.js','utf8');
 const webkitCore=fs.readFileSync('tests/e2e/webkit-core.spec.js','utf8');
 const qualityWorkflow=fs.readFileSync('.github/workflows/quality.yml','utf8');
 const storageHardening=fs.readFileSync('runtime/storage-hardening.js','utf8');
-const pwaHealth=fs.readFileSync('runtime/pwa-health.js','utf8');
-const pwaHealthCss=fs.readFileSync('runtime/pwa-health.css','utf8');
+const pwaStart=html.indexOf('/* Color Lab V2.35.0 PWA / iPhone Update Hardening');
+const pwaEnd=html.indexOf('\nconst MODES={',pwaStart);
+const pwaHealth=pwaStart>=0&&pwaEnd>pwaStart?html.slice(pwaStart,pwaEnd):'';
+const pwaHealthCss=html;
 const uxCleanup=fs.readFileSync('runtime/ux-cleanup.js','utf8');
 const uxCleanupCss=fs.readFileSync('runtime/ux-cleanup.css','utf8');
 const paletteTools=fs.readFileSync('runtime/palette-tools.js','utf8');
@@ -30,7 +32,7 @@ const gradientStudio=fs.readFileSync('runtime/gradient-studio.js','utf8');
 const gradientStudioCss=fs.readFileSync('runtime/gradient-studio.css','utf8');
 const qrVendor=fs.readFileSync('vendor/qrcode.min.js','utf8');
 const qrLicense=fs.readFileSync('vendor/qrcode.LICENSE.txt','utf8');
-const appSource=html+'\n'+storageHardening+'\n'+pwaHealth+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio;
+const appSource=html+'\n'+storageHardening+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio;
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -690,17 +692,17 @@ for(const marker of [
 }
 pass('V2.34.0 WebKit core risk coverage');
 
-if(!html.includes('<link rel="stylesheet" href="./runtime/pwa-health.css">')||
-   !html.includes('<script src="./runtime/pwa-health.js"></script>')||
-   !html.includes('id="pwaHealthMount"')||
+if(!html.includes('id="pwaHealthMount"')||
    !html.includes('initPwaHealth();')||
+   html.includes('<script src="./runtime/pwa-health.js"></script>')||
+   html.includes('<link rel="stylesheet" href="./runtime/pwa-health.css">')||
    html.includes("navigator.serviceWorker.register('./sw.js').catch(()=>{})")||
-   !sw.includes('./runtime/pwa-health.js')||
-   !sw.includes('./runtime/pwa-health.css')||
+   sw.includes('./runtime/pwa-health.js')||
+   sw.includes('./runtime/pwa-health.css')||
    !pwaHealth.includes("const COLORLAB_APP_VERSION='2.35.0'")||
    !pwaHealthCss.includes('.pwa-health{')){
-  fail('V2.35.0 PWA health runtime / UI / offline asset contract missing');
-}else pass('V2.35.0 PWA health runtime + compact UI + offline cache');
+  fail('V2.35.0 shell-integrated PWA health / UI contract missing');
+}else pass('V2.35.0 shell-integrated PWA controller + compact UI');
 
 if(sw.includes(".then(()=>self.skipWaiting())")||
    !sw.includes("if(event.data?.type==='SKIP_WAITING')self.skipWaiting()")||
