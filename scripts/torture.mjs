@@ -475,6 +475,23 @@ check('V2.31 compose render avoids duplicate deep-dive work',
   html.includes("if(deep?.open)renderDeepDiveVisible();")&&
   !html.includes("if(active==='compose'){\n      const deep=$('#composeDeepDive');\n      if(deep?.open)renderDeepDiveVisible()"),
   'visible section renders once per compose palette render');
+check('V2.32 resilience lifecycle lives inside the storage runtime',
+  storageHardening.includes('function openResilienceDB(')&&
+  storageHardening.includes('async function writeResilienceSnapshot(')&&
+  storageHardening.includes('function scheduleResilienceBackup(')&&
+  storageHardening.includes('async function restoreResilienceIfNeeded(')&&
+  !html.includes('function openResilienceDB(')&&
+  !html.includes('async function writeResilienceSnapshot(')&&
+  !html.includes('function scheduleResilienceBackup(')&&
+  !html.includes('async function restoreResilienceIfNeeded('),
+  'IndexedDB lifecycle is modularized without duplicate ownership');
+check('V2.32 storage runtime still carries V2.30 recovery safeguards',
+  storageHardening.includes("schema:'color-lab-shadow-v4'")&&
+  storageHardening.includes("const needsSaved=storageNeedsRecovery('colorlab.saved',Array.isArray)")&&
+  storageHardening.includes("const needsProjects=storageNeedsRecovery(LOCAL_PROJECTS_KEY,Array.isArray)")&&
+  storageHardening.includes("storageTransaction(keys,()=>")&&
+  storageHardening.includes("reader.onerror=()=>toast('備份檔讀取失敗')"),
+  'recovery, rollback, and backup compatibility stay intact');
 
 check('V2.18 context preview ships five realistic scene contracts',
   appText.includes('class="cp2 cp2-app"')&&

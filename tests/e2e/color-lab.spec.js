@@ -1502,3 +1502,53 @@ test('V2.31 visible-section renderer avoids hidden work and never mutates source
 
   expect(result.after).toEqual(result.before);
 });
+
+
+test('V2.32 modularized resilience restores missing saved and project data from IndexedDB shadow', async ({ page }) => {
+  const result=await page.evaluate(async () => {
+    const project={id:'prj-arch01',name:'Architecture Test',createdAt:1};
+    const saved=sanitizeSavedRecord({
+      name:'Storage Boundary',
+      projectId:project.id,
+      palette:{base:'#112233',structure:'#445566',accent:'#AABBCC'},
+      selectedColors:['#112233','#445566','#AABBCC'],
+      lockedSlots:[false,false,false],
+      mode:'quiet',
+      date:1
+    });
+
+    localStorage.setItem('colorlab.saved',JSON.stringify([saved]));
+    writeLocalProjects([project]);
+    resilienceReady=true;
+    await writeResilienceSnapshot();
+
+    localStorage.removeItem('colorlab.saved');
+    localStorage.removeItem(LOCAL_PROJECTS_KEY);
+    resilienceReady=false;
+    await restoreResilienceIfNeeded();
+
+    return{
+      ready:resilienceReady,
+      saved:readSavedData().map(x=>({name:x.name,projectId:x.projectId,palette:x.palette})),
+      projects:readLocalProjects()
+    };
+  });
+
+  expect(result.ready).toBe(true);
+  expect(result.saved).toEqual([{
+    name:'Storage Boundary',
+    projectId:'prj-arch01',
+    palette:{base:'#112233',structure:'#445566',accent:'#AABBCC'}
+  }]);
+  expect(result.projects).toEqual([{id:'prj-arch01',name:'Architecture Test',createdAt:1}]);
+});
+
+test('V2.32 resilience lifecycle remains callable after moving out of index', async ({ page }) => {
+  const result=await page.evaluate(() => ({
+    open:typeof openResilienceDB,
+    write:typeof writeResilienceSnapshot,
+    schedule:typeof scheduleResilienceBackup,
+    restore:typeof restoreResilienceIfNeeded
+  }));
+  expect(result).toEqual({open:'function',write:'function',schedule:'function',restore:'function'});
+});
