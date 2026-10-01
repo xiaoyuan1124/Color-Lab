@@ -257,9 +257,13 @@ if(!localProjects.includes("terms.push('中性','灰','灰色','neutral')")||
    !localProjects.includes("terms.push('藍','藍色','blue')")||
    !localProjects.includes("terms.push('柔和','低彩度','muted')")||
    !localProjects.includes("terms.push('鮮明','高彩度','vivid')")||
-   !localProjects.includes("return terms.every(term=>haystack.includes(term))")){
-  fail('V2.46.0 color-family / tone / multi-token search semantics missing');
-}else pass('V2.46.0 color family + tone + AND search semantics');
+   !localProjects.includes("terms.push('app','網頁','介面','ui','簡報')")||
+   !localProjects.includes("terms.push('室內','穿搭','interior','fashion')")||
+   !localProjects.includes("terms.push('品牌','brand','海報')")||
+   !localProjects.includes("return terms.every(term=>haystack.includes(term))")||
+   !html.includes('品牌、室內、穿搭、簡報')){
+  fail('V2.46.0 color-family / tone / context / multi-token search semantics missing');
+}else pass('V2.46.0 color family + tone + context + AND search semantics');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
