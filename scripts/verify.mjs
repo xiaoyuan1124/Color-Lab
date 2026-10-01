@@ -146,13 +146,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2320")) fail('service worker cache version is not V2.32.0');
+if(!sw.includes("color-lab-v2330")) fail('service worker cache version is not V2.33.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.32.0') fail('package version must be 2.32.0');
+if(pkg.version!=='2.33.0') fail('package version must be 2.33.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.32.0')||!html.includes('<div class="version">V2.32.0</div>')||!html.includes("appVersion:'2.32.0'")) fail('V2.32.0 UI or backup version metadata missing');
-else pass('V2.32.0 version metadata');
+if(!html.includes('Color Lab V2.33.0')||!html.includes('<div class="version">V2.33.0</div>')||!html.includes("appVersion:'2.33.0'")) fail('V2.33.0 UI or backup version metadata missing');
+else pass('V2.33.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -636,6 +636,23 @@ if(!appSource.includes('function openResilienceDB(')||
    !appSource.includes("reader.onerror=()=>toast('備份檔讀取失敗')")){
   fail('V2.32.0 storage behavior continuity contract missing');
 }else pass('V2.32.0 storage behavior continuity preserved through runtime boundary');
+
+if(!photoPalette.includes('function photoCompositionProfile(')||
+   !photoPalette.includes('function photoCurrentRelationship(')||
+   html.includes('function photoCompositionProfile(')||
+   html.includes('function photoCurrentRelationship(')){
+  fail('V2.33.0 photo analysis modularization contract missing');
+}else pass('V2.33.0 photo analysis helpers moved into photo runtime');
+
+if(!photoPalette.includes("const edgeCandidate=[...usable]")||
+   !photoPalette.includes("const focusBand=vivid")||
+   !photoPalette.includes("return distance<.10?'與目前三色關係接近':distance<.22?'與目前三色有可見差異':'與目前三色方向差異明顯'")||
+   photoPalette.includes('selectedColors=')||
+   photoPalette.includes('palette.base=')||
+   photoPalette.includes('palette.structure=')||
+   photoPalette.includes('palette.accent=')){
+  fail('V2.33.0 pure photo analysis behavior contract missing');
+}else pass('V2.33.0 photo analysis remains pure and behavior-equivalent');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
