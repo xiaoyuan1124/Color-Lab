@@ -3,7 +3,7 @@ let photoPaletteStyle=(()=>{try{return localStorage.getItem('colorlab.photoPalet
 if(!['balanced','muted','vivid'].includes(photoPaletteStyle))photoPaletteStyle='balanced';
 
 function photoPaletteStyleLabel(style=photoPaletteStyle){
-  return style==='muted'?'Muted / 柔和':style==='vivid'?'Vivid / 鮮明':'Balanced / 平衡';
+  return style==='muted'?'柔和':style==='vivid'?'鮮明':'平衡';
 }
 function photoDistinctClusters(clusters,threshold=.06){
   const sorted=(clusters||[]).filter(x=>x&&normHex(x.hex))
