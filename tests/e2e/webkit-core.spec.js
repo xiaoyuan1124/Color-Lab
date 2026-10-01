@@ -233,3 +233,24 @@ test('WebKit V2.39 releases decoded photo URLs while keeping canvas photo availa
   expect(state.height).toBeGreaterThan(0);
   expect(state.revoked).toBeGreaterThanOrEqual(1);
 });
+
+
+test('WebKit V2.40 drops delayed Inspire actions after route changes', async ({ page }) => {
+  await page.evaluate(() => ensureInspirationResources());
+  await page.evaluate(() => switchTab('inspire',false));
+  await page.waitForTimeout(220);
+  const result=await page.evaluate(async () => {
+    const originalEnsure=ensureInspirationResources;
+    const beforeOffset=recommendationBatchOffset;
+    let resolveLoad=null,ran=0;
+    ensureInspirationResources=()=>new Promise(resolve=>{resolveLoad=resolve});
+    const pending=runInspirationAction(()=>{ran++;recommendationBatchOffset+=50});
+    switchTab('photo',false);
+    if(resolveLoad)resolveLoad([]);
+    const executed=await pending;
+    const state={executed,ran,beforeOffset,afterOffset:recommendationBatchOffset,active:document.querySelector('.tab-view.active')?.dataset.view||''};
+    ensureInspirationResources=originalEnsure;
+    return state;
+  });
+  expect(result).toEqual({executed:false,ran:0,beforeOffset:result.beforeOffset,afterOffset:result.beforeOffset,active:'photo'});
+});
