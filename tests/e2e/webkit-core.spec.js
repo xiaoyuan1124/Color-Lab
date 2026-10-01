@@ -331,7 +331,11 @@ test('WebKit V2.43 keeps consolidated mobile actions discoverable and source-saf
 
 
 test('WebKit V2.44 first-run guidance dismisses once and stays source-safe', async ({ page }) => {
-  await page.evaluate(() => localStorage.clear());
+  await page.addInitScript(() => {
+    if(sessionStorage.getItem('v244WebKitFreshPrepared')==='1')return;
+    localStorage.clear();
+    sessionStorage.setItem('v244WebKitFreshPrepared','1');
+  });
   await page.reload();
   await expect(page.locator('#firstRunGuide')).toBeVisible();
   const before=await page.evaluate(() => paletteArtifactBase());
