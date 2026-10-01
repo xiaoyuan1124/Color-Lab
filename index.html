@@ -773,6 +773,43 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
   pointer-events:none;
 }
 .palette-actions-three{grid-template-columns:repeat(3,1fr)}
+.professional-handoff{
+  margin-top:var(--space-4);
+  padding-top:var(--space-4);
+  border-top:1px solid var(--hairline);
+}
+.professional-handoff-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:var(--space-3);
+  margin-bottom:var(--space-3);
+}
+.professional-handoff-head strong{font-size:12px;color:var(--text-1)}
+.professional-color-values{display:grid;gap:10px}
+.professional-color-row{
+  display:grid;
+  grid-template-columns:minmax(86px,.8fr) minmax(0,1.45fr);
+  gap:10px;
+  padding:10px 0;
+  border-bottom:1px solid var(--hairline);
+}
+.professional-color-row:last-child{border-bottom:0}
+.professional-color-role{display:flex;align-items:center;gap:9px;min-width:0}
+.professional-color-role i{
+  width:30px;height:30px;flex:0 0 30px;border-radius:10px;
+  border:1px solid rgba(36,38,36,.08);
+}
+.professional-color-role span{display:grid;gap:2px;min-width:0}
+.professional-color-role b{font-size:11px}
+.professional-color-role code{font-size:10px;color:var(--text-3)}
+.professional-color-spec{display:grid;gap:4px;align-content:center}
+.professional-color-spec span{font-size:10px;line-height:1.35;color:var(--text-2);font-variant-numeric:tabular-nums}
+.professional-handoff-note{margin:10px 0 0;color:var(--text-3);font-size:10px;line-height:1.5}
+@media(max-width:360px){
+  .professional-color-row{grid-template-columns:1fr}
+}
+
 .compare-actions{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -2366,7 +2403,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.49.0</div>
+    <div class="version">V2.50.0</div>
   </div>
 
   <main class="app-main">
@@ -2585,6 +2622,14 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
               <button type="button" class="utility-btn" data-export-format="swiftui">SwiftUI</button>
               <button type="button" class="utility-btn" data-export-format="svg">SVG 色票</button>
             </div>
+            <section class="professional-handoff" id="professionalHandoff" aria-labelledby="professionalHandoffTitle">
+              <div class="professional-handoff-head">
+                <strong id="professionalHandoffTitle">專業色彩值</strong>
+                <button type="button" class="text-action" id="copyProfessionalHandoff">複製規格</button>
+              </div>
+              <div class="professional-color-values" id="professionalColorValues"></div>
+              <p class="professional-handoff-note">LAB 使用 CIELAB D50。CMYK 為 sRGB 數學參考值；實際印刷請依設備、紙材與 ICC profile。</p>
+            </section>
           </details>
           <details class="handoff-more action-disclosure" id="compareMore">
             <summary><span><b>比較配色</b><small>把目前方案放進 A / B</small></span></summary>
@@ -2789,7 +2834,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.49.0</div>
+  <div class="footer app-footer">Color Lab V2.50.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2884,6 +2929,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 
 <script src="./runtime/storage-hardening.js"></script>
 <script src="./core/color-quality.js"></script>
+<script src="./core/color-handoff.js"></script>
 <script src="./core/library-search.js"></script>
 <script src="./runtime/palette-tools.js"></script>
 <script src="./runtime/vision-accessibility.js"></script>
@@ -2900,7 +2946,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 /* Color Lab V2.35.0 PWA / iPhone Update Hardening
    User-mediated service worker activation prevents mixed-version sessions. */
 
-const COLORLAB_APP_VERSION='2.49.0';
+const COLORLAB_APP_VERSION='2.50.0';
 const PWA_UPDATE_CHECK_INTERVAL=20*60*1000;
 let pwaRegistration=null;
 let pwaUpdateReady=false;
@@ -3232,6 +3278,38 @@ function renderResultSummary(){
   const x=paletteResultSummaryData();
   host.innerHTML='<strong>'+x.tone+'</strong><div class="result-summary-meta"><span>'+x.hierarchy+'</span><span>'+x.focus+'</span><span>'+x.readability+'</span></div>';
 }
+function professionalHandoffRows(){
+  return[
+    {role:'Base',ratio:75,hex:palette.base},
+    {role:'Structure',ratio:18,hex:palette.structure},
+    {role:'Accent',ratio:7,hex:palette.accent}
+  ].map(item=>({...item,values:professionalColorValues(item.hex)}));
+}
+function professionalNumber(value,digits=1){
+  const rounded=Number(value.toFixed(digits));
+  return Object.is(rounded,-0)?'0':String(rounded);
+}
+function professionalHandoffText(){
+  const title=(($('#comboName')?.value||currentComboName||'Color Lab 配色').trim()||'Color Lab 配色');
+  const lines=professionalHandoffRows().map(item=>{
+    const lab=item.values.lab,cmyk=item.values.cmyk;
+    return item.role+' '+item.ratio+'% '+item.hex+
+      ' | Lab D50 '+professionalNumber(lab.l)+', '+professionalNumber(lab.a)+', '+professionalNumber(lab.b)+
+      ' | CMYK ref '+professionalNumber(cmyk.c,0)+'/'+professionalNumber(cmyk.m,0)+'/'+professionalNumber(cmyk.y,0)+'/'+professionalNumber(cmyk.k,0);
+  });
+  return title+' · 75 / 18 / 7\n'+lines.join('\n')+'\nCMYK = unprofiled sRGB reference; print output requires an ICC profile.';
+}
+function renderProfessionalHandoff(){
+  const host=$('#professionalColorValues');if(!host)return;
+  host.innerHTML=professionalHandoffRows().map(item=>{
+    const lab=item.values.lab,cmyk=item.values.cmyk;
+    return '<div class="professional-color-row">'+
+      '<div class="professional-color-role"><i style="background:'+item.hex+'"></i><span><b>'+item.role+' '+item.ratio+'%</b><code>'+item.hex+'</code></span></div>'+
+      '<div class="professional-color-spec"><span>LAB D50 · L '+professionalNumber(lab.l)+' · a '+professionalNumber(lab.a)+' · b '+professionalNumber(lab.b)+'</span>'+
+      '<span>CMYK 參考 · '+professionalNumber(cmyk.c,0)+' / '+professionalNumber(cmyk.m,0)+' / '+professionalNumber(cmyk.y,0)+' / '+professionalNumber(cmyk.k,0)+'</span></div>'+
+      '</div>';
+  }).join('');
+}
 function openResultDisclosure(id){
   const target=$('#'+id);if(!target)return;
   target.open=true;
@@ -3349,7 +3427,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v5',appVersion:'2.49.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.50.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -4568,6 +4646,7 @@ function render(){
   [['base','75'],['structure','18'],['accent','7']].forEach(([k,t])=>{const d=document.createElement('div');d.style.background=palette[k];d.style.color=textFor(palette[k]);d.innerHTML=`<span>${t}</span>`;pv.appendChild(d)});
   renderPaletteHealth();
   renderResultSummary();
+  if($('#handoffMore')?.open)renderProfessionalHandoff();
   const deep=$('#composeDeepDive');
   if(deep?.open)scheduleDeepDiveVisibleRender();
   scheduleSecondaryRender();
@@ -5367,7 +5446,9 @@ $('#sharePalette').onclick=openShareSnapshot;
 $$('[data-preview-theme]').forEach(b=>b.addEventListener('click',()=>setPreviewTheme(b.dataset.previewTheme)));
 $$('[data-validation-theme]').forEach(b=>b.addEventListener('click',()=>setValidationTheme(b.dataset.validationTheme)));
 initCrossPlatformHandoff();
-$$('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
+$('#handoffMore').addEventListener('toggle',e=>{if(e.currentTarget.open)renderProfessionalHandoff()});
+$('#copyProfessionalHandoff').onclick=()=>copy(professionalHandoffText());
+$('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
 const LIBRARY_QUICK_TERMS=['藍','柔和','深色','品牌','室內','簡報'];
 function libraryQuickQueryTerms(){
   const input=$('#librarySearch');
