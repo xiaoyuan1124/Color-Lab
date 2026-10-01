@@ -3,6 +3,7 @@ import vm from 'node:vm';
 import fc from 'fast-check';
 
 const html=fs.readFileSync('index.html','utf8');
+const colorQuality=fs.readFileSync('core/color-quality.js','utf8');
 const photoPalette=fs.readFileSync('runtime/photo-palette.js','utf8');
 const scriptMatch=html.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/);
 if(!scriptMatch){
@@ -10,6 +11,8 @@ if(!scriptMatch){
   process.exit(1);
 }
 const source=scriptMatch[1];
+const testSource=colorQuality+'\n'+source;
+try{new Function(colorQuality)}catch(e){console.error('FAIL core color quality syntax',e.message);process.exit(1)}
 
 function extractFunction(name,code=source){
   const start=code.indexOf('function '+name+'(');
@@ -54,7 +57,7 @@ const sandbox={console};
 vm.createContext(sandbox);
 vm.runInContext(
   'const oklchCache=new Map();const luminanceCache=new Map();\n'+
-  functionNames.map(name=>extractFunction(name,source)).join('\n')+'\n'+
+  functionNames.map(name=>extractFunction(name,testSource)).join('\n')+'\n'+
   photoRuntimeFunctionNames.map(name=>extractFunction(name,photoPalette)).join('\n')+
   '\nthis.API={'+[...functionNames,...photoRuntimeFunctionNames].join(',')+'};',
   sandbox,

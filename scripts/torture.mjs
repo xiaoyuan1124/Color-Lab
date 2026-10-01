@@ -3,6 +3,7 @@ import vm from 'node:vm';
 
 const html=fs.readFileSync('index.html','utf8');
 const storageHardening=fs.readFileSync('runtime/storage-hardening.js','utf8');
+const colorQuality=fs.readFileSync('core/color-quality.js','utf8');
 const pwaStart=html.indexOf('/* Color Lab V2.35.0 PWA / iPhone Update Hardening');
 const pwaEnd=html.indexOf('\nconst MODES={',pwaStart);
 const pwaHealth=pwaStart>=0&&pwaEnd>pwaStart?html.slice(pwaStart,pwaEnd):'';
@@ -18,7 +19,7 @@ const localProjects=fs.readFileSync('runtime/local-projects.js','utf8');
 const referenceBoard=fs.readFileSync('runtime/reference-board.js','utf8');
 const gradientStudio=fs.readFileSync('runtime/gradient-studio.js','utf8');
 const recommendationEngine=fs.readFileSync('data/recommendation-engine.js','utf8');
-const appText=html+'\n'+storageHardening+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio+'\n'+recommendationEngine;
+const appText=html+'\n'+storageHardening+'\n'+colorQuality+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio+'\n'+recommendationEngine;
 const toneSource=fs.readFileSync('data/tone-families.js','utf8');
 const inlineScripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
 const scriptMatch=inlineScripts.at(-1);
@@ -27,8 +28,11 @@ if(!scriptMatch){
   process.exit(1);
 }
 const source=scriptMatch[1];
+const testSource=colorQuality+'\n'+source;
 try{new Function(storageHardening)}
 catch(e){console.error('FAIL storage hardening runtime syntax',e.message);process.exit(1)}
+try{new Function(colorQuality)}
+catch(e){console.error('FAIL core color quality syntax',e.message);process.exit(1)}
 try{new Function(pwaHealth)}
 catch(e){console.error('FAIL pwa health runtime syntax',e.message);process.exit(1)}
 try{new Function(uxCleanup)}
@@ -140,7 +144,7 @@ vm.createContext(sandbox);
 vm.runInContext(toneSource,sandbox,{timeout:1000});
 vm.runInContext(
   'const oklchCache=new Map();const luminanceCache=new Map();\n'+
-  functionNames.map(name=>extractFunction(name,source)).join('\n')+'\n'+
+  functionNames.map(name=>extractFunction(name,testSource)).join('\n')+'\n'+
   photoRuntimeFunctionNames.map(name=>extractFunction(name,photoPalette)).join('\n')+'\n'+
   recommendationRuntimeFunctionNames.map(name=>extractFunction(name,recommendationEngine)).join('\n')+
   '\nthis.API={'+[...functionNames,...photoRuntimeFunctionNames,...recommendationRuntimeFunctionNames].join(',')+'};',
@@ -527,6 +531,19 @@ check('V2.36 core two-color completion stays in startup path',
   html.includes('const pool=intelligentPool(chosen,style)')&&
   !recommendationEngine.includes('function intelligentPool('),
   'Compose two-color completion does not depend on lazy Inspire engine');
+check('V2.37 core color quality ownership is isolated',
+  html.includes('<script src="./core/color-quality.js"></script>')&&
+  html.indexOf('./core/color-quality.js')<html.indexOf('./runtime/palette-tools.js')&&
+  colorQuality.includes('function qualityRefineGenerated(')&&
+  colorQuality.includes('function gamutMapOKLCH(')&&
+  !html.includes('function qualityRefineGenerated(')&&
+  !html.includes('function gamutMapOKLCH('),
+  'pure color quality helpers live in the eager core module only');
+check('V2.37 color quality core cannot write source palette or storage',
+  !/\bselectedColors\s*=/.test(colorQuality)&&
+  !/\bpalette\.(?:base|structure|accent)\s*=/.test(colorQuality)&&
+  !/localStorage|indexedDB|fetch\(/.test(colorQuality),
+  'core is deterministic color math, not product state ownership');
 check('V2.32 resilience lifecycle lives inside the storage runtime',
   storageHardening.includes('function openResilienceDB(')&&
   storageHardening.includes('async function writeResilienceSnapshot(')&&

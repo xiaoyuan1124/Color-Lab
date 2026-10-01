@@ -5,6 +5,7 @@ const webkitConfig=fs.readFileSync('playwright.webkit.config.js','utf8');
 const webkitCore=fs.readFileSync('tests/e2e/webkit-core.spec.js','utf8');
 const qualityWorkflow=fs.readFileSync('.github/workflows/quality.yml','utf8');
 const storageHardening=fs.readFileSync('runtime/storage-hardening.js','utf8');
+const colorQuality=fs.readFileSync('core/color-quality.js','utf8');
 const pwaStart=html.indexOf('/* Color Lab V2.35.0 PWA / iPhone Update Hardening');
 const pwaEnd=html.indexOf('\nconst MODES={',pwaStart);
 const pwaHealth=pwaStart>=0&&pwaEnd>pwaStart?html.slice(pwaStart,pwaEnd):'';
@@ -33,7 +34,7 @@ const gradientStudioCss=fs.readFileSync('runtime/gradient-studio.css','utf8');
 const recommendationEngine=fs.readFileSync('data/recommendation-engine.js','utf8');
 const qrVendor=fs.readFileSync('vendor/qrcode.min.js','utf8');
 const qrLicense=fs.readFileSync('vendor/qrcode.LICENSE.txt','utf8');
-const appSource=html+'\n'+storageHardening+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio+'\n'+recommendationEngine;
+const appSource=html+'\n'+storageHardening+'\n'+colorQuality+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio+'\n'+recommendationEngine;
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -54,6 +55,8 @@ else {
 }
 try { new Function(storageHardening); pass('storage hardening runtime syntax'); }
 catch(e){ fail('storage hardening runtime syntax: '+e.message); }
+try { new Function(colorQuality); pass('core color quality syntax'); }
+catch(e){ fail('core color quality syntax: '+e.message); }
 try { new Function(pwaHealth); pass('pwa health runtime syntax'); }
 catch(e){ fail('pwa health runtime syntax: '+e.message); }
 try { new Function(uxCleanup); pass('ux cleanup runtime syntax'); }
@@ -159,13 +162,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2360")) fail('service worker cache version is not V2.36.0');
+if(!sw.includes("color-lab-v2370")) fail('service worker cache version is not V2.36.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.36.0') fail('package version must be 2.36.0');
+if(pkg.version!=='2.37.0') fail('package version must be 2.37.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.36.0')||!html.includes('<div class="version">V2.36.0</div>')||!html.includes("appVersion:'2.36.0'")) fail('V2.36.0 UI or backup version metadata missing');
-else pass('V2.36.0 version metadata');
+if(!html.includes('Color Lab V2.37.0')||!html.includes('<div class="version">V2.37.0</div>')||!html.includes("appVersion:'2.37.0'")) fail('V2.37.0 UI or backup version metadata missing');
+else pass('V2.37.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -703,7 +706,7 @@ if(!html.includes('id="pwaHealthMount"')||
    html.includes("navigator.serviceWorker.register('./sw.js').catch(()=>{})")||
    sw.includes('./runtime/pwa-health.js')||
    sw.includes('./runtime/pwa-health.css')||
-   !pwaHealth.includes("const COLORLAB_APP_VERSION='2.36.0'")||
+   !pwaHealth.includes("const COLORLAB_APP_VERSION='2.37.0'")||
    !pwaHealthCss.includes('.pwa-health{')){
   fail('V2.35.0 shell-integrated PWA health / UI contract missing');
 }else pass('V2.35.0 shell-integrated PWA controller + compact UI');
@@ -751,6 +754,23 @@ if(html.includes('<script src="./data/recommendation-engine.js"></script>')||
    !html.includes("$('#nextRecommendations').onclick=()=>ensureInspirationResources()")){
   fail('V2.36.0 lazy-load or recommendation behavior-preservation contract missing');
 }else pass('V2.36.0 Inspire-only lazy load + anti-repeat/batch/personalization semantics preserved');
+
+
+const v237CoreFunctions=['boundedCacheSet','clamp','hexToRgb','rgbToHex','lum','textFor','normHex','contrastRatio','hueDistance','srgbToLinear','linearToSrgb','toOKLCH','fromOKLCH','perceptualDistance','oklchLinearRgb','isLinearSrgbInGamut','gamutMapOKLCH','signedHueDelta','hueToward','ensureStructureContrast','cohesionPass','qualityRefineGenerated','qualityMetrics','relationVector','relationVectorDistance'];
+if(!html.includes('<script src="./core/color-quality.js"></script>')||
+   html.indexOf('./core/color-quality.js')>html.indexOf('./runtime/palette-tools.js')||
+   !sw.includes('./core/color-quality.js')||
+   v237CoreFunctions.some(fn=>!colorQuality.includes('function '+fn+'(')||html.includes('function '+fn+'('))||
+   !colorQuality.includes('const oklchCache=new Map()')||
+   !colorQuality.includes('const luminanceCache=new Map()')){
+  fail('V2.37.0 core color quality ownership / load-order contract missing');
+}else pass('V2.37.0 color quality core extracted before dependent runtimes + offline cached');
+
+if(/\bselectedColors\s*=/.test(colorQuality)||
+   /\bpalette\.(?:base|structure|accent)\s*=/.test(colorQuality)||
+   /localStorage|indexedDB|fetch\(/.test(colorQuality)){
+  fail('V2.37.0 core color quality must stay pure and local-state agnostic');
+}else pass('V2.37.0 color quality core is source-palette immutable and side-effect bounded');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
@@ -1135,7 +1155,7 @@ else pass('IG styling recommendation UI description');
 
 
 for(const fn of ['gamutMapOKLCH','cohesionPass','qualityRefineGenerated','qualityMetrics','semanticPhotoSwatches','fallbackPhotoClusters']){
-  if(!html.includes('function '+fn+'(')) fail('V1.5 quality function missing: '+fn);
+  if(!appSource.includes('function '+fn+'(')) fail('V1.5 quality function missing: '+fn);
 }
 pass('V1.5 quality engine functions present');
 
@@ -1234,7 +1254,7 @@ if(html.includes("sanitizeDraftRecord(JSON.parse(localStorage.getItem('colorlab.
 }else pass('draft restore uses safe JSON reader');
 
 
-if(!html.includes('function loadScriptOnce(')||!html.includes('const oklchCache=new Map()')||!html.includes('const luminanceCache=new Map()')){
+if(!html.includes('function loadScriptOnce(')||!colorQuality.includes('const oklchCache=new Map()')||!colorQuality.includes('const luminanceCache=new Map()')){
   fail('V1.9 lazy runtime or color caches missing');
 }else pass('V1.9 lazy runtime and color caches');
 

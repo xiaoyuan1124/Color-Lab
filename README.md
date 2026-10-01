@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.36.0**
+**目前版本：V2.37.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,19 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.37.0 Color Quality Architecture
+
+這一版延續架構硬化，不增加配色功能，也不改任何既有判斷公式：
+
+- 將共用色彩數學、OKLCH / gamut、contrast、relation vector 與 generated-palette quality guards 從 `index.html` 移到 `core/color-quality.js`
+- core 以本機 classic script 在 `palette-tools.js` 之前載入，讓 Accessibility、Context、Photo、Inspire 與 Compose 共用單一實作
+- 完整三色仍原樣保留；`qualityRefineGenerated(..., 3)` 不改色、不重排，Base / Structure / Accent 與 75 / 18 / 7 契約不變
+- core 不讀寫 localStorage / IndexedDB、不發網路請求，也不持有 `selectedColors` / `palette` 狀態
+- Service Worker 預快取 core，離線與 PWA 更新仍維持同一版本世代
+- 既有 `runtime/` 140 KiB budget 完全不放寬；新增獨立 16 KiB core module budget，並把 core 納入既有 440 KiB aggregate gate
+- Torture / Property / Chromium E2E / WebKit 都新增或調整為直接驗證抽離後的同一套品質函式
+- 不新增後端、登入、Supabase、AI 或付費 API
 
 ## V2.36.0 Recommendation Architecture
 

@@ -1715,3 +1715,26 @@ test('V2.36 Inspire lazy engine preserves anti-repeat and batch semantics', asyn
   expect(result.batch).toEqual([0,1,2,3,4]);
   expect(result.size).toBe(5);
 });
+
+test('V2.37 core color quality module preserves exact complete source palettes', async ({ page }) => {
+  await expect(page.locator('script[src="./core/color-quality.js"]')).toHaveCount(1);
+  const result=await page.evaluate(() => {
+    const source=['#112233','#445566','#AABBCC'];
+    selectedColors=[...source];
+    lockedSlots=[false,false,false];
+    activeSlot=0;seed=source[0];
+    const refined=qualityRefineGenerated(source,3);
+    generate(false);
+    return{
+      refined,
+      selected:[...selectedColors],
+      palette:paletteArtifactBase(),
+      qualityReady:typeof qualityMetrics==='function'&&typeof gamutMapOKLCH==='function'
+    };
+  });
+  expect(result.qualityReady).toBe(true);
+  expect(result.refined).toEqual(['#112233','#445566','#AABBCC']);
+  expect(result.selected).toEqual(['#112233','#445566','#AABBCC']);
+  expect(result.palette).toEqual({base:'#112233',structure:'#445566',accent:'#AABBCC'});
+});
+
