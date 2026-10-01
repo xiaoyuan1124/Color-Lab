@@ -6,6 +6,7 @@ const webkitCore=fs.readFileSync('tests/e2e/webkit-core.spec.js','utf8');
 const qualityWorkflow=fs.readFileSync('.github/workflows/quality.yml','utf8');
 const storageHardening=fs.readFileSync('runtime/storage-hardening.js','utf8');
 const colorQuality=fs.readFileSync('core/color-quality.js','utf8');
+const librarySearchCore=fs.readFileSync('core/library-search.js','utf8');
 const pwaStart=html.indexOf('/* Color Lab V2.35.0 PWA / iPhone Update Hardening');
 const pwaEnd=html.indexOf('\nconst MODES={',pwaStart);
 const pwaHealth=pwaStart>=0&&pwaEnd>pwaStart?html.slice(pwaStart,pwaEnd):'';
@@ -34,7 +35,7 @@ const gradientStudioCss=fs.readFileSync('runtime/gradient-studio.css','utf8');
 const recommendationEngine=fs.readFileSync('data/recommendation-engine.js','utf8');
 const qrVendor=fs.readFileSync('vendor/qrcode.min.js','utf8');
 const qrLicense=fs.readFileSync('vendor/qrcode.LICENSE.txt','utf8');
-const appSource=html+'\n'+storageHardening+'\n'+colorQuality+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio+'\n'+recommendationEngine;
+const appSource=html+'\n'+storageHardening+'\n'+colorQuality+'\n'+librarySearchCore+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio+'\n'+recommendationEngine;
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -57,6 +58,8 @@ try { new Function(storageHardening); pass('storage hardening runtime syntax'); 
 catch(e){ fail('storage hardening runtime syntax: '+e.message); }
 try { new Function(colorQuality); pass('core color quality syntax'); }
 catch(e){ fail('core color quality syntax: '+e.message); }
+try { new Function(librarySearchCore); pass('core library search syntax'); }
+catch(e){ fail('core library search syntax: '+e.message); }
 try { new Function(pwaHealth); pass('pwa health runtime syntax'); }
 catch(e){ fail('pwa health runtime syntax: '+e.message); }
 try { new Function(uxCleanup); pass('ux cleanup runtime syntax'); }
@@ -246,24 +249,29 @@ if(!html.includes('id="photoCameraTrigger"')||
 
 if(!html.includes('搜尋名稱、HEX、標籤、色系或調性')||
    !html.includes('可搜尋：藍、紅、柔和、鮮明、深色、淺色')||
-   !localProjects.includes('function libraryColorSemanticTerms(')||
-   !localProjects.includes('function libraryPaletteSemanticTerms(')||
+   !librarySearchCore.includes('function libraryColorSemanticTerms(')||
+   !librarySearchCore.includes('function libraryPaletteSemanticTerms(')||
    !localProjects.includes('function librarySearchMatches(')||
    !html.includes('return librarySearchMatches(x,q);')){
   fail('V2.46.0 semantic Library search contract missing');
 }else pass('V2.46.0 local semantic Library search');
 
-if(!localProjects.includes("terms.push('中性','灰','灰色','neutral')")||
-   !localProjects.includes("terms.push('藍','藍色','blue')")||
-   !localProjects.includes("terms.push('柔和','低彩度','muted')")||
-   !localProjects.includes("terms.push('鮮明','高彩度','vivid')")||
-   !localProjects.includes("terms.push('app','網頁','介面','ui','簡報')")||
-   !localProjects.includes("terms.push('室內','穿搭','interior','fashion')")||
-   !localProjects.includes("terms.push('品牌','brand','海報')")||
+if(!librarySearchCore.includes("terms.push('中性','灰','灰色','neutral')")||
+   !librarySearchCore.includes("terms.push('藍','藍色','blue')")||
+   !librarySearchCore.includes("terms.push('柔和','低彩度','muted')")||
+   !librarySearchCore.includes("terms.push('鮮明','高彩度','vivid')")||
+   !librarySearchCore.includes("terms.push('app','網頁','介面','ui','簡報')")||
+   !librarySearchCore.includes("terms.push('室內','穿搭','interior','fashion')")||
+   !librarySearchCore.includes("terms.push('品牌','brand','海報')")||
    !localProjects.includes("return terms.every(term=>haystack.includes(term))")||
    !html.includes('品牌、室內、穿搭、簡報')){
   fail('V2.46.0 color-family / tone / context / multi-token search semantics missing');
 }else pass('V2.46.0 color family + tone + context + AND search semantics');
+
+if(!html.includes('<script src="./core/library-search.js"></script>')||
+   !sw.includes('./core/library-search.js')){
+  fail('V2.46.0 semantic Library core load/offline contract missing');
+}else pass('V2.46.0 semantic Library core load + offline cache');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
