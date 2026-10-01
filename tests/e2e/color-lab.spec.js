@@ -2384,3 +2384,39 @@ test('V2.49 collapses secondary Library tools and reopens help without changing 
   expect(await page.evaluate(() => storageReadRaw(FIRST_RUN_GUIDE_KEY,''))).toBe('done');
   expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before.palette);
 });
+
+
+test('V2.50 professional handoff matches Lab D50 reference and stays source-safe', async ({ page }) => {
+  const reference=await page.evaluate(() => ({
+    lab:hexToLabD50('#7654CD'),
+    white:hexToCmykReference('#FFFFFF'),
+    black:hexToCmykReference('#000000'),
+    red:hexToCmykReference('#FF0000')
+  }));
+
+  expect(reference.lab.l).toBeCloseTo(44.36,2);
+  expect(reference.lab.a).toBeCloseTo(36.05,2);
+  expect(reference.lab.b).toBeCloseTo(-58.99,2);
+  expect(reference.lab.whitePoint).toBe('D50');
+  expect(reference.white).toMatchObject({c:0,m:0,y:0,k:0});
+  expect(reference.black).toMatchObject({c:0,m:0,y:0,k:100});
+  expect(reference.red.c).toBeCloseTo(0,6);
+  expect(reference.red.m).toBeCloseTo(100,6);
+  expect(reference.red.y).toBeCloseTo(100,6);
+  expect(reference.red.k).toBeCloseTo(0,6);
+
+  await setExactPalette(page,['#7654CD','#445566','#FF0000']);
+  const before=await page.evaluate(() => paletteArtifactBase());
+  await page.locator('#handoffMore > summary').click();
+  await expect(page.locator('#professionalHandoff')).toBeVisible();
+  await expect(page.locator('#professionalColorValues .professional-color-row')).toHaveCount(3);
+  await expect(page.locator('#professionalHandoff')).toContainText('LAB D50');
+  await expect(page.locator('#professionalHandoff')).toContainText('CMYK 參考');
+  await expect(page.locator('#professionalHandoff')).toContainText('ICC profile');
+
+  const text=await page.evaluate(() => professionalHandoffText());
+  expect(text).toContain('Base 75% #7654CD');
+  expect(text).toContain('Lab D50 44.4, 36, -59');
+  expect(text).toContain('CMYK = unprofiled sRGB reference');
+  expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before);
+});
