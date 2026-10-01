@@ -684,6 +684,29 @@ check('V2.45 first-run copy makes Corner Fan discoverable without adding permane
   !html.includes('class="bottom-tab'),
   'navigation remains on-demand while first use explains the entry point');
 
+check('V2.46 camera and gallery inputs share one Photo load path',
+  html.includes('id="photoCameraInput" type="file" accept="image/*" capture="environment" hidden')&&
+  appText.includes('function handlePhotoInputChange(')&&
+  appText.includes("photoInput.addEventListener('change',handlePhotoInputChange)")&&
+  appText.includes("photoCameraInput.addEventListener('change',handlePhotoInputChange)")&&
+  appText.includes('if(file)loadPhoto(file)'),
+  'camera capture and gallery selection converge on the existing loadPhoto lifecycle');
+
+check('V2.46 semantic Library search is derived and schema-free',
+  appText.includes('function libraryColorSemanticTerms(')&&
+  appText.includes('function libraryPaletteSemanticTerms(')&&
+  appText.includes('function librarySearchMatches(')&&
+  appText.includes('return terms.every(term=>haystack.includes(term))')&&
+  !/function libraryPaletteSemanticTerms\([\s\S]{0,1800}storageWrite/.test(appText)&&
+  !/function libraryPaletteSemanticTerms\([\s\S]{0,1800}selectedColors\s*=/.test(appText),
+  'search terms are derived from saved colors without mutating storage or Compose source state');
+
+check('V2.46 semantic search keeps exact legacy fields in the index',
+  appText.includes('(x.name&&x.name.trim())')&&
+  appText.includes('x.seed,x.palette?.base,x.palette?.structure,x.palette?.accent')&&
+  appText.includes('...tags,x.folder||\'\',localProjectSearchText(x)'),
+  'name, HEX, tags, folders, and project names remain searchable alongside semantic color terms');
+
 check('V2.32 resilience lifecycle lives inside the storage runtime',
   storageHardening.includes('function openResilienceDB(')&&
   storageHardening.includes('async function writeResilienceSnapshot(')&&
