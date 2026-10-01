@@ -718,11 +718,11 @@ if(!appSource.includes('const LEARNING_CONCEPTS=')||!appSource.includes('data-le
   fail('V2.6 contextual learning layer missing');
 }else pass('V2.6 contextual learning layer');
 
-if(!html.includes('function photoPaletteFromRoles(')||!html.includes('function usePhotoPalette(')||!html.includes('id="photoUsePalette"')){
+if(!appSource.includes('function photoPaletteFromRoles(')||!appSource.includes('function usePhotoPalette(')||!html.includes('id="photoUsePalette"')){
   fail('V2.6 Photo to Compose bridge missing');
 }else pass('V2.6 Photo to Compose bridge');
 
-if(!html.includes('function photoCurrentRelationship(')||!html.includes('與目前三色')){
+if(!appSource.includes('function photoCurrentRelationship(')||!appSource.includes('與目前三色')){
   fail('V2.6 Compose to Photo comparison missing');
 }else pass('V2.6 Compose to Photo comparison');
 
@@ -1174,7 +1174,7 @@ if(!html.includes('selectDiverseRecommendations(candidates,30)')||
 
 
 for(const fn of ['photoCompositionProfile','renderPhotoInsight']){
-  if(!html.includes('function '+fn+'(')) fail('V1.9 photo intelligence function missing: '+fn);
+  if(!appSource.includes('function '+fn+'(')) fail('V1.9 photo intelligence function missing: '+fn);
 }
 pass('V1.9 photo intelligence functions present');
 
@@ -1189,7 +1189,7 @@ if(!html.includes("const clusters=fallbackPhotoClusters(region);")||!html.includ
 
 
 for(const fn of ['photoDominanceScore','photoCompositionProfile','detectPhotoColorCapability','updatePhotoColorSpaceNote']){
-  if(!html.includes('function '+fn+'(')) fail('V1.9 photo analysis function missing: '+fn);
+  if(!appSource.includes('function '+fn+'(')) fail('V1.9 photo analysis function missing: '+fn);
 }
 pass('V1.9 edge-aware photo analysis functions present');
 
