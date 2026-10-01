@@ -258,7 +258,7 @@ if(!html.includes('搜尋名稱、HEX、標籤、色系或調性')||
   fail('V2.46.0 semantic Library search contract missing');
 }else pass('V2.46.0 local semantic Library search');
 
-if(!html.includes('id="libraryQuickSearch" aria-label="快速搜尋收藏"')||
+if(!html.includes('id="libraryQuickSearch" role="group" aria-label="快速搜尋收藏"')||
    !html.includes('id="libraryQuickClear" hidden>清除搜尋</button>')||
    !html.includes('data-library-quick-term="藍" aria-pressed="false"')||
    !html.includes('data-library-quick-term="室內" aria-pressed="false"')||
