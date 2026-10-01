@@ -146,13 +146,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2310")) fail('service worker cache version is not V2.31.0');
+if(!sw.includes("color-lab-v2320")) fail('service worker cache version is not V2.32.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.31.0') fail('package version must be 2.31.0');
+if(pkg.version!=='2.32.0') fail('package version must be 2.32.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.31.0')||!html.includes('<div class="version">V2.31.0</div>')||!html.includes("appVersion:'2.31.0'")) fail('V2.31.0 UI or backup version metadata missing');
-else pass('V2.31.0 version metadata');
+if(!html.includes('Color Lab V2.32.0')||!html.includes('<div class="version">V2.32.0</div>')||!html.includes("appVersion:'2.32.0'")) fail('V2.32.0 UI or backup version metadata missing');
+else pass('V2.32.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -459,8 +459,8 @@ if(!html.includes('<script src="./runtime/local-projects.js"></script>')||
 }else pass('V2.26.0 Local Projects runtime + UI');
 
 if(!html.includes("schema:'color-lab-backup-v5'")||
-   !html.includes("projects:readLocalProjects()")||
-   !html.includes("schema:'color-lab-shadow-v4'")||
+   !storageHardening.includes("projects:readLocalProjects()")||
+   !storageHardening.includes("schema:'color-lab-shadow-v4'")||
    !html.includes("projectId:sanitizeProjectId(x.projectId)")||
    !html.includes("localProjectMatches(x)")||
    !localProjects.includes("function localProjectSearchText(")||
@@ -561,9 +561,9 @@ if(!html.includes('<script src="./runtime/storage-hardening.js"></script>')||
 }else pass('V2.30.0 safe local storage runtime + offline cache');
 
 if(!storageHardening.includes('function storageNeedsRecovery(')||
-   !html.includes("const needsProjects=storageNeedsRecovery(LOCAL_PROJECTS_KEY,Array.isArray)")||
-   !html.includes("const needsSaved=storageNeedsRecovery('colorlab.saved',Array.isArray)")||
-   html.includes('const needsSaved=currentSaved.length===0')||
+   !storageHardening.includes("const needsProjects=storageNeedsRecovery(LOCAL_PROJECTS_KEY,Array.isArray)")||
+   !storageHardening.includes("const needsSaved=storageNeedsRecovery('colorlab.saved',Array.isArray)")||
+   storageHardening.includes('const needsSaved=currentSaved.length===0')||
    !storageHardening.includes("storageTransaction(keys,()=>")||
    !localProjects.includes("storageTransaction(['colorlab.saved',LOCAL_PROJECTS_KEY]")||
    !localProjects.includes("if(!storageWriteJson('colorlab.saved',data))return")){
@@ -616,6 +616,26 @@ if(!html.includes("if(deep?.open)renderDeepDiveVisible()")||
    !html.includes('initDeepDiveUx();')){
   fail('V2.31.0 deep-dive render integration contract missing');
 }else pass('V2.31.0 deep-dive render integration avoids hidden-section work');
+
+if(!storageHardening.includes('function openResilienceDB(')||
+   !storageHardening.includes('async function writeResilienceSnapshot(')||
+   !storageHardening.includes('function scheduleResilienceBackup(')||
+   !storageHardening.includes('async function restoreResilienceIfNeeded(')||
+   html.includes('function openResilienceDB(')||
+   html.includes('async function writeResilienceSnapshot(')||
+   html.includes('function scheduleResilienceBackup(')||
+   html.includes('async function restoreResilienceIfNeeded(')||
+   html.includes('let resilienceTimer=')){
+  fail('V2.32.0 storage architecture modularization contract missing');
+}else pass('V2.32.0 IndexedDB resilience lifecycle moved out of index');
+
+if(!appSource.includes('function openResilienceDB(')||
+   !appSource.includes("schema:'color-lab-shadow-v4'")||
+   !appSource.includes('storageNeedsRecovery(')||
+   !appSource.includes('storageTransaction(keys,()=>')||
+   !appSource.includes("reader.onerror=()=>toast('備份檔讀取失敗')")){
+  fail('V2.32.0 storage behavior continuity contract missing');
+}else pass('V2.32.0 storage behavior continuity preserved through runtime boundary');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
@@ -1076,7 +1096,7 @@ if(!html.includes("function safeJsonRead(")||!html.includes("function readRecent
   fail('safe startup storage readers missing');
 }else pass('safe startup storage readers');
 
-const startupWindow=html.slice(0,html.indexOf("function openResilienceDB"));
+const startupWindow=html.slice(0,html.indexOf("function snapshotState(){"));
 if(startupWindow.includes("JSON.parse(localStorage.getItem('colorlab.compareA')")||
    startupWindow.includes("JSON.parse(localStorage.getItem('colorlab.compareB')")||
    startupWindow.includes("JSON.parse(localStorage.getItem('colorlab.recent')")){
@@ -1276,7 +1296,7 @@ if(!html.includes("colorlab.preferenceEnabled")||!html.includes("color-lab-backu
   fail('V2.3 personalization setting persistence or current backup missing');
 }else pass('V2.3 setting persistence in current backup');
 
-if(!html.includes("schema:'color-lab-shadow-v4'")||!html.includes("preferenceEnabled,")){
+if(!storageHardening.includes("schema:'color-lab-shadow-v4'")||!storageHardening.includes("preferenceEnabled,")){
   fail('V2.3 resilience shadow does not include personalization setting');
 }else pass('V2.3 resilience shadow includes personalization setting');
 
