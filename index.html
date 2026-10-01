@@ -2869,6 +2869,7 @@ let preferenceState=null,preferenceEnabled=true;
 const lazyScriptPromises=new Map();
 const qualityScoreCache=new Map();
 let secondaryRenderToken=0;
+let secondaryRenderPending=false;
 let sortableLoadToken=0;
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 function loadScriptOnce(src,globalName=''){
@@ -4360,13 +4361,22 @@ function render(){
   scheduleSecondaryRender();
 }
 function scheduleSecondaryRender(){
-  const token=++secondaryRenderToken;
+  secondaryRenderToken++;
+  if(secondaryRenderPending)return;
+  secondaryRenderPending=true;
   const run=()=>{
-    if(token!==secondaryRenderToken)return;
+    secondaryRenderPending=false;
+    const token=secondaryRenderToken;
     const active=document.querySelector('.tab-view.active')?.dataset.view||'compose';
-    if(active==='inspire'){
-      ensureInspirationResources().then(()=>{if(token===secondaryRenderToken){renderIdeas();renderRecommendations()}}).catch(()=>{if(token===secondaryRenderToken)toast('推薦資源載入失敗，請稍後再試')});
-    }
+    if(active!=='inspire')return;
+    ensureInspirationResources().then(()=>{
+      const stillActive=(document.querySelector('.tab-view.active')?.dataset.view||'compose')==='inspire';
+      if(token!==secondaryRenderToken||!stillActive)return;
+      renderIdeas();renderRecommendations();
+    }).catch(()=>{
+      const stillActive=(document.querySelector('.tab-view.active')?.dataset.view||'compose')==='inspire';
+      if(token===secondaryRenderToken&&stillActive)toast('推薦資源載入失敗，請稍後再試');
+    });
   };
   if('requestIdleCallback'in window)requestIdleCallback(run,{timeout:180});
   else setTimeout(run,24);
@@ -4956,10 +4966,8 @@ function switchTab(name,scrollTop=true){
   updatePhotoTarget();
   if(name==='library'){renderSaved();updateInstallCard()}
   if(name==='photo'){setPhotoMode(photoMode);updatePhotoColorSpaceNote()}
-  if(name==='inspire'){
-    renderCompare();
-    scheduleSecondaryRender();
-  }
+  if(name==='inspire')renderCompare();
+  scheduleSecondaryRender();
   if(name==='compose'&&$('#composeDeepDive')?.open)scheduleDeepDiveVisibleRender();
   setCornerNavOpen(false);
   if(scrollTop){
