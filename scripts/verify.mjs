@@ -1260,7 +1260,7 @@ if(!appSource.includes("function previewThemePalette(theme=previewTheme)")||
 if(!appSource.includes("$$('#contextTabs [data-context]').forEach")||
    !appSource.includes("$$('#contextThemeModes [data-preview-theme]').forEach")||
    !appSource.includes("$$('[data-preview-theme]').forEach")||
-   !appSource.includes("$$('[data-export-format]').forEach")){
+   !appSource.includes("document.querySelectorAll('[data-export-format]').forEach")){
   fail('V2.12.0 collection controls are not bound with querySelectorAll helper');
 }else pass('V2.12.0 collection controls use querySelectorAll helper');
 
