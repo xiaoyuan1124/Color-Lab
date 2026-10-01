@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.33.0**
+**目前版本：V2.34.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,20 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.34.0 WebKit / Safari Compatibility Gate
+
+這一版不增加產品功能，先把 iPhone Safari 類風險納入自動驗收：
+
+- GitHub Actions 新增獨立 WebKit job，不取代既有 Chromium / axe / Lighthouse / CodeQL
+- 使用 390 × 844、touch、mobile WebKit 設定模擬手機 Safari 類執行環境
+- 核心 Gate 驗證 Compose 啟動、75 / 18 / 7、Corner Fan 導航
+- 驗證 exact Base / Structure / Accent 在 Deep Dive 操作後不被改寫，並驗證 accordion section 本機記憶
+- 驗證 LocalStorage 收藏跨 reload 保留 exact palette
+- 驗證 Share Snapshot hash 可在 WebKit 還原 exact 三色與 context / theme
+- 驗證本機圖片 Blob → Image → Canvas → cluster analysis 路徑可在 WebKit 執行
+- WebKit 報告與 failure artifacts 獨立保存 7 天
+- 此 Gate 是 Safari 類相容性自動測試，**不宣稱等同真實 iPhone Safari / PWA 實機驗收**
 
 ## V2.33.0 Photo Analysis Architecture
 

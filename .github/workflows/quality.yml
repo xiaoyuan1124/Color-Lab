@@ -74,3 +74,29 @@ jobs:
             test-results
           if-no-files-found: ignore
           retention-days: 7
+
+
+  webkit:
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Install WebKit quality tools
+        run: npm install --no-audit --no-fund
+      - name: Install WebKit
+        run: npx playwright install --with-deps webkit
+      - name: WebKit mobile compatibility gate
+        run: npm run test:webkit:core
+      - name: Upload WebKit artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: webkit-quality
+          path: |
+            playwright-report-webkit
+            test-results-webkit
+          if-no-files-found: ignore
+          retention-days: 7
