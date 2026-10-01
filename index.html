@@ -5325,7 +5325,7 @@ function libraryQuickQueryTerms(){
 function syncLibraryQuickSearch(){
   const input=$('#librarySearch');
   const terms=libraryQuickQueryTerms().map(x=>x.toLocaleLowerCase('zh-Hant'));
-  $('#libraryQuickSearch [data-library-quick-term]').forEach(button=>{
+  document.querySelectorAll('#libraryQuickSearch [data-library-quick-term]').forEach(button=>{
     const key=(button.dataset.libraryQuickTerm||'').toLocaleLowerCase('zh-Hant');
     button.setAttribute('aria-pressed',terms.includes(key)?'true':'false');
   });
