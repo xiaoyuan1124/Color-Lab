@@ -1396,3 +1396,97 @@ test('V2.30 backup import rolls back all keys when a later storage write fails',
   expect(result.saved[0].palette).toEqual({base:'#112233',structure:'#445566',accent:'#AABBCC'});
   expect(result.recent).toEqual(['#010101']);
 });
+
+
+test('V2.31 deep dive behaves as a three-section accordion and remembers the last section', async ({ page }) => {
+  const deep=page.locator('#composeDeepDive');
+  await deep.locator(':scope > summary').click();
+
+  await expect(page.locator('#deepUnderstanding')).toHaveAttribute('open','');
+  await expect(page.locator('#deepValidation')).not.toHaveAttribute('open','');
+  await expect(page.locator('#deepApplication')).not.toHaveAttribute('open','');
+
+  await page.locator('#deepValidation > summary').click();
+  await expect(page.locator('#deepUnderstanding')).not.toHaveAttribute('open','');
+  await expect(page.locator('#deepValidation')).toHaveAttribute('open','');
+  await expect(page.locator('#deepApplication')).not.toHaveAttribute('open','');
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('colorlab.deepSection'))).toBe('deepValidation');
+
+  await deep.locator(':scope > summary').click();
+  await expect(deep).not.toHaveAttribute('open','');
+  await deep.locator(':scope > summary').click();
+  await expect(page.locator('#deepValidation')).toHaveAttribute('open','');
+  await expect(page.locator('#deepUnderstanding')).not.toHaveAttribute('open','');
+  await expect(page.locator('#deepApplication')).not.toHaveAttribute('open','');
+});
+
+test('V2.31 reload restores the preferred deep-dive section only when Deep Dive opens', async ({ page }) => {
+  await page.evaluate(() => localStorage.setItem('colorlab.deepSection','deepApplication'));
+  await page.reload();
+  await expect(page.locator('.tab-view[data-view="compose"]')).toBeVisible();
+
+  await expect(page.locator('#composeDeepDive')).not.toHaveAttribute('open','');
+  await page.locator('#composeDeepDive > summary').click();
+
+  await expect(page.locator('#deepApplication')).toHaveAttribute('open','');
+  await expect(page.locator('#deepUnderstanding')).not.toHaveAttribute('open','');
+  await expect(page.locator('#deepValidation')).not.toHaveAttribute('open','');
+});
+
+test('V2.31 visible-section renderer avoids hidden work and never mutates source colors', async ({ page }) => {
+  const result=await page.evaluate(async () => {
+    selectedColors=['#E7DCC8','#274C55','#C65338'];
+    lockedSlots=[false,false,false];activeSlot=0;seed=selectedColors[0];generate(false);
+    const before=paletteArtifactBase();
+    const names=[
+      'renderRelationshipExplanation','renderColorRelationshipMap','renderToneExplorer',
+      'renderRoleScale','renderPaletteValidation','renderVision','renderContextPreview',
+      'renderGradientStudio','renderCustomDesignPreview'
+    ];
+    const originals={},calls={};
+    names.forEach(name=>{
+      originals[name]=window[name];
+      calls[name]=0;
+      window[name]=()=>{calls[name]++};
+    });
+    const waitFrame=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    const snapshot=()=>Object.fromEntries(names.map(name=>[name,calls[name]]));
+    const reset=()=>names.forEach(name=>{calls[name]=0});
+
+    document.getElementById('composeDeepDive').open=true;
+
+    openDeepDiveSection('deepUnderstanding');
+    await waitFrame();reset();renderDeepDiveVisible();
+    const understanding=snapshot();
+
+    openDeepDiveSection('deepValidation');
+    await waitFrame();reset();renderDeepDiveVisible();
+    const validation=snapshot();
+
+    openDeepDiveSection('deepApplication');
+    await waitFrame();reset();renderDeepDiveVisible();
+    const application=snapshot();
+
+    names.forEach(name=>{window[name]=originals[name]});
+    return{before,after:paletteArtifactBase(),understanding,validation,application};
+  });
+
+  expect(result.understanding.renderRelationshipExplanation).toBe(1);
+  expect(result.understanding.renderColorRelationshipMap).toBe(1);
+  expect(result.understanding.renderToneExplorer).toBe(1);
+  expect(result.understanding.renderPaletteValidation).toBe(0);
+  expect(result.understanding.renderVision).toBe(0);
+  expect(result.understanding.renderContextPreview).toBe(0);
+
+  expect(result.validation.renderPaletteValidation).toBe(1);
+  expect(result.validation.renderVision).toBe(1);
+  expect(result.validation.renderRelationshipExplanation).toBe(0);
+  expect(result.validation.renderContextPreview).toBe(0);
+
+  expect(result.application.renderContextPreview).toBe(1);
+  expect(result.application.renderRelationshipExplanation).toBe(0);
+  expect(result.application.renderPaletteValidation).toBe(0);
+  expect(result.application.renderVision).toBe(0);
+
+  expect(result.after).toEqual(result.before);
+});
