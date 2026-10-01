@@ -308,3 +308,23 @@ test('WebKit V2.42 defers hidden Application preview rendering until section rev
   await expect(page.locator('#contextThemeNote')).toContainText('綠色弱近似模擬');
   await expect(page.locator('.cp2-room-wall')).toHaveCount(1);
 });
+
+
+test('WebKit V2.43 keeps consolidated mobile actions discoverable and source-safe', async ({ page }) => {
+  await setExactPalette(page,['#112233','#445566','#AABBCC']);
+  await page.evaluate(() => renderComboSlots());
+  const before=await page.evaluate(() => paletteArtifactBase());
+
+  await expect(page.locator('#generate')).toContainText('分析這組配色');
+  await expect(page.locator('#handoffMore')).not.toHaveAttribute('open','');
+  await expect(page.locator('[data-export-format="css"]')).not.toBeVisible();
+  await page.locator('#handoffMore > summary').click();
+  await expect(page.locator('[data-export-format="css"]')).toBeVisible();
+
+  await expect(page.locator('#compareMore')).not.toHaveAttribute('open','');
+  await page.locator('#compareMore > summary').click();
+  await expect(page.locator('#setCompareA')).toBeVisible();
+
+  const after=await page.evaluate(() => paletteArtifactBase());
+  expect(after).toEqual(before);
+});
