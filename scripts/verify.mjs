@@ -2,6 +2,8 @@ import fs from 'node:fs';
 
 const html=fs.readFileSync('index.html','utf8');
 const storageHardening=fs.readFileSync('runtime/storage-hardening.js','utf8');
+const uxCleanup=fs.readFileSync('runtime/ux-cleanup.js','utf8');
+const uxCleanupCss=fs.readFileSync('runtime/ux-cleanup.css','utf8');
 const paletteTools=fs.readFileSync('runtime/palette-tools.js','utf8');
 const toneExplorer=fs.readFileSync('runtime/tone-explorer.js','utf8');
 const photoPalette=fs.readFileSync('runtime/photo-palette.js','utf8');
@@ -23,7 +25,7 @@ const gradientStudio=fs.readFileSync('runtime/gradient-studio.js','utf8');
 const gradientStudioCss=fs.readFileSync('runtime/gradient-studio.css','utf8');
 const qrVendor=fs.readFileSync('vendor/qrcode.min.js','utf8');
 const qrLicense=fs.readFileSync('vendor/qrcode.LICENSE.txt','utf8');
-const appSource=html+'\n'+storageHardening+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio;
+const appSource=html+'\n'+storageHardening+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio;
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -44,6 +46,8 @@ else {
 }
 try { new Function(storageHardening); pass('storage hardening runtime syntax'); }
 catch(e){ fail('storage hardening runtime syntax: '+e.message); }
+try { new Function(uxCleanup); pass('ux cleanup runtime syntax'); }
+catch(e){ fail('ux cleanup runtime syntax: '+e.message); }
 try { new Function(paletteTools); pass('palette tools runtime syntax'); }
 catch(e){ fail('palette tools runtime syntax: '+e.message); }
 try { new Function(toneExplorer); pass('tone explorer runtime syntax'); }
@@ -142,13 +146,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2300")) fail('service worker cache version is not V2.30.0');
+if(!sw.includes("color-lab-v2310")) fail('service worker cache version is not V2.31.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.30.0') fail('package version must be 2.30.0');
+if(pkg.version!=='2.31.0') fail('package version must be 2.31.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.30.0')||!html.includes('<div class="version">V2.30.0</div>')||!html.includes("appVersion:'2.30.0'")) fail('V2.30.0 UI or backup version metadata missing');
-else pass('V2.30.0 version metadata');
+if(!html.includes('Color Lab V2.31.0')||!html.includes('<div class="version">V2.31.0</div>')||!html.includes("appVersion:'2.31.0'")) fail('V2.31.0 UI or backup version metadata missing');
+else pass('V2.31.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -580,6 +584,39 @@ if(!sw.includes("const codeAsset=/\\/(?:runtime|data|vendor)\\//")||
   fail('V2.30.0 service worker code freshness contract missing');
 }else pass('V2.30.0 network-first code assets + offline fallback');
 
+if(!html.includes('<script src="./runtime/ux-cleanup.js"></script>')||
+   !html.includes('<link rel="stylesheet" href="./runtime/ux-cleanup.css">')||
+   !sw.includes('./runtime/ux-cleanup.js')||!sw.includes('./runtime/ux-cleanup.css')||
+   !html.includes('id="deepUnderstanding"')||
+   !html.includes('id="deepValidation"')||
+   !html.includes('id="deepApplication"')||
+   !uxCleanup.includes("const DEEP_DIVE_SECTIONS=['deepUnderstanding','deepValidation','deepApplication']")||
+   !uxCleanup.includes('function renderDeepDiveVisible(')||
+   !uxCleanup.includes('function openDeepDiveSection(')||
+   !uxCleanup.includes('function initDeepDiveUx(')||
+   !uxCleanupCss.includes('.deep-section>summary{')){
+  fail('V2.31.0 Deep Dive information architecture contract missing');
+}else pass('V2.31.0 three-section Deep Dive UX + offline runtime');
+
+if(!uxCleanup.includes("if(section==='deepUnderstanding')")||
+   !uxCleanup.includes("}else if(section==='deepValidation')")||
+   !uxCleanup.includes("}else if(section==='deepApplication')")||
+   !uxCleanup.includes("storageWriteRaw(DEEP_DIVE_SECTION_KEY,id,{silent:true})")||
+   !uxCleanup.includes("storageReadRaw(DEEP_DIVE_SECTION_KEY,'deepUnderstanding')")||
+   uxCleanup.includes('selectedColors=')||
+   uxCleanup.includes('palette.base=')||
+   uxCleanup.includes('palette.structure=')||
+   uxCleanup.includes('palette.accent=')){
+  fail('V2.31.0 visible-section render or source immutability contract missing');
+}else pass('V2.31.0 visible-section-only render + remembered section + source immutability');
+
+if(!html.includes("if(deep?.open)renderDeepDiveVisible()")||
+   html.includes("if(deep?.open){renderRelationshipExplanation();renderColorRelationshipMap();renderToneExplorer();renderPaletteValidation();")||
+   !html.includes("if(name==='compose'&&$('#composeDeepDive')?.open)requestAnimationFrame(renderDeepDiveVisible)")||
+   !html.includes('initDeepDiveUx();')){
+  fail('V2.31.0 deep-dive render integration contract missing');
+}else pass('V2.31.0 deep-dive render integration avoids hidden-section work');
+
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
    !html.includes("padding:10px 0 16px var(--app-gutter)")){
@@ -663,8 +700,9 @@ if(!html.includes('--text-3:#716C66')||
   fail('V2.6.1 accessibility contrast or label hardening missing');
 }else pass('V2.6.1 accessibility contrast and labels');
 
-if(!html.includes("if(deep?.open){renderVision();renderColorRelationshipMap();renderToneExplorer();renderPaletteValidation();renderContextPreview()")||
-   !html.includes("$('#composeDeepDive').addEventListener('toggle'")||
+if(!html.includes("if(deep?.open)renderDeepDiveVisible()")||
+   !uxCleanup.includes("deep.addEventListener('toggle'")||
+   !uxCleanup.includes('requestAnimationFrame(renderDeepDiveVisible)')||
    !html.includes('color:var(--text-3);')){
   fail('V2.6.2 deferred deep-dive or contrast follow-up missing');
 }else pass('V2.6.2 deferred deep-dive and contrast follow-up');
@@ -715,7 +753,7 @@ const startupRenderStart=html.indexOf('function render(){');
 const startupRenderEnd=html.indexOf('function scheduleSecondaryRender()',startupRenderStart);
 const startupRenderBlock=startupRenderStart>=0&&startupRenderEnd>startupRenderStart?html.slice(startupRenderStart,startupRenderEnd):'';
 if(startupRenderBlock.includes('renderRelationshipExplanation();scheduleSecondaryRender()')||
-   !startupRenderBlock.includes("if(deep?.open){renderRelationshipExplanation();renderColorRelationshipMap();renderToneExplorer();renderPaletteValidation();")){
+   !startupRenderBlock.includes("if(deep?.open)renderDeepDiveVisible()")){
   fail('V2.11.0 hidden relationship rendering still blocks startup');
 }else pass('V2.11.0 hidden relationship rendering deferred');
 
