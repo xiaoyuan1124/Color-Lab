@@ -717,9 +717,10 @@ if(!pwaHealth.includes("if(typeof persistDraft==='function')persistDraft()")||
    !pwaHealth.includes("window.addEventListener('offline',pwaConnectivityState)")||
    !pwaHealth.includes("window.addEventListener('online',()=>{pwaConnectivityState();pwaCheckForUpdate(true)})")||
    !pwaHealth.includes("PWA_UPDATE_CHECK_INTERVAL=20*60*1000")||
-   !pwaHealth.includes("document.visibilityState==='visible'")){
-  fail('V2.35.0 safe-update persistence / connectivity / throttled update-check contract missing');
-}else pass('V2.35.0 save-before-update + offline state + throttled foreground checks');
+   !pwaHealth.includes("document.visibilityState==='visible'")||
+   !webkitCore.includes('WebKit PWA update prompt remains explicit')){
+  fail('V2.35.0 safe-update persistence / connectivity / WebKit coverage contract missing');
+}else pass('V2.35.0 save-before-update + offline state + throttled checks + WebKit coverage');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
