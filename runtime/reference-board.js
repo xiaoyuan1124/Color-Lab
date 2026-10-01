@@ -7,7 +7,7 @@ function referenceBoardSafeName(value){
   return (String(value||'color-lab').trim().replace(/[^\w\u4e00-\u9fff-]+/g,'-').replace(/^-+|-+$/g,'')||'color-lab').slice(0,48);
 }
 function referenceBoardHasPhoto(){
-  return typeof photoObjectURL!=='undefined'&&!!photoObjectURL&&
+  return typeof photoLoaded!=='undefined'&&photoLoaded&&
     typeof photoCanvas!=='undefined'&&photoCanvas&&photoCanvas.width>0&&photoCanvas.height>0;
 }
 async function referenceBoardData(){

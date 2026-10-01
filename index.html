@@ -2230,7 +2230,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.38.0</div>
+    <div class="version">V2.39.0</div>
   </div>
 
   <main class="app-main">
@@ -2605,7 +2605,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.38.0</div>
+  <div class="footer app-footer">Color Lab V2.39.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2715,7 +2715,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 /* Color Lab V2.35.0 PWA / iPhone Update Hardening
    User-mediated service worker activation prevents mixed-version sessions. */
 
-const COLORLAB_APP_VERSION='2.38.0';
+const COLORLAB_APP_VERSION='2.39.0';
 const PWA_UPDATE_CHECK_INTERVAL=20*60*1000;
 let pwaRegistration=null;
 let pwaUpdateReady=false;
@@ -3140,7 +3140,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v5',appVersion:'2.38.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.39.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -4547,7 +4547,7 @@ const photoInput=$('#photoInput'),photoCanvas=$('#photoCanvas'),photoPanel=$('#p
 const photoCtx=photoCanvas.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'});
 let lastPhotoRoles=[],lastPhotoClusters=[];
 const magnifier=$('#magnifier'),magnifierCanvas=$('#magnifierCanvas'),magnifierCtx=magnifierCanvas.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'}),pickReadout=$('#pickReadout');
-let photoObjectURL=null,photoPicking=false,lastPicked=null;
+let photoObjectURL=null,photoLoadToken=0,photoLoadImage=null,photoLoaded=false,photoPicking=false,lastPicked=null;
 
 function renderPhotoPalette(items){
   const host=$('#photoAuto'),box=$('#photoSwatches');if(!host||!box)return;
@@ -4751,12 +4751,28 @@ function finishPhotoRegion(p){
   extractPhotoPalette({x,y,w,h});toast('已分析框選區域');
 }
 function openPhotoPicker(){photoInput.click()}
+function releasePhotoObjectURL(url){
+  if(!url)return;
+  try{URL.revokeObjectURL(url)}catch(_){}
+  if(photoObjectURL===url)photoObjectURL=null;
+}
+function cancelPendingPhotoLoad(){
+  photoLoadToken++;
+  if(photoLoadImage){photoLoadImage.onload=null;photoLoadImage.onerror=null;photoLoadImage=null}
+  if(photoObjectURL)releasePhotoObjectURL(photoObjectURL);
+}
 function loadPhoto(file){
   if(!file||!file.type.startsWith('image/'))return;
-  if(photoObjectURL)URL.revokeObjectURL(photoObjectURL);
-  photoObjectURL=URL.createObjectURL(file);
-  const img=new Image();
+  cancelPendingPhotoLoad();
+  const token=photoLoadToken,objectURL=URL.createObjectURL(file),img=new Image();
+  photoObjectURL=objectURL;photoLoadImage=img;
+  const isCurrent=()=>token===photoLoadToken&&photoLoadImage===img&&photoObjectURL===objectURL;
+  const finish=()=>{
+    if(photoLoadImage===img)photoLoadImage=null;
+    releasePhotoObjectURL(objectURL);
+  };
   img.onload=()=>{
+    if(!isCurrent())return;
     const maxSide=2200;
     const scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
     photoCanvas.width=Math.max(1,Math.round(img.naturalWidth*scale));
@@ -4769,11 +4785,14 @@ function loadPhoto(file){
     pickMarker.style.display='none';
     magnifier.style.display='none';
     $('#regionBox').style.display='none';regionStart=null;
-    URL.revokeObjectURL(photoObjectURL);photoObjectURL=null;
+    photoLoaded=true;finish();
     toast(photoMode==='region'?'拖曳框選區域':'按住照片拖動取色');
   };
-  img.onerror=()=>{if(photoObjectURL){URL.revokeObjectURL(photoObjectURL);photoObjectURL=null}toast('照片讀取失敗')};
-  img.src=photoObjectURL;
+  img.onerror=()=>{
+    if(!isCurrent())return;
+    finish();toast('照片讀取失敗');
+  };
+  img.src=objectURL;
 }
 function mapPhotoPoint(clientX,clientY){
   const r=photoCanvas.getBoundingClientRect();
@@ -5057,7 +5076,7 @@ document.addEventListener('keydown',e=>{
   else if(!$('#installBackdrop').hidden)closeInstallGuide();
   else if(!document.getElementById('projectPickerBackdrop')?.hidden)closeProjectPicker();
 });
-window.addEventListener('pagehide',()=>{persistDraft();writeResilienceSnapshot()});
+window.addEventListener('pagehide',()=>{cancelPendingPhotoLoad();persistDraft();writeResilienceSnapshot()});
 $('#setCompareA').onclick=()=>saveCompare('A');
 $('#setCompareB').onclick=()=>saveCompare('B');
 $('#exportPaletteImage').onclick=exportPaletteImage;

@@ -162,13 +162,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2380")) fail('service worker cache version is not V2.38.0');
+if(!sw.includes("color-lab-v2390")) fail('service worker cache version is not V2.39.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.38.0') fail('package version must be 2.38.0');
+if(pkg.version!=='2.39.0') fail('package version must be 2.39.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.38.0')||!html.includes('<div class="version">V2.38.0</div>')||!html.includes("appVersion:'2.38.0'")) fail('V2.38.0 UI or backup version metadata missing');
-else pass('V2.38.0 version metadata');
+if(!html.includes('Color Lab V2.39.0')||!html.includes('<div class="version">V2.39.0</div>')||!html.includes("appVersion:'2.39.0'")) fail('V2.39.0 UI or backup version metadata missing');
+else pass('V2.39.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -706,7 +706,7 @@ if(!html.includes('id="pwaHealthMount"')||
    html.includes("navigator.serviceWorker.register('./sw.js').catch(()=>{})")||
    sw.includes('./runtime/pwa-health.js')||
    sw.includes('./runtime/pwa-health.css')||
-   !pwaHealth.includes("const COLORLAB_APP_VERSION='2.38.0'")||
+   !pwaHealth.includes("const COLORLAB_APP_VERSION='2.39.0'")||
    !pwaHealthCss.includes('.pwa-health{')){
   fail('V2.35.0 shell-integrated PWA health / UI contract missing');
 }else pass('V2.35.0 shell-integrated PWA controller + compact UI');
@@ -785,6 +785,22 @@ if(!uxCleanup.includes('let deepDiveRenderFrame=0')||
    !html.includes("if(name==='inspire')renderCompare();\n  scheduleSecondaryRender();")){
   fail('V2.38.0 render scheduling coalescing / stale-route invalidation contract missing');
 }else pass('V2.38.0 Deep Dive + Inspire render scheduling is coalesced and route-aware');
+
+if(!html.includes('let photoObjectURL=null,photoLoadToken=0,photoLoadImage=null,photoLoaded=false')||
+   !html.includes('function releasePhotoObjectURL(')||
+   !html.includes('function cancelPendingPhotoLoad(')||
+   !html.includes('photoLoadToken++')||
+   !html.includes('photoLoadImage.onload=null;photoLoadImage.onerror=null;photoLoadImage=null')||
+   !html.includes('const token=photoLoadToken,objectURL=URL.createObjectURL(file),img=new Image()')||
+   !html.includes('const isCurrent=()=>token===photoLoadToken&&photoLoadImage===img&&photoObjectURL===objectURL')||
+   !html.includes('photoLoaded=true;finish()')||
+   !html.includes('img.src=objectURL')||
+   !html.includes("window.addEventListener('pagehide',()=>{cancelPendingPhotoLoad();persistDraft();writeResilienceSnapshot()})")||
+   !referenceBoard.includes("typeof photoLoaded!=='undefined'&&photoLoaded")||
+   referenceBoard.includes("typeof photoObjectURL!=='undefined'&&!!photoObjectURL")||
+   html.includes('URL.revokeObjectURL(photoObjectURL);photoObjectURL=null')){
+  fail('V2.39.0 photo load lifecycle / stale callback isolation contract missing');
+}else pass('V2.39.0 photo load uses request-local URLs, stale guards, pagehide cleanup, and canvas-backed photo presence');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
