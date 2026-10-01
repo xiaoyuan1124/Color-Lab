@@ -5,6 +5,8 @@ const webkitConfig=fs.readFileSync('playwright.webkit.config.js','utf8');
 const webkitCore=fs.readFileSync('tests/e2e/webkit-core.spec.js','utf8');
 const qualityWorkflow=fs.readFileSync('.github/workflows/quality.yml','utf8');
 const storageHardening=fs.readFileSync('runtime/storage-hardening.js','utf8');
+const pwaHealth=fs.readFileSync('runtime/pwa-health.js','utf8');
+const pwaHealthCss=fs.readFileSync('runtime/pwa-health.css','utf8');
 const uxCleanup=fs.readFileSync('runtime/ux-cleanup.js','utf8');
 const uxCleanupCss=fs.readFileSync('runtime/ux-cleanup.css','utf8');
 const paletteTools=fs.readFileSync('runtime/palette-tools.js','utf8');
@@ -28,7 +30,7 @@ const gradientStudio=fs.readFileSync('runtime/gradient-studio.js','utf8');
 const gradientStudioCss=fs.readFileSync('runtime/gradient-studio.css','utf8');
 const qrVendor=fs.readFileSync('vendor/qrcode.min.js','utf8');
 const qrLicense=fs.readFileSync('vendor/qrcode.LICENSE.txt','utf8');
-const appSource=html+'\n'+storageHardening+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio;
+const appSource=html+'\n'+storageHardening+'\n'+pwaHealth+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio;
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -49,6 +51,8 @@ else {
 }
 try { new Function(storageHardening); pass('storage hardening runtime syntax'); }
 catch(e){ fail('storage hardening runtime syntax: '+e.message); }
+try { new Function(pwaHealth); pass('pwa health runtime syntax'); }
+catch(e){ fail('pwa health runtime syntax: '+e.message); }
 try { new Function(uxCleanup); pass('ux cleanup runtime syntax'); }
 catch(e){ fail('ux cleanup runtime syntax: '+e.message); }
 try { new Function(paletteTools); pass('palette tools runtime syntax'); }
@@ -149,13 +153,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2340")) fail('service worker cache version is not V2.34.0');
+if(!sw.includes("color-lab-v2350")) fail('service worker cache version is not V2.35.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.34.0') fail('package version must be 2.34.0');
+if(pkg.version!=='2.35.0') fail('package version must be 2.35.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.34.0')||!html.includes('<div class="version">V2.34.0</div>')||!html.includes("appVersion:'2.34.0'")) fail('V2.34.0 UI or backup version metadata missing');
-else pass('V2.34.0 version metadata');
+if(!html.includes('Color Lab V2.35.0')||!html.includes('<div class="version">V2.35.0</div>')||!html.includes("appVersion:'2.35.0'")) fail('V2.35.0 UI or backup version metadata missing');
+else pass('V2.35.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -685,6 +689,37 @@ for(const marker of [
   if(!webkitCore.includes(marker))fail('V2.34.0 WebKit core coverage missing: '+marker);
 }
 pass('V2.34.0 WebKit core risk coverage');
+
+if(!html.includes('<link rel="stylesheet" href="./runtime/pwa-health.css">')||
+   !html.includes('<script src="./runtime/pwa-health.js"></script>')||
+   !html.includes('id="pwaHealthMount"')||
+   !html.includes('initPwaHealth();')||
+   html.includes("navigator.serviceWorker.register('./sw.js').catch(()=>{})")||
+   !sw.includes('./runtime/pwa-health.js')||
+   !sw.includes('./runtime/pwa-health.css')||
+   !pwaHealth.includes("const COLORLAB_APP_VERSION='2.35.0'")||
+   !pwaHealthCss.includes('.pwa-health{')){
+  fail('V2.35.0 PWA health runtime / UI / offline asset contract missing');
+}else pass('V2.35.0 PWA health runtime + compact UI + offline cache');
+
+if(sw.includes(".then(()=>self.skipWaiting())")||
+   !sw.includes("if(event.data?.type==='SKIP_WAITING')self.skipWaiting()")||
+   !pwaHealth.includes("registration.waiting&&navigator.serviceWorker?.controller")||
+   !pwaHealth.includes("waiting.postMessage({type:'SKIP_WAITING'})")||
+   !pwaHealth.includes("navigator.serviceWorker.addEventListener('controllerchange'")||
+   !pwaHealth.includes("if(!pwaUpdateRequested||pwaControllerReloaded)return")||
+   !pwaHealth.includes("location.reload()")){
+  fail('V2.35.0 user-mediated service worker activation contract missing');
+}else pass('V2.35.0 user-mediated activation + single reload guard');
+
+if(!pwaHealth.includes("if(typeof persistDraft==='function')persistDraft()")||
+   !pwaHealth.includes("if(typeof writeResilienceSnapshot==='function')await writeResilienceSnapshot()")||
+   !pwaHealth.includes("window.addEventListener('offline',pwaConnectivityState)")||
+   !pwaHealth.includes("window.addEventListener('online',()=>{pwaConnectivityState();pwaCheckForUpdate(true)})")||
+   !pwaHealth.includes("PWA_UPDATE_CHECK_INTERVAL=20*60*1000")||
+   !pwaHealth.includes("document.visibilityState==='visible'")){
+  fail('V2.35.0 safe-update persistence / connectivity / throttled update-check contract missing');
+}else pass('V2.35.0 save-before-update + offline state + throttled foreground checks');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
