@@ -786,6 +786,17 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
   margin-bottom:var(--space-3);
 }
 .professional-handoff-head strong{font-size:12px;color:var(--text-1)}
+.professional-handoff-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.p3-capability{
+  margin:0 0 8px;
+  padding:8px 10px;
+  border:1px solid var(--hairline);
+  border-radius:var(--radius-md);
+  background:rgba(255,253,249,.28);
+  color:var(--text-2);
+  font-size:10px;
+  line-height:1.4;
+}
 .professional-color-values{display:grid;gap:10px}
 .professional-color-row{
   display:grid;
@@ -2403,7 +2414,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.50.0</div>
+    <div class="version">V2.51.0</div>
   </div>
 
   <main class="app-main">
@@ -2613,7 +2624,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
         </div>
         <div class="action-disclosures" aria-label="更多配色操作">
           <details class="handoff-more action-disclosure" id="handoffMore">
-            <summary><span><b>匯出</b><small>CSS · JSON · Design Tokens · App</small></span></summary>
+            <summary><span><b>匯出</b><small>CSS · P3 · JSON · Design Tokens</small></span></summary>
             <div class="handoff-more-actions">
               <button type="button" class="utility-btn" data-export-format="css">CSS</button>
               <button type="button" class="utility-btn" data-export-format="json">JSON</button>
@@ -2625,10 +2636,14 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
             <section class="professional-handoff" id="professionalHandoff" aria-labelledby="professionalHandoffTitle">
               <div class="professional-handoff-head">
                 <strong id="professionalHandoffTitle">專業色彩值</strong>
-                <button type="button" class="text-action" id="copyProfessionalHandoff">複製規格</button>
+                <div class="professional-handoff-actions">
+                  <button type="button" class="text-action" id="copyProfessionalHandoff">複製規格</button>
+                  <button type="button" class="text-action" id="copyP3Css">複製 P3 CSS</button>
+                </div>
               </div>
+              <div class="p3-capability" id="p3Capability" role="status"></div>
               <div class="professional-color-values" id="professionalColorValues"></div>
-              <p class="professional-handoff-note">LAB 使用 CIELAB D50。CMYK 為 sRGB 數學參考值；實際印刷請依設備、紙材與 ICC profile。</p>
+              <p class="professional-handoff-note">LAB 使用 CIELAB D50。CMYK 為 sRGB 數學參考值，印刷仍需 ICC profile。Display-P3 是目前 sRGB HEX 的等色換算，不會偷偷提高彩度或改寫來源色。</p>
             </section>
           </details>
           <details class="handoff-more action-disclosure" id="compareMore">
@@ -2834,7 +2849,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.50.0</div>
+  <div class="footer app-footer">Color Lab V2.51.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2946,7 +2961,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 /* Color Lab V2.35.0 PWA / iPhone Update Hardening
    User-mediated service worker activation prevents mixed-version sessions. */
 
-const COLORLAB_APP_VERSION='2.50.0';
+const COLORLAB_APP_VERSION='2.51.0';
 const PWA_UPDATE_CHECK_INTERVAL=20*60*1000;
 let pwaRegistration=null;
 let pwaUpdateReady=false;
@@ -3289,24 +3304,56 @@ function professionalNumber(value,digits=1){
   const rounded=Number(value.toFixed(digits));
   return Object.is(rounded,-0)?'0':String(rounded);
 }
+function displayP3Capability(){
+  const syntax=!!(globalThis.CSS?.supports?.('color','color(display-p3 1 0 0)'));
+  const gamut=!!(globalThis.matchMedia?.('(color-gamut: p3)')?.matches);
+  return{syntax,gamut};
+}
+function displayP3StatusText(){
+  const cap=displayP3Capability();
+  if(cap.syntax&&cap.gamut)return'P3 語法與顯示 gamut 可用 · 目前 source 仍是 sRGB HEX';
+  if(cap.syntax)return'P3 語法可用 · 目前顯示環境未回報 P3 gamut · 使用 sRGB fallback';
+  return'此瀏覽器未回報 Display-P3 CSS 支援 · 使用 sRGB fallback';
+}
+function professionalP3Css(){
+  const name=(($('#comboName')?.value||currentComboName||'Color Lab 配色').trim()||'Color Lab 配色');
+  const rows=professionalHandoffRows();
+  const vars=rows.map(item=>'  --color-'+item.role.toLowerCase()+': '+item.hex+';').join('\n');
+  const p3=rows.map(item=>'      --color-'+item.role.toLowerCase()+': '+displayP3CssFromHex(item.hex)+';').join('\n');
+  return '/* '+name+' · Color Lab 75 / 18 / 7\n   Source = exact sRGB HEX; P3 values are equivalent coordinates, not gamut expansion. */\n'+
+    ':root {\n'+vars+'\n}\n\n'+
+    '@supports (color: color(display-p3 1 1 1)) {\n'+
+    '  @media (color-gamut: p3) {\n'+
+    '    :root {\n'+p3+'\n    }\n  }\n}\n';
+}
+async function copyProfessionalP3Css(){
+  const value=professionalP3Css();
+  try{
+    if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(value);toast('已複製 P3 CSS');return}
+  }catch(_){}
+  copy(value);
+}
 function professionalHandoffText(){
   const title=(($('#comboName')?.value||currentComboName||'Color Lab 配色').trim()||'Color Lab 配色');
   const lines=professionalHandoffRows().map(item=>{
     const lab=item.values.lab,cmyk=item.values.cmyk;
     return item.role+' '+item.ratio+'% '+item.hex+
       ' | Lab D50 '+professionalNumber(lab.l)+', '+professionalNumber(lab.a)+', '+professionalNumber(lab.b)+
-      ' | CMYK ref '+professionalNumber(cmyk.c,0)+'/'+professionalNumber(cmyk.m,0)+'/'+professionalNumber(cmyk.y,0)+'/'+professionalNumber(cmyk.k,0);
+      ' | CMYK ref '+professionalNumber(cmyk.c,0)+'/'+professionalNumber(cmyk.m,0)+'/'+professionalNumber(cmyk.y,0)+'/'+professionalNumber(cmyk.k,0)+
+      ' | P3 '+displayP3CssFromHex(item.hex);
   });
-  return title+' · 75 / 18 / 7\n'+lines.join('\n')+'\nCMYK = unprofiled sRGB reference; print output requires an ICC profile.';
+  return title+' · 75 / 18 / 7\n'+lines.join('\n')+'\nCMYK = unprofiled sRGB reference; print output requires an ICC profile.\nP3 = exact sRGB-source color expressed in Display-P3 coordinates; source palette remains unchanged.';
 }
 function renderProfessionalHandoff(){
   const host=$('#professionalColorValues');if(!host)return;
+  const capability=$('#p3Capability');if(capability)capability.textContent=displayP3StatusText();
   host.innerHTML=professionalHandoffRows().map(item=>{
     const lab=item.values.lab,cmyk=item.values.cmyk;
     return '<div class="professional-color-row">'+
       '<div class="professional-color-role"><i style="background:'+item.hex+'"></i><span><b>'+item.role+' '+item.ratio+'%</b><code>'+item.hex+'</code></span></div>'+
       '<div class="professional-color-spec"><span>LAB D50 · L '+professionalNumber(lab.l)+' · a '+professionalNumber(lab.a)+' · b '+professionalNumber(lab.b)+'</span>'+
-      '<span>CMYK 參考 · '+professionalNumber(cmyk.c,0)+' / '+professionalNumber(cmyk.m,0)+' / '+professionalNumber(cmyk.y,0)+' / '+professionalNumber(cmyk.k,0)+'</span></div>'+
+      '<span>CMYK 參考 · '+professionalNumber(cmyk.c,0)+' / '+professionalNumber(cmyk.m,0)+' / '+professionalNumber(cmyk.y,0)+' / '+professionalNumber(cmyk.k,0)+'</span>'+
+      '<span>Display-P3 · '+displayP3CssFromHex(item.hex)+'</span></div>'+
       '</div>';
   }).join('');
 }
@@ -3427,7 +3474,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v5',appVersion:'2.50.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.51.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -5448,6 +5495,7 @@ $$('[data-validation-theme]').forEach(b=>b.addEventListener('click',()=>setValid
 initCrossPlatformHandoff();
 $('#handoffMore').addEventListener('toggle',e=>{if(e.currentTarget.open)renderProfessionalHandoff()});
 $('#copyProfessionalHandoff').onclick=()=>copy(professionalHandoffText());
+$('#copyP3Css').onclick=copyProfessionalP3Css;
 document.querySelectorAll('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
 const LIBRARY_QUICK_TERMS=['藍','柔和','深色','品牌','室內','簡報'];
 function libraryQuickQueryTerms(){
