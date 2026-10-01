@@ -2465,3 +2465,47 @@ test('V2.51 converts exact sRGB source colors to Display-P3 handoff without gamu
   expect(css).toContain('not gamut expansion');
   expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before);
 });
+
+
+test('V2.52 exports all Context Preview layouts from the current DOM without mutating source colors', async ({ page }) => {
+  await page.evaluate(() => {
+    selectedColors=['#E7DCC8','#274C55','#C65338'];
+    lockedSlots=[false,false,false];activeSlot=0;seed=selectedColors[0];
+    previewTheme='light';visionMode='normal';generate(false);
+  });
+  const before=await page.evaluate(() => paletteArtifactBase());
+  await openDeepSection(page,'deepApplication');
+  await expect(page.locator('#exportContextPreview')).toBeVisible();
+
+  const snapshots=await page.evaluate(() => {
+    const classes={app:'cp2-app',brand:'cp2-brand',room:'cp2-room',outfit:'cp2-outfit',slides:'cp2-slide'};
+    return Object.keys(classes).map(context=>{
+      previewContext=context;renderContextPreview();
+      const svg=contextPreviewSnapshotSvg();
+      const parsed=new DOMParser().parseFromString(svg,'image/svg+xml');
+      return {
+        context,
+        expectedClass:classes[context],
+        hasForeignObject:svg.includes('<foreignObject'),
+        hasCss:svg.includes('.cp2'),
+        hasClass:svg.includes(classes[context]),
+        hasScript:svg.includes('<script'),
+        parseError:!!parsed.querySelector('parsererror')
+      };
+    });
+  });
+
+  expect(snapshots).toHaveLength(5);
+  for(const item of snapshots){
+    expect(item.hasForeignObject).toBe(true);
+    expect(item.hasCss).toBe(true);
+    expect(item.hasClass).toBe(true);
+    expect(item.hasScript).toBe(false);
+    expect(item.parseError).toBe(false);
+  }
+  expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before);
+
+  const source=await page.evaluate(() => contextPreviewSnapshotSvg());
+  expect(source).toContain('Color Lab');
+  expect(source).toContain('75 / 18 / 7');
+});
