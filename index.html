@@ -2230,7 +2230,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.35.0</div>
+    <div class="version">V2.36.0</div>
   </div>
 
   <main class="app-main">
@@ -2605,7 +2605,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.35.0</div>
+  <div class="footer app-footer">Color Lab V2.36.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2711,7 +2711,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <script src="./runtime/tone-explorer.js"></script>
 <script src="./runtime/ux-cleanup.js"></script>
 <script>
-/* Color Lab V2.35.0 PWA / iPhone Update Hardening
+/* Color Lab V2.36.0 PWA / iPhone Update Hardening
    User-mediated service worker activation prevents mixed-version sessions. */
 
 const COLORLAB_APP_VERSION='2.35.0';
@@ -2901,7 +2901,12 @@ function ensureToneFamilies(){
   return loadScriptOnce('./data/tone-families.js','TONE_FAMILIES').catch(()=>({}));
 }
 function ensureInspirationResources(){
-  return Promise.all([ensureRecommendationReferences(),ensureInspirationAtlas(),ensureToneFamilies()]);
+  return Promise.all([
+    ensureRecommendationReferences(),
+    ensureInspirationAtlas(),
+    ensureToneFamilies(),
+    loadScriptOnce('./data/recommendation-engine.js','recommendationCombos')
+  ]);
 }
 function boundedCacheSet(map,key,value,max=512){
   if(map.size>=max&&!map.has(key))map.delete(map.keys().next().value);
@@ -3149,7 +3154,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v5',appVersion:'2.35.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.36.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
