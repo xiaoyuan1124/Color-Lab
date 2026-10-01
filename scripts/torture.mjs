@@ -577,6 +577,20 @@ check('V2.39 photo presence is canvas-backed and pending loads clean up on pageh
   appText.includes('photoLoaded=true;finish()')&&
   appText.includes("window.addEventListener('pagehide',()=>{cancelPendingPhotoLoad();persistDraft();writeResilienceSnapshot()})"),
   'successful decode releases its blob URL while preserving local canvas availability');
+check('V2.40 Inspire explicit actions are route-token guarded',
+  appText.includes('function inspirationRouteActive(')&&
+  appText.includes('function runInspirationAction(')&&
+  appText.includes('const token=secondaryRenderToken')&&
+  appText.includes("if(!inspirationRouteActive())return Promise.resolve(false)")&&
+  appText.includes("if(token!==secondaryRenderToken||!inspirationRouteActive())return false")&&
+  appText.includes("$('#previousRecommendations').onclick=()=>runInspirationAction(previousRecommendationBatch)")&&
+  appText.includes("$('#nextRecommendations').onclick=()=>runInspirationAction(nextRecommendationBatch)"),
+  'delayed batch actions cannot mutate recommendation state after leaving Inspire');
+check('V2.40 preference refreshes reuse the coalesced Inspire scheduler',
+  appText.includes('if(inspirationRouteActive())scheduleSecondaryRender();')&&
+  !appText.includes("ensureInspirationResources().then(()=>{renderIdeas();renderRecommendations()})"),
+  'preference changes no longer bypass route-aware render scheduling');
+
 check('V2.32 resilience lifecycle lives inside the storage runtime',
   storageHardening.includes('function openResilienceDB(')&&
   storageHardening.includes('async function writeResilienceSnapshot(')&&
