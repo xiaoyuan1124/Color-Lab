@@ -254,7 +254,7 @@ if(!html.includes('id="photoSourceActions" role="group" aria-label="照片來源
    !html.includes('function syncPhotoWorkflowUi(')||
    !html.includes("sources.hidden=photoLoaded")||
    !html.includes("modes.hidden=!photoLoaded")||
-   !html.includes("photoLoaded=true;syncPhotoWorkflowUi();finish()")||
+   !html.includes("photoLoaded=true;finish();syncPhotoWorkflowUi()")||
    !html.includes("$('#photoRetake').onclick=openPhotoCamera")||
    !html.includes("if(name==='photo'){setPhotoMode(photoMode);updatePhotoColorSpaceNote();syncPhotoWorkflowUi()}")||
    !html.includes('.photo-source-actions[hidden],.photo-mode-bar[hidden]{display:none!important}')){
