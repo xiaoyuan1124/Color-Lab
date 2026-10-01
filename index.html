@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="./runtime/custom-design-preview.css">
 <link rel="stylesheet" href="./runtime/vision-accessibility.css">
 <link rel="stylesheet" href="./runtime/ux-cleanup.css">
+<link rel="stylesheet" href="./runtime/pwa-health.css">
 <link rel="stylesheet" href="./runtime/gradient-studio.css">
 <link rel="stylesheet" href="./runtime/local-projects.css">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -2218,7 +2219,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.34.0</div>
+    <div class="version">V2.35.0</div>
   </div>
 
   <main class="app-main">
@@ -2593,7 +2594,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.34.0</div>
+  <div class="footer app-footer">Color Lab V2.35.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2683,6 +2684,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
   </section>
 </div>
 
+<div id="pwaHealthMount"></div>
 <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true">已複製</div>
 
 <script src="./runtime/storage-hardening.js"></script>
@@ -2697,6 +2699,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <script src="./runtime/custom-design-preview.js"></script>
 <script src="./runtime/tone-explorer.js"></script>
 <script src="./runtime/ux-cleanup.js"></script>
+<script src="./runtime/pwa-health.js"></script>
 <script>
 const MODES={
   quiet:{label:'安靜',baseL:.93,structureL:.27,accentShift:22,sat:.26},
@@ -3027,7 +3030,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v5',appVersion:'2.34.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.35.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -5405,11 +5408,10 @@ $('#librarySort').addEventListener('change',e=>{librarySort=e.target.value;stora
 $('#libraryFolderFilter').addEventListener('change',e=>{libraryFolderFilter=e.target.value;renderSaved()});
 $('#comboName').addEventListener('input',e=>{currentComboName=e.target.value;persistDraft()});
 renderModes();palette=fastInitialPalette();renderComboSlots();render();updateLockToggle();
-historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();installShareSnapshotHashListener();initCustomDesignPreview();initLocalProjects();initReferenceBoardExport();initGradientStudio();initDeepDiveUx();
+historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();installShareSnapshotHashListener();initCustomDesignPreview();initLocalProjects();initReferenceBoardExport();initGradientStudio();initDeepDiveUx();initPwaHealth();
 setCornerNavOpen(false);
 switchTab(storageReadRaw('colorlab.tab','compose'),false);updatePhotoTarget();
 scheduleNonCriticalStartup();
-if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 <script src="./runtime/photo-palette.js"></script>
 </body>
