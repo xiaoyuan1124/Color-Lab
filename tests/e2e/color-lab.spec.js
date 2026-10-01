@@ -11,6 +11,7 @@ async function openDeepSection(page,id){
   const section=page.locator('#'+id);
   if(!(await section.evaluate(el=>el.open)))await section.locator(':scope > summary').click();
   await expect(section).toHaveAttribute('open','');
+  await page.evaluate(() => new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
 }
 
 test('mobile Compose keeps the 75 / 18 / 7 contract visible', async ({ page }) => {
