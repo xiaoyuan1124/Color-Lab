@@ -1820,3 +1820,71 @@ test('V2.38 Inspire scheduler invalidates stale async work and coalesces rapid r
   expect(result.final.recommendations).toBe(1);
 });
 
+
+
+test('V2.39 Photo loader ignores stale callbacks and releases request-local object URLs', async ({ page }) => {
+  const before=await page.evaluate(() => paletteArtifactBase());
+  const result=await page.evaluate(() => {
+    cancelPendingPhotoLoad();
+    const OriginalImage=window.Image;
+    const originalCreate=URL.createObjectURL;
+    const originalRevoke=URL.revokeObjectURL;
+    const images=[],revoked=[];
+    let serial=0;
+    class FakeImage{
+      constructor(){this.onload=null;this.onerror=null;this.naturalWidth=32;this.naturalHeight=24;images.push(this)}
+      set src(value){this._src=value}
+      get src(){return this._src}
+    }
+    try{
+      window.Image=FakeImage;
+      URL.createObjectURL=()=>`blob:v239-${++serial}`;
+      URL.revokeObjectURL=url=>revoked.push(url);
+
+      photoLoaded=false;
+      loadPhoto(new File(['first'],'first.png',{type:'image/png'}));
+      const first=images[0],firstUrl=photoObjectURL,staleOnload=first.onload;
+
+      loadPhoto(new File(['second'],'second.png',{type:'image/png'}));
+      const second=images[1],secondUrl=photoObjectURL;
+      staleOnload();
+
+      const afterStale={
+        url:photoObjectURL,
+        current:photoLoadImage===second,
+        loaded:photoLoaded,
+        firstHandlersCleared:first.onload===null&&first.onerror===null
+      };
+
+      second.onerror();
+      return{
+        firstUrl,secondUrl,afterStale,
+        afterError:{
+          url:photoObjectURL,
+          image:photoLoadImage,
+          loaded:photoLoaded,
+          revoked:[...revoked]
+        }
+      };
+    }finally{
+      window.Image=OriginalImage;
+      URL.createObjectURL=originalCreate;
+      URL.revokeObjectURL=originalRevoke;
+      cancelPendingPhotoLoad();
+    }
+  });
+
+  expect(result.firstUrl).toBe('blob:v239-1');
+  expect(result.secondUrl).toBe('blob:v239-2');
+  expect(result.afterStale).toEqual({
+    url:'blob:v239-2',
+    current:true,
+    loaded:false,
+    firstHandlersCleared:true
+  });
+  expect(result.afterError.url).toBeNull();
+  expect(result.afterError.image).toBeNull();
+  expect(result.afterError.loaded).toBe(false);
+  expect(result.afterError.revoked).toEqual(['blob:v239-1','blob:v239-2']);
+  expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before);
+});
