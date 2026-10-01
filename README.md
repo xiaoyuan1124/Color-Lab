@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.39.0**
+**目前版本：V2.40.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,19 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.40.0 Inspire Action Lifecycle Hardening
+
+這一版延續 V2.38 的 render scheduling hardening，把仍繞過 scheduler 的 Inspire 互動收進同一套 route-aware async boundary：
+
+- 新增 `inspirationRouteActive()`，集中判斷目前是否仍停留在 Inspire
+- 新增 `runInspirationAction()`；上一批 / 下一批推薦在 lazy resources resolve 後會再次檢查 route 與 render token
+- 使用者在資源載入途中切到 Compose / Photo / Library，舊 action 不再改 recommendation batch state，也不背景 render
+- 開啟 / 關閉個人化與重置偏好不再直接 `ensureInspirationResources().then(render...)`，改走既有 coalesced secondary scheduler
+- stale action 的錯誤也不會在使用者離開 Inspire 後跳出過期 toast
+- 推薦公式、排序、候選內容、75 / 18 / 7、source palette 與 Local-first 契約完全不變
+- Chromium / WebKit regression 覆蓋 delayed Inspire action + route invalidation
+- 不新增後端、登入、Supabase、AI、付費 API 或網路依賴
 
 ## V2.39.0 Photo Load Lifecycle Hardening
 
