@@ -259,7 +259,7 @@ check('V2.12 multi-control selectors return collections',
   appText.includes("$$('#contextTabs [data-context]').forEach")&&
   appText.includes("$$('#contextThemeModes [data-preview-theme]').forEach")&&
   appText.includes("$$('[data-preview-theme]').forEach")&&
-  appText.includes("$$('[data-export-format]').forEach"),
+  appText.includes("document.querySelectorAll('[data-export-format]').forEach"),
   'querySelectorAll helper for preview/export controls');
 
 check('selector helper never grows beyond querySelectorAll',

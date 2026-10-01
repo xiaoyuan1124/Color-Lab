@@ -6,6 +6,7 @@ const webkitCore=fs.readFileSync('tests/e2e/webkit-core.spec.js','utf8');
 const qualityWorkflow=fs.readFileSync('.github/workflows/quality.yml','utf8');
 const storageHardening=fs.readFileSync('runtime/storage-hardening.js','utf8');
 const colorQuality=fs.readFileSync('core/color-quality.js','utf8');
+const colorHandoff=fs.readFileSync('core/color-handoff.js','utf8');
 const librarySearchCore=fs.readFileSync('core/library-search.js','utf8');
 const pwaStart=html.indexOf('/* Color Lab V2.35.0 PWA / iPhone Update Hardening');
 const pwaEnd=html.indexOf('\nconst MODES={',pwaStart);
@@ -35,7 +36,7 @@ const gradientStudioCss=fs.readFileSync('runtime/gradient-studio.css','utf8');
 const recommendationEngine=fs.readFileSync('data/recommendation-engine.js','utf8');
 const qrVendor=fs.readFileSync('vendor/qrcode.min.js','utf8');
 const qrLicense=fs.readFileSync('vendor/qrcode.LICENSE.txt','utf8');
-const appSource=html+'\n'+storageHardening+'\n'+colorQuality+'\n'+librarySearchCore+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio+'\n'+recommendationEngine;
+const appSource=html+'\n'+storageHardening+'\n'+colorQuality+'\n'+colorHandoff+'\n'+librarySearchCore+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio+'\n'+recommendationEngine;
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -58,6 +59,8 @@ try { new Function(storageHardening); pass('storage hardening runtime syntax'); 
 catch(e){ fail('storage hardening runtime syntax: '+e.message); }
 try { new Function(colorQuality); pass('core color quality syntax'); }
 catch(e){ fail('core color quality syntax: '+e.message); }
+try { new Function(colorHandoff); pass('core color handoff syntax'); }
+catch(e){ fail('core color handoff syntax: '+e.message); }
 try { new Function(librarySearchCore); pass('core library search syntax'); }
 catch(e){ fail('core library search syntax: '+e.message); }
 try { new Function(pwaHealth); pass('pwa health runtime syntax'); }
@@ -165,13 +168,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2490")) fail('service worker cache version is not V2.49.0');
+if(!sw.includes("color-lab-v2500")) fail('service worker cache version is not V2.50.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.49.0') fail('package version must be 2.49.0');
+if(pkg.version!=='2.50.0') fail('package version must be 2.50.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.49.0')||!html.includes('<div class="version">V2.49.0</div>')||!html.includes("appVersion:'2.49.0'")) fail('V2.49.0 UI or backup version metadata missing');
-else pass('V2.49.0 version metadata');
+if(!html.includes('Color Lab V2.50.0')||!html.includes('<div class="version">V2.50.0</div>')||!html.includes("appVersion:'2.50.0'")) fail('V2.50.0 UI or backup version metadata missing');
+else pass('V2.50.0 version metadata');
 
 if(!html.includes('id="compareMore"')||
    !html.includes('<b>匯出</b>')||
@@ -274,6 +277,32 @@ if(!html.includes('<details class="library-settings" id="librarySettings">')||
    !html.includes('.library-settings .library-tools{')){
   fail('V2.49.0 reopenable help / compact Library settings contract missing');
 }else pass('V2.49.0 reopenable help + compact Library settings');
+
+if(!html.includes('<script src="./core/color-handoff.js"></script>')||
+   !sw.includes('./core/color-handoff.js')||
+   !colorHandoff.includes('function hexToLabD50(')||
+   !colorHandoff.includes('function hexToCmykReference(')||
+   !colorHandoff.includes('function professionalColorValues(')||
+   !colorHandoff.includes('HANDOFF_D65_TO_D50')){
+  fail('V2.50.0 professional handoff color core missing');
+}else pass('V2.50.0 LAB D50 + CMYK reference core');
+
+if(/localStorage|sessionStorage|fetch\(|XMLHttpRequest|selectedColors\s*=|palette\s*=/.test(colorHandoff)){
+  fail('V2.50.0 handoff core must remain pure and source-safe');
+}else pass('V2.50.0 handoff core is storage/network/source mutation free');
+
+if(!html.includes('id="professionalHandoff" aria-labelledby="professionalHandoffTitle"')||
+   !html.includes('id="copyProfessionalHandoff">複製規格</button>')||
+   !html.includes('id="professionalColorValues"')||
+   !html.includes('LAB 使用 CIELAB D50')||
+   !html.includes('ICC profile')||
+   !html.includes('function professionalHandoffRows(')||
+   !html.includes('function professionalHandoffText(')||
+   !html.includes('function renderProfessionalHandoff(')||
+   !html.includes("$('#copyProfessionalHandoff').onclick=()=>copy(professionalHandoffText())")||
+   !html.includes("if($('#handoffMore')?.open)renderProfessionalHandoff()")){
+  fail('V2.50.0 professional handoff UI/copy contract missing');
+}else pass('V2.50.0 professional handoff UI + copy contract');
 
 if(!html.includes('搜尋名稱、HEX、標籤、色系或調性')||
    !html.includes('可搜尋：藍、紅、柔和、鮮明、深色、淺色')||
@@ -1231,7 +1260,7 @@ if(!appSource.includes("function previewThemePalette(theme=previewTheme)")||
 if(!appSource.includes("$$('#contextTabs [data-context]').forEach")||
    !appSource.includes("$$('#contextThemeModes [data-preview-theme]').forEach")||
    !appSource.includes("$$('[data-preview-theme]').forEach")||
-   !appSource.includes("$$('[data-export-format]').forEach")){
+   !appSource.includes("document.querySelectorAll('[data-export-format]').forEach")){
   fail('V2.12.0 collection controls are not bound with querySelectorAll helper');
 }else pass('V2.12.0 collection controls use querySelectorAll helper');
 

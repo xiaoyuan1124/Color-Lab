@@ -463,3 +463,22 @@ test('WebKit V2.49 reopens help from compact Library settings without mutating s
   await expect(page.locator('#firstRunGuide')).toBeHidden();
   expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before);
 });
+
+
+test('WebKit V2.50 renders professional handoff without changing source colors', async ({ page }) => {
+  await setExactPalette(page,['#E7DCC8','#274C55','#C65338']);
+  const before=await page.evaluate(() => paletteArtifactBase());
+
+  await page.locator('#handoffMore > summary').click();
+  await expect(page.locator('#professionalHandoff')).toBeVisible();
+  await expect(page.locator('#professionalColorValues .professional-color-row')).toHaveCount(3);
+  await expect(page.locator('#professionalHandoff')).toContainText('CIELAB D50');
+  await expect(page.locator('#professionalHandoff')).toContainText('ICC profile');
+
+  const data=await page.evaluate(() => professionalHandoffRows().map(x=>({
+    role:x.role,hex:x.hex,lab:x.values.lab,cmyk:x.values.cmyk
+  })));
+  expect(data.map(x=>x.hex)).toEqual(['#E7DCC8','#274C55','#C65338']);
+  expect(data.every(x=>x.lab.whitePoint==='D50')).toBe(true);
+  expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before);
+});
