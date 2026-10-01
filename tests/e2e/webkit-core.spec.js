@@ -146,3 +146,18 @@ test('WebKit keeps recommendation engine lazy until Inspire and preserves source
   expect(after).toEqual(before);
   expect(after.palette.base).toBe('#112233');
 });
+
+test('WebKit loads V2.37 color quality core before dependent palette runtime', async ({ page }) => {
+  const result=await page.evaluate(() => {
+    const src=[...document.scripts].map(script=>script.getAttribute('src')).filter(Boolean);
+    return{
+      core:src.indexOf('./core/color-quality.js'),
+      palette:src.indexOf('./runtime/palette-tools.js'),
+      ready:typeof qualityRefineGenerated==='function'&&typeof contrastRatio==='function'
+    };
+  });
+  expect(result.ready).toBe(true);
+  expect(result.core).toBeGreaterThanOrEqual(0);
+  expect(result.palette).toBeGreaterThan(result.core);
+});
+

@@ -29,15 +29,18 @@ function pass(label,value,limit){
 const sizes=Object.fromEntries(Object.entries(files).map(([k,p])=>[k,size(p)]));
 const runtimeFiles=fs.readdirSync('runtime').filter(name=>/\.(?:js|css)$/.test(name)).map(name=>'runtime/'+name);
 const runtimeModules=runtimeFiles.reduce((sum,path)=>sum+size(path),0);
+const coreFiles=fs.readdirSync('core').filter(name=>/\.js$/.test(name)).map(name=>'core/'+name);
+const coreModules=coreFiles.reduce((sum,path)=>sum+size(path),0);
 const eager=0;
 const lazyIntelligence=sizes.poline+sizes.fashion+sizes.ig+sizes.atlas+sizes.tones+sizes.recommendation;
 const lazyInteraction=sizes.iro+sizes.sortable+sizes.qr;
-const core=Object.values(sizes).reduce((a,b)=>a+b,0);
+const core=Object.values(sizes).reduce((a,b)=>a+b,0)+coreModules;
 
 pass('index.html budget',sizes.index,235*KB);
 pass('eager intelligence budget',eager,1*KB);
 pass('lazy intelligence budget',lazyIntelligence,112*KB);
 pass('lazy interaction tools budget',lazyInteraction,110*KB);
+pass('core color modules budget',coreModules,16*KB);
 pass('core runtime budget',core,440*KB);
 pass('runtime modules budget',runtimeModules,140*KB);
 
@@ -53,6 +56,7 @@ console.log('Color Lab size budget',{
   eager,
   lazyIntelligence,
   lazyInteraction,
+  coreModules,
   core,
   runtimeModules
 });
