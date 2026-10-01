@@ -297,6 +297,26 @@ check('V2.51 P3 CSS handoff retains exact sRGB fallback',
   html.includes('not gamut expansion'),
   'sRGB fallback + guarded Display-P3 override');
 
+const contextSnapshotSource=extractFunction('contextPreviewSnapshotSvg');
+const contextSnapshotCssSource=extractFunction('contextPreviewSnapshotCss');
+check('V2.52 Context Preview snapshot serializes the existing renderer',
+  contextSnapshotSource.includes('renderContextPreview()')&&
+  contextSnapshotSource.includes("$('#uiPreview')")&&
+  contextSnapshotSource.includes('new XMLSerializer().serializeToString(host)')&&
+  contextSnapshotSource.includes('<foreignObject')&&
+  contextSnapshotCssSource.includes('document.styleSheets')&&
+  contextSnapshotCssSource.includes('sheet.cssRules'),
+  'current DOM + same-origin preview CSS');
+check('V2.52 Context Preview snapshot remains dependency-free and source-safe',
+  !html.includes('html2canvas')&&
+  !html.includes('dom-to-image')&&
+  !html.includes('html-to-image')&&
+  !contextSnapshotSource.includes('selectedColors=')&&
+  !contextSnapshotSource.includes('palette.base=')&&
+  !contextSnapshotSource.includes('palette.structure=')&&
+  !contextSnapshotSource.includes('palette.accent='),
+  'no capture library and no source writes');
+
 check('V2.20 professional export formats are present',
   appText.includes("if(kind==='tailwind')")&&
   appText.includes("if(kind==='swiftui')")&&
