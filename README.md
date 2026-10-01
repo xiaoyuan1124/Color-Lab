@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.35.0**
+**目前版本：V2.36.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,19 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.36.0 Recommendation Architecture
+
+這一版不改推薦公式、排序或 UI，專門把 Inspire 最大的責任群從主檔移出並延後載入：
+
+- 將 Atlas archetype、diversity selection、recommendation batch/history、推薦說明與推薦卡 render 從 `index.html` 移到 `data/recommendation-engine.js`
+- `index.html` 約從 230 KB 降到 213 KB，保留更多主檔 budget 與後續維護空間
+- Recommendation Engine 不列入 eager runtime；只有進入 Inspire、原本就載入 Atlas / Fashion / IG / Tone references 時才一起載入
+- Compose 首屏不下載或解析 recommendation-engine；現有 Poline / Fashion / IG / Atlas / Tone lazy orchestration 仍維持
+- 新 lazy engine 納入既有 112 KiB intelligence budget，沒有放寬 140 KiB runtime modules budget
+- Service Worker 預先快取 recommendation engine，因此離線進入 Inspire 仍可使用
+- exact source colors、75 / 18 / 7、Aesthetic Gate、Tonal Cohesion、anti-repeat、personal preference ranking 與推薦批次語意全部保持不變
+- 不新增後端、API、依賴或資料格式
 
 ## V2.35.0 PWA / iPhone Update Hardening
 
