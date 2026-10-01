@@ -162,13 +162,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2450")) fail('service worker cache version is not V2.45.0');
+if(!sw.includes("color-lab-v2460")) fail('service worker cache version is not V2.46.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.45.0') fail('package version must be 2.45.0');
+if(pkg.version!=='2.46.0') fail('package version must be 2.46.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.45.0')||!html.includes('<div class="version">V2.45.0</div>')||!html.includes("appVersion:'2.45.0'")) fail('V2.45.0 UI or backup version metadata missing');
-else pass('V2.45.0 version metadata');
+if(!html.includes('Color Lab V2.46.0')||!html.includes('<div class="version">V2.46.0</div>')||!html.includes("appVersion:'2.46.0'")) fail('V2.46.0 UI or backup version metadata missing');
+else pass('V2.46.0 version metadata');
 
 if(!html.includes('id="compareMore"')||
    !html.includes('<b>匯出</b>')||
@@ -234,6 +234,32 @@ if(!html.includes("const tone=avgC<.055?'沉穩柔和':avgC>.145?'鮮明有張�
    !html.includes("const readability=validation.normal>=2?'可讀性良好':validation.large>=2?'大字可用':'需檢查可讀性'")){
   fail('V2.45.0 concise result language contract missing');
 }else pass('V2.45.0 concise evidence-derived result language');
+
+if(!html.includes('id="photoCameraTrigger"')||
+   !html.includes('id="photoCameraInput" type="file" accept="image/*" capture="environment" hidden')||
+   !html.includes('id="photoTrigger" type="button">從相簿選擇</button>')||
+   !html.includes('function openPhotoCamera(){photoCameraInput.click()}')||
+   !html.includes("$('#photoCameraTrigger').onclick=openPhotoCamera")||
+   !html.includes('photoCameraInput.addEventListener(\'change\',handlePhotoInputChange)')){
+  fail('V2.46.0 camera-first Photo entry contract missing');
+}else pass('V2.46.0 camera + gallery Photo entry');
+
+if(!html.includes('搜尋名稱、HEX、標籤、色系或調性')||
+   !html.includes('可搜尋：藍、紅、柔和、鮮明、深色、淺色')||
+   !localProjects.includes('function libraryColorSemanticTerms(')||
+   !localProjects.includes('function libraryPaletteSemanticTerms(')||
+   !localProjects.includes('function librarySearchMatches(')||
+   !html.includes('return librarySearchMatches(x,q);')){
+  fail('V2.46.0 semantic Library search contract missing');
+}else pass('V2.46.0 local semantic Library search');
+
+if(!localProjects.includes("terms.push('中性','灰','灰色','neutral')")||
+   !localProjects.includes("terms.push('藍','藍色','blue')")||
+   !localProjects.includes("terms.push('柔和','低彩度','muted')")||
+   !localProjects.includes("terms.push('鮮明','高彩度','vivid')")||
+   !localProjects.includes("return terms.every(term=>haystack.includes(term))")){
+  fail('V2.46.0 color-family / tone / multi-token search semantics missing');
+}else pass('V2.46.0 color family + tone + AND search semantics');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
