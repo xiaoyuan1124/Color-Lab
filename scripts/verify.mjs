@@ -32,7 +32,7 @@ const gradientStudio=fs.readFileSync('runtime/gradient-studio.js','utf8');
 const gradientStudioCss=fs.readFileSync('runtime/gradient-studio.css','utf8');
 const qrVendor=fs.readFileSync('vendor/qrcode.min.js','utf8');
 const qrLicense=fs.readFileSync('vendor/qrcode.LICENSE.txt','utf8');
-const appSource=html+'\n'+storageHardening+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio;
+const appSource=html+'\n'+storageHardening+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio+'\n'+recommendationEngine;
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -40,6 +40,7 @@ const fashion=fs.readFileSync('data/fashion-palettes.js','utf8');
 const igStyles=fs.readFileSync('data/ig-style-patterns.js','utf8');
 const inspirationAtlas=fs.readFileSync('data/inspiration-atlas.js','utf8');
 const toneFamilies=fs.readFileSync('data/tone-families.js','utf8');
+const recommendationEngine=fs.readFileSync('data/recommendation-engine.js','utf8');
 
 const fail=(msg)=>{console.error('FAIL:',msg);process.exitCode=1};
 const pass=(msg)=>console.log('PASS:',msg);
@@ -79,6 +80,8 @@ try { new Function(referenceBoard); pass('reference board runtime syntax'); }
 catch(e){ fail('reference board runtime syntax: '+e.message); }
 try { new Function(gradientStudio); pass('gradient studio runtime syntax'); }
 catch(e){ fail('gradient studio runtime syntax: '+e.message); }
+try { new Function(recommendationEngine); pass('recommendation engine syntax'); }
+catch(e){ fail('recommendation engine syntax: '+e.message); }
 try { new Function(qrVendor); pass('local QR vendor syntax'); }
 catch(e){ fail('local QR vendor syntax: '+e.message); }
 
@@ -135,7 +138,8 @@ const lazyScripts=[
   ['./data/fashion-palettes.js','FASHION_PALETTES'],
   ['./data/ig-style-patterns.js','IG_STYLE_PATTERNS'],
   ['./data/inspiration-atlas.js','INSPIRATION_ATLAS'],
-  ['./data/tone-families.js','TONE_FAMILIES']
+  ['./data/tone-families.js','TONE_FAMILIES'],
+  ['./data/recommendation-engine.js','recommendationCombos']
 ];
 for(const [src] of lazyScripts){
   if(html.includes('<script src="'+src+'"></script>')) fail('lazy dependency regressed to eager script: '+src);
@@ -155,13 +159,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2350")) fail('service worker cache version is not V2.35.0');
+if(!sw.includes("color-lab-v2360")) fail('service worker cache version is not V2.36.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.35.0') fail('package version must be 2.35.0');
+if(pkg.version!=='2.36.0') fail('package version must be 2.36.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.35.0')||!html.includes('<div class="version">V2.35.0</div>')||!html.includes("appVersion:'2.35.0'")) fail('V2.35.0 UI or backup version metadata missing');
-else pass('V2.35.0 version metadata');
+if(!html.includes('Color Lab V2.36.0')||!html.includes('<div class="version">V2.36.0</div>')||!html.includes("appVersion:'2.36.0'")) fail('V2.36.0 UI or backup version metadata missing');
+else pass('V2.36.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -724,6 +728,26 @@ if(!pwaHealth.includes("if(typeof persistDraft==='function')persistDraft()")||
   fail('V2.35.0 safe-update persistence / connectivity / WebKit coverage contract missing');
 }else pass('V2.35.0 save-before-update + offline state + throttled checks + WebKit coverage');
 
+if(html.includes('function recommendationCombos(')||
+   html.includes('function renderRecommendations(')||
+   !recommendationEngine.includes('function recommendationCombos(')||
+   !recommendationEngine.includes('function renderRecommendations(')||
+   !recommendationEngine.includes('function selectDiverseRecommendations(')||
+   !recommendationEngine.includes('function archetypeCombos(')||
+   !html.includes("loadScriptOnce('./data/recommendation-engine.js','recommendationCombos')")||
+   !sw.includes('./data/recommendation-engine.js')){
+  fail('V2.36.0 lazy recommendation engine extraction contract missing');
+}else pass('V2.36.0 recommendation engine moved out of index + offline cached');
+
+if(html.includes('<script src="./data/recommendation-engine.js"></script>')||
+   !html.includes('function ensureInspirationResources(')||
+   !html.includes("loadScriptOnce('./data/recommendation-engine.js','recommendationCombos')")||
+   !recommendationEngine.includes('prioritizeUnseenRecommendations(selectDiverseRecommendations(candidates,30))')||
+   !recommendationEngine.includes('recommendationBatchHistoryIndex')||
+   !recommendationEngine.includes('learnPalettePreference(r.palette,.25)')){
+  fail('V2.36.0 lazy-load or recommendation behavior-preservation contract missing');
+}else pass('V2.36.0 Inspire-only lazy load + anti-repeat/batch/personalization semantics preserved');
+
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
    !html.includes("padding:10px 0 16px var(--app-gutter)")){
@@ -833,14 +857,14 @@ if(atlasCount<40) fail('inspiration atlas too small: '+atlasCount);
 else pass('inspiration atlas size '+atlasCount);
 
 for(const fn of ['inspirationRefineGenerated','paletteSurpriseScore','paletteAestheticCore','paletteAestheticScore','laneAestheticFloor','archetypeCombos','inspirationUtility','inspirationVariations']){
-  if(!html.includes('function '+fn+'(')) fail('V2.11.0 inspiration function missing: '+fn);
+  if(!appSource.includes('function '+fn+'(')) fail('V2.11.0 inspiration function missing: '+fn);
 }
-if(html.includes("const lanes=['editorial','atmospheric','fashion','expressive','unexpected']")){
+if(appSource.includes("const lanes=['editorial','atmospheric','fashion','expressive','unexpected']")){
   fail('V2.11.0 still forces one recommendation per lane');
-}else if(!html.includes("item.aesthetic>=laneAestheticFloor(recommendationLane(item))")){
+}else if(!appSource.includes("item.aesthetic>=laneAestheticFloor(recommendationLane(item))")){
   fail('V2.11.0 aesthetic eligibility gate missing');
 }else pass('V2.11.0 beauty-first diversity gate');
-if(!html.includes('...archetypeCombos(inputs)')||!html.includes('inspirationRefineGenerated(x.colors,inputs.length)')){
+if(!recommendationEngine.includes('...archetypeCombos(inputs)')||!recommendationEngine.includes('inspirationRefineGenerated(x.colors,inputs.length)')){
   fail('V2.7 relation-first recommendation sources missing');
 }else pass('V2.7 relation-first recommendation sources');
 const v27IdeaStart=html.indexOf('function renderIdeas(){');
@@ -865,8 +889,8 @@ if(startupRenderBlock.includes('renderRelationshipExplanation();scheduleSecondar
 }else pass('V2.11.0 hidden relationship rendering deferred');
 
 
-if(!html.includes('const beautyGuard=clamp((aesthetic-.48)/.34)')||
-   !html.includes('return aesthetic*3.85+tonal*2.10')||
+if(!recommendationEngine.includes('const beautyGuard=clamp((aesthetic-.48)/.34)')||
+   !recommendationEngine.includes('return aesthetic*3.85+tonal*2.10')||
    !html.includes('Tonal Cohesion × Aesthetic Gate × Atlas')){
   fail('V2.11.0 aesthetic-first utility or UI contract missing');
 }else pass('V2.11.0 aesthetic-first utility');
