@@ -30,6 +30,7 @@ const localProjectsCss=fs.readFileSync('runtime/local-projects.css','utf8');
 const referenceBoard=fs.readFileSync('runtime/reference-board.js','utf8');
 const gradientStudio=fs.readFileSync('runtime/gradient-studio.js','utf8');
 const gradientStudioCss=fs.readFileSync('runtime/gradient-studio.css','utf8');
+const recommendationEngine=fs.readFileSync('data/recommendation-engine.js','utf8');
 const qrVendor=fs.readFileSync('vendor/qrcode.min.js','utf8');
 const qrLicense=fs.readFileSync('vendor/qrcode.LICENSE.txt','utf8');
 const appSource=html+'\n'+storageHardening+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio+'\n'+recommendationEngine;
@@ -40,7 +41,6 @@ const fashion=fs.readFileSync('data/fashion-palettes.js','utf8');
 const igStyles=fs.readFileSync('data/ig-style-patterns.js','utf8');
 const inspirationAtlas=fs.readFileSync('data/inspiration-atlas.js','utf8');
 const toneFamilies=fs.readFileSync('data/tone-families.js','utf8');
-const recommendationEngine=fs.readFileSync('data/recommendation-engine.js','utf8');
 
 const fail=(msg)=>{console.error('FAIL:',msg);process.exitCode=1};
 const pass=(msg)=>console.log('PASS:',msg);
