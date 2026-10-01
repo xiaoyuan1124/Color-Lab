@@ -506,3 +506,29 @@ test('WebKit V2.51 keeps Display-P3 handoff truthful and source-safe', async ({ 
   expect(result.p3.every(item=>item.space==='display-p3'&&item.inGamut)).toBe(true);
   expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before);
 });
+
+
+test('WebKit V2.52 serializes the current Context Preview as source-safe SVG', async ({ page }) => {
+  await setExactPalette(page,['#E7DCC8','#274C55','#C65338']);
+  const before=await page.evaluate(() => paletteArtifactBase());
+
+  const result=await page.evaluate(() => {
+    previewContext='brand';previewTheme='light';renderContextPreview();
+    const svg=contextPreviewSnapshotSvg();
+    const parsed=new DOMParser().parseFromString(svg,'image/svg+xml');
+    return {
+      svg,
+      parseError:!!parsed.querySelector('parsererror'),
+      hasForeignObject:svg.includes('<foreignObject'),
+      hasBrand:svg.includes('cp2-brand'),
+      hasCss:svg.includes('.cp2')
+    };
+  });
+
+  expect(result.parseError).toBe(false);
+  expect(result.hasForeignObject).toBe(true);
+  expect(result.hasBrand).toBe(true);
+  expect(result.hasCss).toBe(true);
+  expect(result.svg).not.toContain('<script');
+  expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before);
+});
