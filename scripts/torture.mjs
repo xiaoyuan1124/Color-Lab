@@ -707,6 +707,13 @@ check('V2.46 semantic search keeps exact legacy fields in the index',
   appText.includes('...tags,x.folder||\'\',localProjectSearchText(x)'),
   'name, HEX, tags, folders, and project names remain searchable alongside semantic color terms');
 
+check('V2.46 use-case search terms are derived from measurable palette relationships',
+  appText.includes("if(baseStructureContrast>=4.5)terms.push('app','網頁','介面','ui','簡報')")&&
+  appText.includes("if(avgC<.11)terms.push('室內','穿搭','interior','fashion')")&&
+  appText.includes("if(accent.c>Math.max(.08,roleC*1.25))terms.push('品牌','brand','海報')")&&
+  appText.includes('const baseStructureContrast=contrastRatio(colors[0],colors[1])'),
+  'context terms reuse local contrast/chroma evidence instead of stored profile metadata or remote classification');
+
 check('V2.32 resilience lifecycle lives inside the storage runtime',
   storageHardening.includes('function openResilienceDB(')&&
   storageHardening.includes('async function writeResilienceSnapshot(')&&
