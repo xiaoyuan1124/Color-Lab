@@ -5,6 +5,14 @@ test.beforeEach(async ({ page }) => {
   await expect(page.locator('.tab-view[data-view="compose"]')).toBeVisible();
 });
 
+async function openDeepSection(page,id){
+  const deep=page.locator('#composeDeepDive');
+  if(!(await deep.evaluate(el=>el.open)))await deep.locator(':scope > summary').click();
+  const section=page.locator('#'+id);
+  if(!(await section.evaluate(el=>el.open)))await section.locator(':scope > summary').click();
+  await expect(section).toHaveAttribute('open','');
+}
+
 test('mobile Compose keeps the 75 / 18 / 7 contract visible', async ({ page }) => {
   const preview = page.locator('#preview > div');
   await expect(preview).toHaveCount(3);
@@ -87,7 +95,7 @@ test('professional handoff exports exact 75 / 18 / 7 role colors', async ({ page
 });
 
 test('dark context preview never overwrites the current palette', async ({ page }) => {
-  await page.locator('#composeDeepDive').evaluate(el => { el.open = true; el.dispatchEvent(new Event('toggle')); });
+  await openDeepSection(page,'deepApplication');
   const before = await page.evaluate(() => paletteArtifactBase());
   const dark = page.locator('[data-preview-theme="dark"]');
   await dark.click();
@@ -103,7 +111,7 @@ test('dark context preview never overwrites the current palette', async ({ page 
 });
 
 test('three-color accessibility matrix validates original and Dark preview without mutation', async ({ page }) => {
-  await page.locator('#composeDeepDive').evaluate(el => { el.open = true; el.dispatchEvent(new Event('toggle')); });
+  await openDeepSection(page,'deepValidation');
 
   const matrix = page.locator('#accessibilityMatrix .validation-table');
   await expect(matrix).toBeVisible();
@@ -166,7 +174,7 @@ test('V2.14 suggests the smallest AA fix, previews without mutation, and applies
     seed = selectedColors[0];
     generate(false);
   });
-  await page.locator('#composeDeepDive').evaluate(el => { el.open = true; el.dispatchEvent(new Event('toggle')); });
+  await openDeepSection(page,'deepValidation');
 
   const before = await page.evaluate(() => paletteArtifactBase());
   const previewButton = page.locator('[data-accessibility-preview="structure"]').first();
@@ -189,7 +197,7 @@ test('V2.14 suggests the smallest AA fix, previews without mutation, and applies
 });
 
 test('V2.14 Dark validation never offers source-color apply actions', async ({ page }) => {
-  await page.locator('#composeDeepDive').evaluate(el => { el.open = true; el.dispatchEvent(new Event('toggle')); });
+  await openDeepSection(page,'deepValidation');
   await page.locator('[data-validation-theme="dark"]').click();
   await expect(page.locator('#accessibilityFixes')).toContainText('Dark 為衍生預覽');
   await expect(page.locator('[data-accessibility-apply]')).toHaveCount(0);
@@ -311,7 +319,7 @@ test('V2.17 Tone Explorer preview is non-mutating, apply is explicit, and Undo r
     generate(false);
     historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();
   });
-  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await openDeepSection(page,'deepUnderstanding');
   await expect(page.locator('#toneExplorer')).toBeVisible();
   await expect(page.locator('[data-tone-preview="tone-earth"]')).toBeVisible();
 
@@ -368,7 +376,7 @@ test('V2.18 Context Preview 2.0 renders all five real-world scenes without mutat
     lockedSlots=[false,false,false];
     activeSlot=0;seed=selectedColors[0];generate(false);
   });
-  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await openDeepSection(page,'deepApplication');
   const before=await page.evaluate(() => paletteArtifactBase());
 
   const scenes=[
@@ -393,7 +401,7 @@ test('V2.18 Dark preview only derives UI-like contexts while room and outfit sta
     lockedSlots=[false,false,false];
     activeSlot=0;seed=selectedColors[0];generate(false);
   });
-  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await openDeepSection(page,'deepApplication');
   const before=await page.evaluate(() => paletteArtifactBase());
 
   await page.locator('[data-context="app"]').click();
@@ -577,7 +585,7 @@ test('V2.20 keeps advanced handoff formats behind compact disclosure', async ({ 
 });
 
 test('V2.18 renders all five realistic 75/18/7 context scenes', async ({ page }) => {
-  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await openDeepSection(page,'deepApplication');
   const cases=[
     ['app','.cp2-app','App / Web'],
     ['brand','.cp2-brand','品牌'],
@@ -597,7 +605,7 @@ test('V2.18 context switching and Dark preview never mutate the source palette',
     selectedColors=['#E7DCC8','#274C55','#C65338'];
     activeSlot=0;seed=selectedColors[0];generate(false);
   });
-  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await openDeepSection(page,'deepApplication');
   const before=await page.evaluate(() => paletteArtifactBase());
 
   await page.locator('[data-context="app"]').click();
@@ -619,7 +627,7 @@ test('V2.18 Room and Outfit stay on exact source colors even while Dark mode is 
     selectedColors=['#E7DCC8','#274C55','#C65338'];
     activeSlot=0;seed=selectedColors[0];generate(false);
   });
-  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await openDeepSection(page,'deepApplication');
   await page.locator('[data-preview-theme="dark"]').click();
 
   for(const context of ['room','outfit']){
@@ -637,7 +645,7 @@ test('V2.18 Room and Outfit stay on exact source colors even while Dark mode is 
 });
 
 test('V2.18 App scene uses all three palette roles in distinct product UI responsibilities', async ({ page }) => {
-  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await openDeepSection(page,'deepApplication');
   await page.locator('[data-context="app"]').click();
   await expect(page.locator('.cp2-app-rail')).toBeVisible();
   await expect(page.locator('.cp2-app-hero')).toBeVisible();
@@ -652,7 +660,7 @@ test('V2.21 Color Relationship Map visualizes Hue Lightness Chroma and 75/18/7 w
     activeSlot=0;seed=selectedColors[0];generate(false);
   });
   const before=await page.evaluate(() => paletteArtifactBase());
-  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await openDeepSection(page,'deepUnderstanding');
   await expect(page.locator('#colorRelationshipMap')).toBeVisible();
   await expect(page.locator('#colorRelationshipMap .crm-point')).toHaveCount(3);
   await expect(page.locator('#colorRelationshipMap .crm-wheel line')).toHaveCount(3);
@@ -720,7 +728,7 @@ test('V2.22 Role Scale renders 30 derived swatches and suggested usage without m
     activeSlot=0;seed=selectedColors[0];generate(false);
   });
   const before=await page.evaluate(() => paletteArtifactBase());
-  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await openDeepSection(page,'deepUnderstanding');
   await page.locator('#roleScaleDetails').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
   await expect(page.locator('#roleScale')).toBeVisible();
   await expect(page.locator('#roleScale .rscale-role')).toHaveCount(3);
@@ -830,7 +838,7 @@ test('V2.24 maps local SVG flat colors to exact source roles without mutating Co
     activeSlot=0;seed=selectedColors[0];generate(false);
   });
   const before=await page.evaluate(() => paletteArtifactBase());
-  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await openDeepSection(page,'deepApplication');
   await page.locator('#customDesignPreviewDetails').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
 
   const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80"><rect width="40" height="80" fill="#111111"/><rect x="40" width="20" height="80" fill="#111111"/><rect x="60" width="20" height="80" fill="#111111"/><rect x="80" width="20" height="80" fill="#222222"/><circle cx="100" cy="20" r="10" fill="#222222"/><circle cx="105" cy="55" r="8" fill="#333333"/></svg>';
@@ -870,7 +878,7 @@ test('V2.25 detects CVD role conflicts and previews a minimal fix without mutati
   });
   const before=await page.evaluate(() => paletteArtifactBase());
 
-  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await openDeepSection(page,'deepValidation');
   await page.locator('[data-vision="deutan"]').click();
 
   const result=await page.evaluate(() => {
@@ -904,11 +912,13 @@ test('V2.25 syncs CVD simulation across all five context previews and restores e
   });
   const before=await page.evaluate(() => paletteArtifactBase());
 
-  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await openDeepSection(page,'deepApplication');
   await page.locator('[data-context="room"]').click();
   const normalRoom=await page.locator('.cp2-room-wall').evaluate(el => getComputedStyle(el).backgroundColor);
 
+  await openDeepSection(page,'deepValidation');
   await page.locator('[data-vision="deutan"]').click();
+  await openDeepSection(page,'deepApplication');
   await expect(page.locator('#contextThemeNote')).toContainText('綠色弱近似模擬');
   await expect(page.locator('#contextThemeNote')).toContainText('原色不變');
 
@@ -930,7 +940,9 @@ test('V2.25 syncs CVD simulation across all five context previews and restores e
   }
 
   await page.locator('[data-context="room"]').click();
+  await openDeepSection(page,'deepValidation');
   await page.locator('[data-vision="normal"]').click();
+  await openDeepSection(page,'deepApplication');
   await expect(page.locator('#contextThemeNote')).toContainText('原色情境');
   const restoredRoom=await page.locator('.cp2-room-wall').evaluate(el => getComputedStyle(el).backgroundColor);
   expect(restoredRoom).toBe(normalRoom);
@@ -1156,7 +1168,7 @@ test('V2.28 Gradient Studio renders four role paths and four controlled angles w
     lockedSlots=[false,false,false];activeSlot=0;seed=selectedColors[0];generate(false);
   });
   const before=await page.evaluate(() => paletteArtifactBase());
-  await page.locator('#composeDeepDive').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
+  await openDeepSection(page,'deepApplication');
   await page.locator('#gradientStudioDetails').evaluate(el => { el.open=true; el.dispatchEvent(new Event('toggle')); });
 
   await expect(page.locator('#gradientStudioPreview')).toBeVisible();
@@ -1395,4 +1407,98 @@ test('V2.30 backup import rolls back all keys when a later storage write fails',
   expect(result.saved[0].name).toBe('Baseline');
   expect(result.saved[0].palette).toEqual({base:'#112233',structure:'#445566',accent:'#AABBCC'});
   expect(result.recent).toEqual(['#010101']);
+});
+
+
+test('V2.31 deep dive behaves as a three-section accordion and remembers the last section', async ({ page }) => {
+  const deep=page.locator('#composeDeepDive');
+  await deep.locator(':scope > summary').click();
+
+  await expect(page.locator('#deepUnderstanding')).toHaveAttribute('open','');
+  await expect(page.locator('#deepValidation')).not.toHaveAttribute('open','');
+  await expect(page.locator('#deepApplication')).not.toHaveAttribute('open','');
+
+  await page.locator('#deepValidation > summary').click();
+  await expect(page.locator('#deepUnderstanding')).not.toHaveAttribute('open','');
+  await expect(page.locator('#deepValidation')).toHaveAttribute('open','');
+  await expect(page.locator('#deepApplication')).not.toHaveAttribute('open','');
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('colorlab.deepSection'))).toBe('deepValidation');
+
+  await deep.locator(':scope > summary').click();
+  await expect(deep).not.toHaveAttribute('open','');
+  await deep.locator(':scope > summary').click();
+  await expect(page.locator('#deepValidation')).toHaveAttribute('open','');
+  await expect(page.locator('#deepUnderstanding')).not.toHaveAttribute('open','');
+  await expect(page.locator('#deepApplication')).not.toHaveAttribute('open','');
+});
+
+test('V2.31 reload restores the preferred deep-dive section only when Deep Dive opens', async ({ page }) => {
+  await page.evaluate(() => localStorage.setItem('colorlab.deepSection','deepApplication'));
+  await page.reload();
+  await expect(page.locator('.tab-view[data-view="compose"]')).toBeVisible();
+
+  await expect(page.locator('#composeDeepDive')).not.toHaveAttribute('open','');
+  await page.locator('#composeDeepDive > summary').click();
+
+  await expect(page.locator('#deepApplication')).toHaveAttribute('open','');
+  await expect(page.locator('#deepUnderstanding')).not.toHaveAttribute('open','');
+  await expect(page.locator('#deepValidation')).not.toHaveAttribute('open','');
+});
+
+test('V2.31 visible-section renderer avoids hidden work and never mutates source colors', async ({ page }) => {
+  const result=await page.evaluate(async () => {
+    selectedColors=['#E7DCC8','#274C55','#C65338'];
+    lockedSlots=[false,false,false];activeSlot=0;seed=selectedColors[0];generate(false);
+    const before=paletteArtifactBase();
+    const names=[
+      'renderRelationshipExplanation','renderColorRelationshipMap','renderToneExplorer',
+      'renderRoleScale','renderPaletteValidation','renderVision','renderContextPreview',
+      'renderGradientStudio','renderCustomDesignPreview'
+    ];
+    const originals={},calls={};
+    names.forEach(name=>{
+      originals[name]=window[name];
+      calls[name]=0;
+      window[name]=()=>{calls[name]++};
+    });
+    const waitFrame=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    const snapshot=()=>Object.fromEntries(names.map(name=>[name,calls[name]]));
+    const reset=()=>names.forEach(name=>{calls[name]=0});
+
+    document.getElementById('composeDeepDive').open=true;
+
+    openDeepDiveSection('deepUnderstanding');
+    await waitFrame();reset();renderDeepDiveVisible();
+    const understanding=snapshot();
+
+    openDeepDiveSection('deepValidation');
+    await waitFrame();reset();renderDeepDiveVisible();
+    const validation=snapshot();
+
+    openDeepDiveSection('deepApplication');
+    await waitFrame();reset();renderDeepDiveVisible();
+    const application=snapshot();
+
+    names.forEach(name=>{window[name]=originals[name]});
+    return{before,after:paletteArtifactBase(),understanding,validation,application};
+  });
+
+  expect(result.understanding.renderRelationshipExplanation).toBe(1);
+  expect(result.understanding.renderColorRelationshipMap).toBe(1);
+  expect(result.understanding.renderToneExplorer).toBe(1);
+  expect(result.understanding.renderPaletteValidation).toBe(0);
+  expect(result.understanding.renderVision).toBe(0);
+  expect(result.understanding.renderContextPreview).toBe(0);
+
+  expect(result.validation.renderPaletteValidation).toBe(1);
+  expect(result.validation.renderVision).toBe(1);
+  expect(result.validation.renderRelationshipExplanation).toBe(0);
+  expect(result.validation.renderContextPreview).toBe(0);
+
+  expect(result.application.renderContextPreview).toBe(1);
+  expect(result.application.renderRelationshipExplanation).toBe(0);
+  expect(result.application.renderPaletteValidation).toBe(0);
+  expect(result.application.renderVision).toBe(0);
+
+  expect(result.after).toEqual(result.before);
 });

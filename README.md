@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.30.0**
+**目前版本：V2.31.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,21 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.31.0 UX Cleanup
+
+功能不再繼續堆疊，先把已經很強的 Deep Dive 重新整理成手機上更容易理解的資訊架構：
+
+- 「深入理解」拆成三個清楚的 editorial sections：01 理解配色、02 驗證可用性、03 套用情境
+- 01 集中 Why / Relationship Map / Tone Explorer / Role Scale；讓「這組為什麼成立」維持第一個閱讀層
+- 02 集中 WCAG 可讀性與 Accessibility Vision，避免驗證工具打斷色彩理解流程
+- 03 集中 App / Brand / Room / Outfit / Slides、Gradient Studio 與 Custom SVG Preview
+- 三個 section 使用 accordion 行為；一次只展開一區，降低手機上超長捲動與「所有功能同時出現」的壓力
+- 記住最後使用的 Deep Dive section；下次再次打開仍回到原本工作位置
+- hidden section 不再由一般 palette render 背景重算；只 render 當下可見區段
+- 保留 Role Scale、Gradient、Custom SVG 各自的第二層 disclosure，不把專業功能推回首屏
+- 不修改 palette engine、source colors、75 / 18 / 7、收藏、備份、專案或 export semantics
+- 視覺維持低框線、紙張感與 editorial hierarchy，不新增 Bottom Tabs、glass cards 或大面積 pills
 
 ## V2.30.0 Stability / Storage Hardening
 
