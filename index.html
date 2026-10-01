@@ -2697,9 +2697,9 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
           <input id="librarySearch" class="library-search" type="search" placeholder="搜尋名稱、HEX、標籤、色系或調性" autocomplete="off" aria-label="搜尋收藏配色">
           <div class="library-search-note">可複選條件，也支援名稱、HEX、專案、分類與標籤</div>
         </div>
-        <div class="library-quick-search" id="libraryQuickSearch" aria-label="快速搜尋收藏">
+        <div class="library-quick-search" id="libraryQuickSearch" role="group" aria-label="快速搜尋收藏">
           <div class="library-quick-head"><span>快速篩選 · 可複選</span><button type="button" id="libraryQuickClear" hidden>清除搜尋</button></div>
-          <div class="library-quick-chips" role="group" aria-label="常用搜尋條件">
+          <div class="library-quick-chips">
             <button type="button" data-library-quick-term="藍" aria-pressed="false">藍</button>
             <button type="button" data-library-quick-term="柔和" aria-pressed="false">柔和</button>
             <button type="button" data-library-quick-term="深色" aria-pressed="false">深色</button>
