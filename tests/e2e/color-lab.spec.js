@@ -488,7 +488,7 @@ test('V2.19 strategy switching is preview-only until explicit photo apply', asyn
   await expect(page.locator('.photo-palette-ratio i')).toHaveCount(3);
   await page.locator('[data-photo-strategy="vivid"]').click();
   await expect(page.locator('[data-photo-strategy="vivid"]')).toHaveAttribute('aria-pressed','true');
-  await expect(page.locator('#photoPalettePreview')).toContainText('Vivid');
+  await expect(page.locator('#photoPalettePreview')).toContainText('鮮明');
 
   const afterStrategy=await page.evaluate(() => paletteArtifactBase());
   expect(afterStrategy.palette).toEqual(before.palette);
@@ -583,7 +583,7 @@ test('V2.20 keeps advanced handoff formats behind compact disclosure', async ({ 
   await expect(page.locator('[data-export-format="tailwind"]')).toBeVisible();
   await expect(page.locator('[data-export-format="swiftui"]')).toBeVisible();
   await expect(page.locator('[data-export-format="svg"]')).toBeVisible();
-  await expect(page.locator('.handoff-more-actions .utility-btn')).toHaveCount(7);
+  await expect(page.locator('.handoff-more-actions .utility-btn')).toHaveCount(10);
   await expect(page.locator('#exportReferenceBoard')).toBeVisible();
 });
 
@@ -1143,7 +1143,7 @@ test('V2.27 Reference Board export stays behind the existing handoff disclosure'
   await expect(page.locator('#exportReferenceBoard')).not.toBeVisible();
   await page.locator('#handoffMore summary').click();
   await expect(page.locator('#exportReferenceBoard')).toBeVisible();
-  await expect(page.locator('#handoffMore .handoff-more-actions .utility-btn')).toHaveCount(7);
+  await expect(page.locator('#handoffMore .handoff-more-actions .utility-btn')).toHaveCount(10);
 });
 
 
@@ -1256,7 +1256,7 @@ test('V2.29 framework formats remain inside the existing compact handoff disclos
   await expect(page.locator('[data-export-format="scss"]')).toBeVisible();
   await expect(page.locator('[data-export-format="flutter"]')).toBeVisible();
   await expect(page.locator('[data-export-format="jetpack"]')).toBeVisible();
-  await expect(page.locator('#handoffMore .handoff-more-actions .utility-btn')).toHaveCount(7);
+  await expect(page.locator('#handoffMore .handoff-more-actions .utility-btn')).toHaveCount(10);
 });
 
 
@@ -2022,4 +2022,52 @@ test('V2.42 Vision changes defer hidden Context Preview work until Application i
   },expected);
   expect(actual).toBe(expectedCss);
   expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before);
+});
+
+
+test('V2.43 consolidates secondary actions and uses task-based labels without changing source colors', async ({ page }) => {
+  await page.evaluate(() => {
+    selectedColors=['#E7DCC8',null,null];
+    lockedSlots=[false,false,false];
+    activeSlot=0;seed=selectedColors[0];
+    renderComboSlots();
+  });
+  await expect(page.locator('#generate')).toContainText('補齊配色');
+  await expect(page.locator('#openStudioPicker')).toHaveText('精準選色');
+
+  await page.evaluate(() => {
+    selectedColors=['#E7DCC8','#274C55','#C65338'];
+    lockedSlots=[false,false,false];
+    activeSlot=0;seed=selectedColors[0];
+    generate(false);renderComboSlots();
+  });
+  const before=await page.evaluate(() => paletteArtifactBase());
+  await expect(page.locator('#generate')).toContainText('分析這組配色');
+  await expect(page.locator('#composeDeepDive > summary')).toContainText('進階分析');
+
+  await expect(page.locator('[data-export-format="css"]')).not.toBeVisible();
+  await expect(page.locator('#setCompareA')).not.toBeVisible();
+  await page.locator('#handoffMore > summary').click();
+  await expect(page.locator('[data-export-format="css"]')).toBeVisible();
+  await expect(page.locator('[data-export-format="tokens"]')).toHaveText('Design Tokens');
+  await expect(page.locator('[data-export-format="svg"]')).toHaveText('SVG 色票');
+
+  await page.locator('#compareMore > summary').click();
+  await expect(page.locator('#setCompareA')).toHaveText('設為方案 A');
+  await expect(page.locator('#setCompareB')).toHaveText('設為方案 B');
+
+  const after=await page.evaluate(() => paletteArtifactBase());
+  expect(after).toEqual(before);
+});
+
+test('V2.43 localizes high-frequency Photo and Library actions', async ({ page }) => {
+  await page.evaluate(() => switchTab('photo',false));
+  await expect(page.locator('[data-photo-strategy="balanced"]')).toHaveText('平衡');
+  await expect(page.locator('[data-photo-strategy="muted"]')).toHaveText('柔和');
+  await expect(page.locator('[data-photo-strategy="vivid"]')).toHaveText('鮮明');
+  await expect(page.locator('[data-jump="compose"]')).toHaveText('回到配色');
+
+  await page.evaluate(() => switchTab('library',false));
+  await expect(page.locator('#togglePreference')).toContainText('個人化');
+  await expect(page.locator('#installAppBtn')).toHaveText('加入主畫面');
 });
