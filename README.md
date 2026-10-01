@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.43.0**
+**目前版本：V2.44.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,19 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.44.0 First-run Guidance
+
+這一版延續 V2.43 的減法，不增加主導航、不新增後端，也不加入 onboarding 套件：
+
+- 新使用者第一次進入 Compose 時，只顯示一條非阻擋式「三步開始」提示：選 1–3 色 → 看 75 / 18 / 7 → 分析、收藏或匯出
+- 提示不使用 modal、不遮住選色、不要求逐步點擊，避免 onboarding 反而增加操作成本
+- 按「知道了」後只把完成狀態寫入本機 storage；不建立帳號、不追蹤使用行為
+- 已有草稿、收藏或最近用色的 returning user 會自動視為已熟悉，不顯示新手提示
+- onboarding 只解釋既有流程，不改 source palette、推薦、Photo、75 / 18 / 7 或 export
+- 完全使用現有 HTML / CSS / storage runtime；新增第三方 dependency = 0，現金開發成本 = NT$0
+- Chromium / WebKit regression 會驗證首次顯示、dismiss persistence、returning-user suppression 與 source palette 不變
+- Size / Verify / Visual / Torture / Property / Playwright + axe / WebKit / Lighthouse / CodeQL 門檻維持原值
 
 ## V2.43.0 UX Consolidation
 
