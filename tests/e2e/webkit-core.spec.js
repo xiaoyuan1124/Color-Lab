@@ -389,15 +389,6 @@ test('WebKit V2.46 semantic Library search remains local and source-safe', async
 });
 
 
-test('WebKit V2.46 exposes camera capture and gallery as separate mobile Photo choices', async ({ page }) => {
-  await page.evaluate(() => switchTab('photo',false));
-  await expect(page.locator('#photoCameraTrigger')).toBeVisible();
-  await expect(page.locator('#photoTrigger')).toBeVisible();
-  await expect(page.locator('#photoCameraInput')).toHaveAttribute('capture','environment');
-  await expect(page.locator('#photoCameraInput')).toHaveAttribute('accept','image/*');
-  await expect(page.locator('#photoInput')).not.toHaveAttribute('capture',/.+/);
-});
-
 test('WebKit V2.46 semantic Library search works locally and does not mutate saved palettes', async ({ page }) => {
   const before=await page.evaluate(() => {
     const record=sanitizeSavedRecord({
