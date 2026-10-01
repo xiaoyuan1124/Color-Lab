@@ -2695,7 +2695,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
       <section class="app-section first">
         <div class="library-search-wrap">
           <input id="librarySearch" class="library-search" type="search" placeholder="搜尋名稱、HEX、標籤、色系或調性" autocomplete="off" aria-label="搜尋收藏配色">
-          <div class="library-search-note">可複選條件，也支援名稱、HEX、專案、分類與標籤</div>
+          <div class="library-search-note">可搜尋：藍、紅、柔和、鮮明、深色、淺色 · 品牌、室內、穿搭、簡報；也支援名稱、HEX、專案、分類與標籤</div>
         </div>
         <div class="library-quick-search" id="libraryQuickSearch" role="group" aria-label="快速搜尋收藏">
           <div class="library-quick-head"><span>快速篩選 · 可複選</span><button type="button" id="libraryQuickClear" hidden>清除搜尋</button></div>
@@ -5318,10 +5318,13 @@ initCrossPlatformHandoff();
 $$('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
 const LIBRARY_QUICK_TERMS=['藍','柔和','深色','品牌','室內','簡報'];
 function libraryQuickQueryTerms(){
-  return ($('#librarySearch')?.value||'').trim().split(/\s+/).filter(Boolean);
+  const input=$('#librarySearch');
+  const value=input?.value||'';
+  return value.trim().split(/\s+/).filter(Boolean);
 }
 function syncLibraryQuickSearch(){
-  const input=$('#librarySearch'),terms=libraryQuickQueryTerms().map(x=>x.toLocaleLowerCase('zh-Hant'));
+  const input=$('#librarySearch');
+  const terms=libraryQuickQueryTerms().map(x=>x.toLocaleLowerCase('zh-Hant'));
   $('#libraryQuickSearch [data-library-quick-term]').forEach(button=>{
     const key=(button.dataset.libraryQuickTerm||'').toLocaleLowerCase('zh-Hant');
     button.setAttribute('aria-pressed',terms.includes(key)?'true':'false');
