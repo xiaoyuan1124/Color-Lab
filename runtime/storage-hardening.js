@@ -1,5 +1,5 @@
-/* Color Lab V2.30.0 Storage Hardening
-   Safe localStorage access + rollback helpers for local-first reliability. */
+/* Color Lab V2.32.0 Storage Architecture
+   Safe localStorage access, rollback helpers, backup import, and IndexedDB resilience. */
 
 const COLORLAB_STORAGE_FAILURE_COPY='本機儲存失敗，這次變更未保存';
 let colorLabStorageNoticeAt=0;
