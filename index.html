@@ -4987,7 +4987,7 @@ function loadPhoto(file){
     pickMarker.style.display='none';
     magnifier.style.display='none';
     $('#regionBox').style.display='none';regionStart=null;
-    photoLoaded=true;syncPhotoWorkflowUi();finish();
+    photoLoaded=true;finish();syncPhotoWorkflowUi();
     toast(photoMode==='region'?'拖曳框選區域':'按住照片拖動取色');
   };
   img.onerror=()=>{
