@@ -3,6 +3,7 @@ import vm from 'node:vm';
 
 const html=fs.readFileSync('index.html','utf8');
 const storageHardening=fs.readFileSync('runtime/storage-hardening.js','utf8');
+const pwaHealth=fs.readFileSync('runtime/pwa-health.js','utf8');
 const uxCleanup=fs.readFileSync('runtime/ux-cleanup.js','utf8');
 const paletteTools=fs.readFileSync('runtime/palette-tools.js','utf8');
 const toneExplorer=fs.readFileSync('runtime/tone-explorer.js','utf8');
@@ -14,7 +15,7 @@ const visionAccessibility=fs.readFileSync('runtime/vision-accessibility.js','utf
 const localProjects=fs.readFileSync('runtime/local-projects.js','utf8');
 const referenceBoard=fs.readFileSync('runtime/reference-board.js','utf8');
 const gradientStudio=fs.readFileSync('runtime/gradient-studio.js','utf8');
-const appText=html+'\n'+storageHardening+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio;
+const appText=html+'\n'+storageHardening+'\n'+pwaHealth+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio;
 const toneSource=fs.readFileSync('data/tone-families.js','utf8');
 const inlineScripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
 const scriptMatch=inlineScripts.at(-1);
@@ -25,6 +26,8 @@ if(!scriptMatch){
 const source=scriptMatch[1];
 try{new Function(storageHardening)}
 catch(e){console.error('FAIL storage hardening runtime syntax',e.message);process.exit(1)}
+try{new Function(pwaHealth)}
+catch(e){console.error('FAIL pwa health runtime syntax',e.message);process.exit(1)}
 try{new Function(uxCleanup)}
 catch(e){console.error('FAIL ux cleanup runtime syntax',e.message);process.exit(1)}
 try{new Function(paletteTools)}
@@ -478,6 +481,28 @@ check('V2.31 compose render avoids duplicate deep-dive work',
   html.includes("if(deep?.open)renderDeepDiveVisible();")&&
   !html.includes("if(active==='compose'){\n      const deep=$('#composeDeepDive');\n      if(deep?.open)renderDeepDiveVisible()"),
   'visible section renders once per compose palette render');
+check('V2.35 update activation is user-mediated',
+  !fs.readFileSync('sw.js','utf8').includes(".then(()=>self.skipWaiting())")&&
+  fs.readFileSync('sw.js','utf8').includes("if(event.data?.type==='SKIP_WAITING')self.skipWaiting()")&&
+  pwaHealth.includes("waiting.postMessage({type:'SKIP_WAITING'})"),
+  'new worker waits until explicit user update');
+check('V2.35 update path saves local state before worker activation',
+  pwaHealth.includes("if(typeof persistDraft==='function')persistDraft()")&&
+  pwaHealth.includes("if(typeof writeResilienceSnapshot==='function')await writeResilienceSnapshot()")&&
+  pwaHealth.indexOf("persistDraft()")<pwaHealth.indexOf("waiting.postMessage({type:'SKIP_WAITING'})")&&
+  pwaHealth.indexOf("writeResilienceSnapshot()")<pwaHealth.indexOf("waiting.postMessage({type:'SKIP_WAITING'})"),
+  'draft and resilience snapshot happen before SKIP_WAITING');
+check('V2.35 update reload cannot loop',
+  pwaHealth.includes('let pwaControllerReloaded=false')&&
+  pwaHealth.includes('if(!pwaUpdateRequested||pwaControllerReloaded)return')&&
+  pwaHealth.includes('pwaControllerReloaded=true')&&
+  pwaHealth.includes('location.reload()'),
+  'controllerchange reload is guarded');
+check('V2.35 offline state preserves update readiness',
+  pwaHealth.includes("if(navigator.onLine===false)")&&
+  pwaHealth.includes("if(pwaUpdateReady)")&&
+  pwaHealth.includes("window.addEventListener('online',()=>{pwaConnectivityState();pwaCheckForUpdate(true)})"),
+  'offline status wins temporarily and update prompt returns online');
 check('V2.32 resilience lifecycle lives inside the storage runtime',
   storageHardening.includes('function openResilienceDB(')&&
   storageHardening.includes('async function writeResilienceSnapshot(')&&
