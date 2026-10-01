@@ -405,11 +405,11 @@ check('V2.27 reference board exports exact source palette only',
   !referenceBoard.includes('accessibilityPreview'),
   'reference board reads the exact source handoff and excludes preview transforms');
 check('V2.27 optional photo reference remains local',
-  referenceBoard.includes("typeof photoObjectURL!=='undefined'")&&
+  referenceBoard.includes("typeof photoLoaded!=='undefined'&&photoLoaded")&&
   referenceBoard.includes("referenceBoardDrawPhoto(x,photoCanvas")&&
   !referenceBoard.includes('fetch(')&&
   !referenceBoard.includes('XMLHttpRequest'),
-  'loaded photo is drawn from local photoCanvas without network IO');
+  'loaded photo is drawn from local photoCanvas without retaining a blob URL');
 check('V2.27 export cannot mutate source palette',
   !referenceBoard.includes('selectedColors=')&&
   !referenceBoard.includes('palette.base=')&&
@@ -561,6 +561,22 @@ check('V2.38 Inspire rendering is pending-coalesced and route-invalidated',
   appText.includes("if(name==='inspire')renderCompare();\n  scheduleSecondaryRender();")&&
   !appText.includes("ensureInspirationResources().then(()=>requestAnimationFrame(()=>{renderIdeas();renderRecommendations()}))"),
   'rapid route switches invalidate stale async Inspire work without changing recommendation semantics');
+check('V2.39 photo decode owns request-local object URLs',
+  appText.includes('let photoObjectURL=null,photoLoadToken=0,photoLoadImage=null,photoLoaded=false')&&
+  appText.includes('function releasePhotoObjectURL(')&&
+  appText.includes('function cancelPendingPhotoLoad(')&&
+  appText.includes('photoLoadToken++')&&
+  appText.includes('const token=photoLoadToken,objectURL=URL.createObjectURL(file),img=new Image()')&&
+  appText.includes('const isCurrent=()=>token===photoLoadToken&&photoLoadImage===img&&photoObjectURL===objectURL')&&
+  appText.includes('img.src=objectURL')&&
+  !appText.includes('URL.revokeObjectURL(photoObjectURL);photoObjectURL=null'),
+  'stale image callbacks cannot revoke or draw through a newer load');
+check('V2.39 photo presence is canvas-backed and pending loads clean up on pagehide',
+  referenceBoard.includes("typeof photoLoaded!=='undefined'&&photoLoaded")&&
+  !referenceBoard.includes("typeof photoObjectURL!=='undefined'&&!!photoObjectURL")&&
+  appText.includes('photoLoaded=true;finish()')&&
+  appText.includes("window.addEventListener('pagehide',()=>{cancelPendingPhotoLoad();persistDraft();writeResilienceSnapshot()})"),
+  'successful decode releases its blob URL while preserving local canvas availability');
 check('V2.32 resilience lifecycle lives inside the storage runtime',
   storageHardening.includes('function openResilienceDB(')&&
   storageHardening.includes('async function writeResilienceSnapshot(')&&
