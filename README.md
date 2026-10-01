@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.41.0**
+**目前版本：V2.42.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,19 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.42.0 Deep Dive Render Isolation
+
+這一版不改色覺模擬、Context Preview 或配色演算法，專門收斂 Deep Dive 跨 section 的隱藏 render：
+
+- Validation 中切換一般／紅色弱／綠色弱／藍色弱時，只更新目前可見的 Vision 分析
+- 隱藏的 Application Context Preview 不再同步重畫 App / Brand / Room / Outfit / Slides
+- 切到 Application 時，既有 frame-coalesced Deep Dive renderer 會一次套用最新 visionMode 與目前情境
+- 避免隱藏 DOM 被過早更新，也降低手機上快速切 section 時的無效 render
+- 保留 V2.38 的 animation-frame coalescing，不改 Deep Dive accordion 行為
+- Chromium / WebKit regression 驗證 hidden preview 保持不動、section reveal 後才正確套用最新 CVD 模擬
+- source palette、75 / 18 / 7、Accessibility 建議、Context Preview 與 Local-first 契約不變
+- Size / Verify / Visual / Torture / Property / Playwright + axe / Lighthouse / CodeQL 門檻全部維持原值
 
 ## V2.41.0 Photo Pointer Lifecycle Hardening
 
