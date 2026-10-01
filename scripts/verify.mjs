@@ -162,13 +162,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2410")) fail('service worker cache version is not V2.41.0');
+if(!sw.includes("color-lab-v2420")) fail('service worker cache version is not V2.42.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.41.0') fail('package version must be 2.41.0');
+if(pkg.version!=='2.42.0') fail('package version must be 2.42.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.41.0')||!html.includes('<div class="version">V2.41.0</div>')||!html.includes("appVersion:'2.41.0'")) fail('V2.41.0 UI or backup version metadata missing');
-else pass('V2.41.0 version metadata');
+if(!html.includes('Color Lab V2.42.0')||!html.includes('<div class="version">V2.42.0</div>')||!html.includes("appVersion:'2.42.0'")) fail('V2.42.0 UI or backup version metadata missing');
+else pass('V2.42.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -706,7 +706,7 @@ if(!html.includes('id="pwaHealthMount"')||
    html.includes("navigator.serviceWorker.register('./sw.js').catch(()=>{})")||
    sw.includes('./runtime/pwa-health.js')||
    sw.includes('./runtime/pwa-health.css')||
-   !pwaHealth.includes("const COLORLAB_APP_VERSION='2.41.0'")||
+   !pwaHealth.includes("const COLORLAB_APP_VERSION='2.42.0'")||
    !pwaHealthCss.includes('.pwa-health{')){
   fail('V2.35.0 shell-integrated PWA health / UI contract missing');
 }else pass('V2.35.0 shell-integrated PWA controller + compact UI');
@@ -826,6 +826,11 @@ if(!html.includes('photoPointerId=null,photoMagnifierHideTimer=0')||
    !html.includes("cancelPhotoPointerInteraction();persistDraft();writeResilienceSnapshot()")){
   fail('V2.41.0 photo pointer lifecycle / multi-touch isolation contract missing');
 }else pass('V2.41.0 Photo pointer lifecycle is single-owner, timer-safe, and cleaned on replacement/pagehide');
+
+if(!visionAccessibility.includes("if(document.getElementById('composeDeepDive')?.open&&document.getElementById('deepApplication')?.open)renderContextPreview();")||
+   /renderVision\(\);\s*renderContextPreview\(\);/.test(visionAccessibility)){
+  fail('V2.42.0 hidden Context Preview render isolation contract missing');
+}else pass('V2.42.0 Vision updates only rerender Context Preview when Application is visible');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||

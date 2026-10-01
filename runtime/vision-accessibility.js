@@ -161,7 +161,7 @@ function setVisionMode(next){
   if(!VISION_MODE_META[next])return;
   visionMode=next;visionFixPreview=null;
   renderVision();
-  renderContextPreview();
+  if(document.getElementById('composeDeepDive')?.open&&document.getElementById('deepApplication')?.open)renderContextPreview();
 }
 function visionPairName(pair){
   return VISION_ROLE_META[pair.a].label+' ↔ '+VISION_ROLE_META[pair.b].label;

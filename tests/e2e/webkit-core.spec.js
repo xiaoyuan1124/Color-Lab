@@ -281,3 +281,30 @@ test('WebKit V2.41 keeps Photo pointer ownership on the initiating touch', async
   expect(result.afterForeign).toEqual({id:7,picking:true});
   expect(result.afterOwner).toEqual({id:null,picking:false,display:'none'});
 });
+
+
+test('WebKit V2.42 defers hidden Application preview rendering until section reveal', async ({ page }) => {
+  const deep=page.locator('#composeDeepDive');
+  if(!(await deep.evaluate(el=>el.open)))await deep.locator(':scope > summary').click();
+  const validation=page.locator('#deepValidation');
+  if(!(await validation.evaluate(el=>el.open)))await validation.locator(':scope > summary').click();
+  await expect(validation).toHaveAttribute('open','');
+  await page.evaluate(() => new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+
+  await page.evaluate(() => {
+    previewContext='room';
+    document.getElementById('uiPreview').innerHTML='<div id="webkitV242Sentinel">deferred</div>';
+    document.getElementById('contextThemeNote').textContent='webkit-v242-sentinel';
+  });
+  await page.locator('[data-vision="deutan"]').click();
+  await expect(page.locator('#webkitV242Sentinel')).toHaveCount(1);
+  await expect(page.locator('#contextThemeNote')).toHaveText('webkit-v242-sentinel');
+
+  const application=page.locator('#deepApplication');
+  await application.locator(':scope > summary').click();
+  await expect(application).toHaveAttribute('open','');
+  await page.evaluate(() => new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  await expect(page.locator('#webkitV242Sentinel')).toHaveCount(0);
+  await expect(page.locator('#contextThemeNote')).toContainText('綠色弱近似模擬');
+  await expect(page.locator('.cp2-room-wall')).toHaveCount(1);
+});

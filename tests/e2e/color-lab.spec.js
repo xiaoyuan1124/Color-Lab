@@ -1986,3 +1986,40 @@ test('V2.41 Photo pointer lifecycle ignores unrelated touch pointers and stale h
   expect(result.foreignCancel).toEqual({id:33,picking:true});
   expect(result.ownerCancel).toEqual({id:null,picking:false,timer:0,display:'none'});
 });
+
+
+test('V2.42 Vision changes defer hidden Context Preview work until Application is visible', async ({ page }) => {
+  await page.evaluate(() => {
+    selectedColors=['#E7DCC8','#274C55','#C65338'];
+    lockedSlots=[false,false,false];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+  });
+  const before=await page.evaluate(() => paletteArtifactBase());
+
+  await openDeepSection(page,'deepValidation');
+  await page.evaluate(() => {
+    previewContext='room';
+    const host=document.getElementById('uiPreview');
+    host.innerHTML='<div id="v242ContextSentinel">deferred</div>';
+    document.getElementById('contextThemeNote').textContent='v242-sentinel';
+  });
+
+  await page.locator('[data-vision="deutan"]').click();
+  await expect(page.locator('#visionPreview')).toContainText('綠色弱');
+  await expect(page.locator('#v242ContextSentinel')).toHaveCount(1);
+  await expect(page.locator('#contextThemeNote')).toHaveText('v242-sentinel');
+
+  await openDeepSection(page,'deepApplication');
+  await expect(page.locator('#v242ContextSentinel')).toHaveCount(0);
+  await expect(page.locator('#contextThemeNote')).toContainText('綠色弱近似模擬');
+  await expect(page.locator('.cp2-room-wall')).toHaveCount(1);
+
+  const expected=await page.evaluate(() => transformVision(palette.base,'deutan'));
+  const actual=await page.locator('.cp2-room-wall').evaluate(el => getComputedStyle(el).backgroundColor);
+  const expectedCss=await page.evaluate(hex => {
+    const probe=document.createElement('i');probe.style.background=hex;document.body.appendChild(probe);
+    const value=getComputedStyle(probe).backgroundColor;probe.remove();return value;
+  },expected);
+  expect(actual).toBe(expectedCss);
+  expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before);
+});
