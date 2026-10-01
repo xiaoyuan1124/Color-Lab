@@ -544,6 +544,23 @@ check('V2.37 color quality core cannot write source palette or storage',
   !/\bpalette\.(?:base|structure|accent)\s*=/.test(colorQuality)&&
   !/localStorage|indexedDB|fetch\(/.test(colorQuality),
   'core is deterministic color math, not product state ownership');
+check('V2.38 Deep Dive rendering is frame-coalesced',
+  uxCleanup.includes('let deepDiveRenderFrame=0')&&
+  uxCleanup.includes('function scheduleDeepDiveVisibleRender(')&&
+  uxCleanup.includes('if(deepDiveRenderFrame)return')&&
+  uxCleanup.includes('deepDiveRenderFrame=requestAnimationFrame(')&&
+  uxCleanup.includes('deepDiveRenderFrame=0')&&
+  appText.includes("if(deep?.open)scheduleDeepDiveVisibleRender()"),
+  'repeated Deep Dive triggers share one animation-frame render');
+check('V2.38 Inspire rendering is pending-coalesced and route-invalidated',
+  appText.includes('let secondaryRenderPending=false')&&
+  appText.includes('secondaryRenderToken++')&&
+  appText.includes('if(secondaryRenderPending)return')&&
+  appText.includes("if(active!=='inspire')return")&&
+  appText.includes("token!==secondaryRenderToken||!stillActive")&&
+  appText.includes("if(name==='inspire')renderCompare();\n  scheduleSecondaryRender();")&&
+  !appText.includes("ensureInspirationResources().then(()=>requestAnimationFrame(()=>{renderIdeas();renderRecommendations()}))"),
+  'rapid route switches invalidate stale async Inspire work without changing recommendation semantics');
 check('V2.32 resilience lifecycle lives inside the storage runtime',
   storageHardening.includes('function openResilienceDB(')&&
   storageHardening.includes('async function writeResilienceSnapshot(')&&
