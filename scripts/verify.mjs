@@ -750,8 +750,8 @@ if(html.includes('<script src="./data/recommendation-engine.js"></script>')||
    !recommendationEngine.includes('learnPalettePreference(r.palette,.25)')||
    html.includes("$('#previousRecommendations').onclick=previousRecommendationBatch")||
    html.includes("$('#nextRecommendations').onclick=nextRecommendationBatch")||
-   !html.includes("$('#previousRecommendations').onclick=()=>ensureInspirationResources()")||
-   !html.includes("$('#nextRecommendations').onclick=()=>ensureInspirationResources()")){
+   !html.includes("$('#previousRecommendations').onclick=()=>runInspirationAction(previousRecommendationBatch)")||
+   !html.includes("$('#nextRecommendations').onclick=()=>runInspirationAction(nextRecommendationBatch)")){
   fail('V2.36.0 lazy-load or recommendation behavior-preservation contract missing');
 }else pass('V2.36.0 Inspire-only lazy load + anti-repeat/batch/personalization semantics preserved');
 
@@ -780,8 +780,9 @@ if(!uxCleanup.includes('let deepDiveRenderFrame=0')||
    !html.includes('if(secondaryRenderPending)return')||
    !html.includes('secondaryRenderPending=true')||
    !html.includes('secondaryRenderPending=false')||
-   !html.includes("if(active!=='inspire')return")||
-   !html.includes("token!==secondaryRenderToken||!stillActive")||
+   !html.includes('function inspirationRouteActive(')||
+   !html.includes("if(!inspirationRouteActive())return")||
+   !html.includes("if(token!==secondaryRenderToken||!inspirationRouteActive())return")||
    !html.includes("if(name==='inspire')renderCompare();\n  scheduleSecondaryRender();")){
   fail('V2.38.0 render scheduling coalescing / stale-route invalidation contract missing');
 }else pass('V2.38.0 Deep Dive + Inspire render scheduling is coalesced and route-aware');
