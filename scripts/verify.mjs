@@ -264,7 +264,7 @@ if(!html.includes('id="libraryQuickSearch" role="group" aria-label="快速搜尋
    !html.includes('data-library-quick-term="室內" aria-pressed="false"')||
    !html.includes("const LIBRARY_QUICK_TERMS=['藍','柔和','深色','品牌','室內','簡報']")||
    !html.includes('function syncLibraryQuickSearch(')||
-   !html.includes("$('#libraryQuickSearch [data-library-quick-term]').forEach")||
+   !html.includes("document.querySelectorAll('#libraryQuickSearch [data-library-quick-term]').forEach")||
    !html.includes('function toggleLibraryQuickSearch(')||
    !html.includes('function clearLibraryQuickSearch(')||
    !html.includes("input.value=terms.join(' ')")||
