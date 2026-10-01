@@ -1735,6 +1735,6 @@ test('V2.37 core color quality module preserves exact complete source palettes',
   expect(result.qualityReady).toBe(true);
   expect(result.refined).toEqual(['#112233','#445566','#AABBCC']);
   expect(result.selected).toEqual(['#112233','#445566','#AABBCC']);
-  expect(result.palette).toEqual({base:'#112233',structure:'#445566',accent:'#AABBCC'});
+  expect(result.palette.palette).toEqual({base:'#112233',structure:'#445566',accent:'#AABBCC'});
 });
 
