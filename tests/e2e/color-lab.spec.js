@@ -2071,3 +2071,41 @@ test('V2.43 localizes high-frequency Photo and Library actions', async ({ page }
   await expect(page.locator('#togglePreference')).toContainText('個人化');
   await expect(page.locator('#installAppBtn')).toHaveText('加入主畫面');
 });
+
+
+test('V2.44 shows lightweight guidance only for a true first run and persists dismissal locally', async ({ page }) => {
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await expect(page.locator('#firstRunGuide')).toBeVisible();
+  await expect(page.locator('#firstRunGuide')).toContainText('選 1–3 色');
+  await expect(page.locator('#firstRunGuide')).toContainText('看 75 / 18 / 7');
+  await expect(page.locator('#firstRunGuide')).toContainText('分析、收藏或匯出');
+
+  const before=await page.evaluate(() => paletteArtifactBase());
+  await page.locator('#dismissFirstRunGuide').click();
+  await expect(page.locator('#firstRunGuide')).toBeHidden();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('colorlab.firstRunGuideV1'))).toBe('done');
+  const after=await page.evaluate(() => paletteArtifactBase());
+  expect(after).toEqual(before);
+
+  await page.reload();
+  await expect(page.locator('#firstRunGuide')).toBeHidden();
+});
+
+test('V2.44 suppresses onboarding for returning users with an existing draft', async ({ page }) => {
+  await page.evaluate(() => {
+    localStorage.clear();
+    localStorage.setItem('colorlab.draft',JSON.stringify({
+      selectedColors:['#112233','#445566','#AABBCC'],
+      lockedSlots:[false,false,false],
+      activeSlot:0,
+      mode:'quiet',
+      comboName:'Returning'
+    }));
+  });
+  await page.reload();
+  await expect(page.locator('#firstRunGuide')).toBeHidden();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('colorlab.firstRunGuideV1'))).toBe('done');
+  const palette=await page.evaluate(() => paletteArtifactBase());
+  expect(palette.palette).toEqual({base:'#112233',structure:'#445566',accent:'#AABBCC'});
+});
