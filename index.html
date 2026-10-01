@@ -724,6 +724,14 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
   outline:0;
 }
 .library-search::placeholder{color:var(--text-3)}
+.library-quick-search{margin:-4px 0 var(--space-4)}
+.library-quick-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.library-quick-head span{font-size:10px;letter-spacing:.08em;color:var(--text-3);font-weight:700}
+.library-quick-head button{border:0;background:transparent;color:var(--olive-11);padding:4px 0;font-size:10px;font-weight:700}
+.library-quick-chips{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;margin:0 calc(-1 * clamp(20px,5.8vw,28px));padding:1px clamp(20px,5.8vw,28px) 4px}
+.library-quick-chips::-webkit-scrollbar{display:none}
+.library-quick-chips button{flex:0 0 auto;border:1px solid var(--border-subtle);border-radius:var(--radius-pill);background:transparent;color:var(--text-1);padding:8px 12px;font-size:11px;font-weight:650}
+.library-quick-chips button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
 .saved-delete{
   min-height:44px;
   border:0;
@@ -2330,7 +2338,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.46.0</div>
+    <div class="version">V2.47.0</div>
   </div>
 
   <main class="app-main">
@@ -2687,7 +2695,18 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
       <section class="app-section first">
         <div class="library-search-wrap">
           <input id="librarySearch" class="library-search" type="search" placeholder="搜尋名稱、HEX、標籤、色系或調性" autocomplete="off" aria-label="搜尋收藏配色">
-          <div class="library-search-note">可搜尋：藍、紅、柔和、鮮明、深色、淺色、品牌、室內、穿搭、簡報，也支援專案／分類／標籤</div>
+          <div class="library-search-note">可複選條件，也支援名稱、HEX、專案、分類與標籤</div>
+        </div>
+        <div class="library-quick-search" id="libraryQuickSearch" aria-label="快速搜尋收藏">
+          <div class="library-quick-head"><span>快速篩選 · 可複選</span><button type="button" id="libraryQuickClear" hidden>清除搜尋</button></div>
+          <div class="library-quick-chips" role="group" aria-label="常用搜尋條件">
+            <button type="button" data-library-quick-term="藍" aria-pressed="false">藍</button>
+            <button type="button" data-library-quick-term="柔和" aria-pressed="false">柔和</button>
+            <button type="button" data-library-quick-term="深色" aria-pressed="false">深色</button>
+            <button type="button" data-library-quick-term="品牌" aria-pressed="false">品牌</button>
+            <button type="button" data-library-quick-term="室內" aria-pressed="false">室內</button>
+            <button type="button" data-library-quick-term="簡報" aria-pressed="false">簡報</button>
+          </div>
         </div>
         <div class="tag-filters" id="libraryFilters"></div>
         <div class="library-organize">
@@ -2732,7 +2751,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.46.0</div>
+  <div class="footer app-footer">Color Lab V2.47.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2843,7 +2862,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 /* Color Lab V2.35.0 PWA / iPhone Update Hardening
    User-mediated service worker activation prevents mixed-version sessions. */
 
-const COLORLAB_APP_VERSION='2.46.0';
+const COLORLAB_APP_VERSION='2.47.0';
 const PWA_UPDATE_CHECK_INTERVAL=20*60*1000;
 let pwaRegistration=null;
 let pwaUpdateReady=false;
@@ -3292,7 +3311,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v5',appVersion:'2.46.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.47.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -5297,7 +5316,37 @@ $$('[data-preview-theme]').forEach(b=>b.addEventListener('click',()=>setPreviewT
 $$('[data-validation-theme]').forEach(b=>b.addEventListener('click',()=>setValidationTheme(b.dataset.validationTheme)));
 initCrossPlatformHandoff();
 $$('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
-$('#librarySearch').addEventListener('input',renderSaved);
+const LIBRARY_QUICK_TERMS=['藍','柔和','深色','品牌','室內','簡報'];
+function libraryQuickQueryTerms(){
+  return ($('#librarySearch')?.value||'').trim().split(/\s+/).filter(Boolean);
+}
+function syncLibraryQuickSearch(){
+  const input=$('#librarySearch'),terms=libraryQuickQueryTerms().map(x=>x.toLocaleLowerCase('zh-Hant'));
+  $('#libraryQuickSearch [data-library-quick-term]').forEach(button=>{
+    const key=(button.dataset.libraryQuickTerm||'').toLocaleLowerCase('zh-Hant');
+    button.setAttribute('aria-pressed',terms.includes(key)?'true':'false');
+  });
+  const clear=$('#libraryQuickClear');if(clear)clear.hidden=!(input?.value||'').trim();
+}
+function toggleLibraryQuickSearch(term){
+  const input=$('#librarySearch');if(!input||!LIBRARY_QUICK_TERMS.includes(term))return;
+  const terms=libraryQuickQueryTerms(),key=term.toLocaleLowerCase('zh-Hant');
+  const index=terms.findIndex(x=>x.toLocaleLowerCase('zh-Hant')===key);
+  if(index>=0)terms.splice(index,1);else terms.push(term);
+  input.value=terms.join(' ');
+  syncLibraryQuickSearch();renderSaved();
+}
+function clearLibraryQuickSearch(){
+  const input=$('#librarySearch');if(!input)return;
+  input.value='';syncLibraryQuickSearch();renderSaved();
+  try{input.focus({preventScroll:true})}catch(_){input.focus()}
+}
+$('#librarySearch').addEventListener('input',()=>{syncLibraryQuickSearch();renderSaved()});
+$('#libraryQuickSearch').addEventListener('click',e=>{
+  const button=e.target.closest?.('[data-library-quick-term]');if(button)toggleLibraryQuickSearch(button.dataset.libraryQuickTerm||'');
+});
+$('#libraryQuickClear').onclick=clearLibraryQuickSearch;
+syncLibraryQuickSearch();
 $('#librarySort').value=librarySort;
 $('#librarySort').addEventListener('change',e=>{librarySort=e.target.value;storageWriteRaw('colorlab.librarySort',librarySort,{silent:true});renderSaved()});
 $('#libraryFolderFilter').addEventListener('change',e=>{libraryFolderFilter=e.target.value;renderSaved()});
