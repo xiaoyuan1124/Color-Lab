@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.37.0**
+**目前版本：V2.38.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,20 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.38.0 Render Scheduling Hardening
+
+這一版不增加新功能，專門處理快速切換與啟動階段可能造成的重複重型 render：
+
+- Deep Dive 的 visible-section render 改為單一 animation-frame coalescing；同一 frame 內多次觸發只計算一次
+- Compose startup / Deep Dive restore / tab switch 即使同時要求更新，也只保留最新可見 section 的工作
+- Inspire secondary render 增加單一 pending idle task，快速重複切頁不再排出多個重型 callback
+- 每次 tab route 變更都會推進 render token；離開 Inspire 後尚未完成的 lazy promise 會被視為 stale，不再背景更新隱藏頁面
+- promise resolve / reject 都重新確認 token 與目前 active route，避免切頁後出現隱藏 render 或過期錯誤 toast
+- 不改推薦公式、排序、候選內容、Deep Dive UI、source palette 或 75 / 18 / 7
+- Chromium 與 WebKit regression 覆蓋 rapid route switching、stale async invalidation、Deep Dive frame coalescing
+- Size / Verify / Visual / Torture / Property / Playwright + axe / Lighthouse / CodeQL 門檻全部維持原值
+- 不新增後端、登入、Supabase、AI 或付費 API
 
 ## V2.37.0 Color Quality Architecture
 
