@@ -2216,6 +2216,53 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 }
 
 
+/* V2.45 RESULT-FIRST */
+.result-summary{
+  display:grid;
+  gap:8px;
+  margin:0 0 var(--space-4);
+  padding:0 0 var(--space-4);
+  border-bottom:1px solid var(--hairline);
+}
+.result-summary strong{
+  font-size:clamp(18px,4.8vw,22px);
+  line-height:1.28;
+  letter-spacing:-.02em;
+  color:var(--text-1);
+}
+.result-summary-meta{
+  display:flex;
+  gap:7px 12px;
+  flex-wrap:wrap;
+  color:var(--text-2);
+  font-size:11px;
+  line-height:1.45;
+}
+.result-summary-meta span{display:inline-flex;align-items:center;gap:5px}
+.result-summary-meta span::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--olive-8)}
+.result-primary-actions{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  margin:0 0 var(--space-5);
+}
+.result-primary-actions button{
+  min-width:0;
+  min-height:44px;
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-1);
+  padding:8px 5px;
+  font-size:11px;
+  font-weight:700;
+}
+.result-primary-actions button:active{background:var(--olive-2)}
+.first-run-nav-tip{font-size:10px;color:var(--text-3);line-height:1.45}
+@media(max-width:360px){
+  .result-primary-actions{grid-template-columns:repeat(2,1fr)}
+}
+
 /* V2.44 FIRST-RUN GUIDANCE */
 .first-run-guide{
   display:flex;
@@ -2256,7 +2303,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.44.0</div>
+    <div class="version">V2.45.0</div>
   </div>
 
   <main class="app-main">
@@ -2280,6 +2327,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
             <span><b>2</b>看 75 / 18 / 7</span>
             <span><b>3</b>分析、收藏或匯出</span>
           </div>
+          <span class="first-run-nav-tip">右下角四點可切換配色、靈感、相片與收藏</span>
         </div>
         <button type="button" id="dismissFirstRunGuide">知道了</button>
       </aside>
@@ -2323,6 +2371,15 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
         </div>
 
         <div class="preview" id="preview"></div>
+
+        <div class="result-summary" id="resultSummary" aria-live="polite"></div>
+
+        <div class="result-primary-actions" aria-label="主要配色操作">
+          <button type="button" id="resultQuickSave">收藏</button>
+          <button type="button" id="resultQuickCompare">比較</button>
+          <button type="button" id="resultQuickAnalyze">進階分析</button>
+          <button type="button" id="resultQuickExport">匯出</button>
+        </div>
 
         <div class="health-strip" id="paletteHealth"></div>
 
@@ -2643,7 +2700,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.44.0</div>
+  <div class="footer app-footer">Color Lab V2.45.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2753,7 +2810,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 /* Color Lab V2.35.0 PWA / iPhone Update Hardening
    User-mediated service worker activation prevents mixed-version sessions. */
 
-const COLORLAB_APP_VERSION='2.44.0';
+const COLORLAB_APP_VERSION='2.45.0';
 const PWA_UPDATE_CHECK_INTERVAL=20*60*1000;
 let pwaRegistration=null;
 let pwaUpdateReady=false;
@@ -3067,6 +3124,30 @@ function renderPaletteHealth(){
     '<div class="health-item '+(data.normal===3?'good':'warn')+'"><strong>'+data.normal+' / 3 組可作一般文字</strong><span>WCAG AA 4.5:1</span></div>'+
     '<div class="health-item '+(data.large===3?'good':'warn')+'"><strong>'+data.large+' / 3 組達 UI 對比</strong><span>大字 / 非文字元件 3:1</span></div>';
 }
+function paletteResultSummaryData(){
+  const values=[palette.base,palette.structure,palette.accent].map(toOKLCH);
+  const [base,structure,accent]=values;
+  const avgC=(base.c+structure.c+accent.c)/3;
+  const roleC=(base.c+structure.c)/2;
+  const lightSpread=Math.max(...values.map(x=>x.l))-Math.min(...values.map(x=>x.l));
+  const validation=paletteValidationData('original');
+  const tone=avgC<.055?'沉穩柔和':avgC>.145?'鮮明有張力':'平衡自然';
+  const hierarchy=lightSpread>.46?'明暗清楚':lightSpread>.28?'層級穩定':'明暗柔和';
+  const focus=accent.c>Math.max(.04,roleC*1.35)?'Accent 明確':'Accent 克制';
+  const readability=validation.normal>=2?'可讀性良好':validation.large>=2?'大字可用':'需檢查可讀性';
+  return{tone,hierarchy,focus,readability};
+}
+function renderResultSummary(){
+  const host=$('#resultSummary');if(!host)return;
+  const x=paletteResultSummaryData();
+  host.innerHTML='<strong>'+x.tone+'</strong><div class="result-summary-meta"><span>'+x.hierarchy+'</span><span>'+x.focus+'</span><span>'+x.readability+'</span></div>';
+}
+function openResultDisclosure(id){
+  const target=$('#'+id);if(!target)return;
+  target.open=true;
+  if(id==='composeDeepDive')scheduleDeepDiveVisibleRender();
+  requestAnimationFrame(()=>target.scrollIntoView({behavior:'smooth',block:'start'}));
+}
 function renderUIPreview(){renderContextPreview()}
 function trioVariation(colors,key){
   const settings={
@@ -3178,7 +3259,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v5',appVersion:'2.44.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.45.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -4396,6 +4477,7 @@ function render(){
   const pv=$('#preview');pv.innerHTML='';
   [['base','75'],['structure','18'],['accent','7']].forEach(([k,t])=>{const d=document.createElement('div');d.style.background=palette[k];d.style.color=textFor(palette[k]);d.innerHTML=`<span>${t}</span>`;pv.appendChild(d)});
   renderPaletteHealth();
+  renderResultSummary();
   const deep=$('#composeDeepDive');
   if(deep?.open)scheduleDeepDiveVisibleRender();
   scheduleSecondaryRender();
@@ -4959,6 +5041,10 @@ $('#generate').onclick=async()=>{
   finally{button.disabled=false;updateGenerateActionLabel()}
 };
 $('#save').onclick=save;
+$('#resultQuickSave').onclick=()=>$('#save').click();
+$('#resultQuickCompare').onclick=()=>openResultDisclosure('compareMore');
+$('#resultQuickAnalyze').onclick=()=>openResultDisclosure('composeDeepDive');
+$('#resultQuickExport').onclick=()=>openResultDisclosure('handoffMore');
 $('#previousRecommendations').onclick=()=>runInspirationAction(previousRecommendationBatch);
 $('#nextRecommendations').onclick=()=>runInspirationAction(nextRecommendationBatch);
 document.addEventListener('click',e=>{
