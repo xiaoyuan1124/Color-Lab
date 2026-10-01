@@ -1552,3 +1552,53 @@ test('V2.32 resilience lifecycle remains callable after moving out of index', as
   }));
   expect(result).toEqual({open:'function',write:'function',schedule:'function',restore:'function'});
 });
+
+
+test('V2.33 photo analysis helpers remain behavior-equivalent after runtime move', async ({ page }) => {
+  await expect(page.locator('script[src="./runtime/photo-palette.js"]')).toHaveCount(1);
+  const result=await page.evaluate(() => {
+    selectedColors=['#6D7FA4','#C88069','#D7C8AD'];
+    lockedSlots=[false,false,false];activeSlot=0;seed=selectedColors[0];generate(false);
+    const before=paletteArtifactBase();
+    const clusters=[
+      {hex:'#EEEAE4',proportion:.55,l:.94,c:.02,h:75,edgeShare:.82},
+      {hex:'#6D7FA4',proportion:.30,l:.60,c:.08,h:245,edgeShare:.12},
+      {hex:'#D43C5A',proportion:.15,l:.57,c:.19,h:18,edgeShare:.08}
+    ];
+    const roles=semanticRolesFromClusters(clusters);
+    const profile=photoCompositionProfile(clusters,roles);
+    const relationExact=photoCurrentRelationship(['#6D7FA4','#C88069','#D7C8AD']);
+    const relationFar=photoCurrentRelationship(['#111111','#222222','#333333']);
+    return{
+      before,
+      after:paletteArtifactBase(),
+      profile,
+      relationExact,
+      relationFar,
+      profileSource:photoCompositionProfile.toString(),
+      relationshipSource:photoCurrentRelationship.toString()
+    };
+  });
+
+  expect(result.profile.edgeHex).toBe('#EEEAE4');
+  expect(result.profile.dominanceBand).toBeTruthy();
+  expect(result.profile.primaryShare).toBeGreaterThan(0);
+  expect(result.relationExact).toBe('與目前三色關係接近');
+  expect(result.relationFar).toBe('與目前三色方向差異明顯');
+  expect(result.profileSource).toContain('const edgeCandidate=[...usable]');
+  expect(result.relationshipSource).toContain('perceptualDistance');
+  expect(result.after).toEqual(result.before);
+});
+
+test('V2.33 photo analysis runtime does not own source-palette mutation', async ({ page }) => {
+  const result=await page.evaluate(() => ({
+    profile:photoCompositionProfile.toString(),
+    relationship:photoCurrentRelationship.toString()
+  }));
+  for(const source of [result.profile,result.relationship]){
+    expect(source).not.toContain('selectedColors=');
+    expect(source).not.toContain('palette.base=');
+    expect(source).not.toContain('palette.structure=');
+    expect(source).not.toContain('palette.accent=');
+  }
+});
