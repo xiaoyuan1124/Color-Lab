@@ -749,7 +749,7 @@ if(!html.includes('id="pwaHealthMount"')||
    html.includes("navigator.serviceWorker.register('./sw.js').catch(()=>{})")||
    sw.includes('./runtime/pwa-health.js')||
    sw.includes('./runtime/pwa-health.css')||
-   !pwaHealth.includes("const COLORLAB_APP_VERSION='2.43.0'")||
+   !pwaHealth.includes("const COLORLAB_APP_VERSION='"+pkg.version+"'")||
    !pwaHealthCss.includes('.pwa-health{')){
   fail('V2.35.0 shell-integrated PWA health / UI contract missing');
 }else pass('V2.35.0 shell-integrated PWA controller + compact UI');
