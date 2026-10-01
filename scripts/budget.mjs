@@ -11,6 +11,7 @@ const files={
   ig:'data/ig-style-patterns.js',
   atlas:'data/inspiration-atlas.js',
   tones:'data/tone-families.js',
+  recommendation:'data/recommendation-engine.js',
   sw:'sw.js',
   manifest:'manifest.json'
 };
@@ -29,7 +30,7 @@ const sizes=Object.fromEntries(Object.entries(files).map(([k,p])=>[k,size(p)]));
 const runtimeFiles=fs.readdirSync('runtime').filter(name=>/\.(?:js|css)$/.test(name)).map(name=>'runtime/'+name);
 const runtimeModules=runtimeFiles.reduce((sum,path)=>sum+size(path),0);
 const eager=0;
-const lazyIntelligence=sizes.poline+sizes.fashion+sizes.ig+sizes.atlas+sizes.tones;
+const lazyIntelligence=sizes.poline+sizes.fashion+sizes.ig+sizes.atlas+sizes.tones+sizes.recommendation;
 const lazyInteraction=sizes.iro+sizes.sortable+sizes.qr;
 const core=Object.values(sizes).reduce((a,b)=>a+b,0);
 
