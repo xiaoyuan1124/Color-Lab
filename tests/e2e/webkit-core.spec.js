@@ -328,3 +328,19 @@ test('WebKit V2.43 keeps consolidated mobile actions discoverable and source-saf
   const after=await page.evaluate(() => paletteArtifactBase());
   expect(after).toEqual(before);
 });
+
+
+test('WebKit V2.44 first-run guidance dismisses once and stays source-safe', async ({ page }) => {
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await expect(page.locator('#firstRunGuide')).toBeVisible();
+  const before=await page.evaluate(() => paletteArtifactBase());
+
+  await page.locator('#dismissFirstRunGuide').click();
+  await expect(page.locator('#firstRunGuide')).toBeHidden();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('colorlab.firstRunGuideV1'))).toBe('done');
+  expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before);
+
+  await page.reload();
+  await expect(page.locator('#firstRunGuide')).toBeHidden();
+});
