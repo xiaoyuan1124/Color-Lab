@@ -165,13 +165,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2470")) fail('service worker cache version is not V2.47.0');
+if(!sw.includes("color-lab-v2480")) fail('service worker cache version is not V2.48.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.47.0') fail('package version must be 2.47.0');
+if(pkg.version!=='2.48.0') fail('package version must be 2.48.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.47.0')||!html.includes('<div class="version">V2.47.0</div>')||!html.includes("appVersion:'2.47.0'")) fail('V2.47.0 UI or backup version metadata missing');
-else pass('V2.47.0 version metadata');
+if(!html.includes('Color Lab V2.48.0')||!html.includes('<div class="version">V2.48.0</div>')||!html.includes("appVersion:'2.48.0'")) fail('V2.48.0 UI or backup version metadata missing');
+else pass('V2.48.0 version metadata');
 
 if(!html.includes('id="compareMore"')||
    !html.includes('<b>匯出</b>')||
@@ -246,6 +246,20 @@ if(!html.includes('id="photoCameraTrigger"')||
    !html.includes('photoCameraInput.addEventListener(\'change\',handlePhotoInputChange)')){
   fail('V2.46.0 camera-first Photo entry contract missing');
 }else pass('V2.46.0 camera + gallery Photo entry');
+
+if(!html.includes('id="photoSourceActions" role="group" aria-label="照片來源"')||
+   !html.includes('id="photoModeBar" hidden')||
+   !html.includes('id="photoRetake" type="button">重拍</button>')||
+   !html.includes('id="photoChange" type="button">相簿更換</button>')||
+   !html.includes('function syncPhotoWorkflowUi(')||
+   !html.includes("sources.hidden=photoLoaded")||
+   !html.includes("modes.hidden=!photoLoaded")||
+   !html.includes("photoLoaded=true;finish();syncPhotoWorkflowUi()")||
+   !html.includes("$('#photoRetake').onclick=openPhotoCamera")||
+   !html.includes("if(name==='photo'){setPhotoMode(photoMode);updatePhotoColorSpaceNote();syncPhotoWorkflowUi()}")||
+   !html.includes('.photo-source-actions[hidden],.photo-mode-bar[hidden]{display:none!important}')){
+  fail('V2.48.0 Photo task-first workflow contract missing');
+}else pass('V2.48.0 Photo task-first progressive disclosure');
 
 if(!html.includes('搜尋名稱、HEX、標籤、色系或調性')||
    !html.includes('可搜尋：藍、紅、柔和、鮮明、深色、淺色')||

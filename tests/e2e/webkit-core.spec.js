@@ -374,6 +374,37 @@ test('WebKit V2.46 exposes mobile camera capture without replacing gallery selec
   await expect(page.locator('#photoInput')).not.toHaveAttribute('capture',/.+/);
 });
 
+test('WebKit V2.48 keeps Photo source selection simple before and after load', async ({ page }) => {
+  const before=await page.evaluate(() => {
+    switchTab('photo',false);
+    photoLoaded=false;
+    syncPhotoWorkflowUi();
+    return paletteArtifactBase();
+  });
+
+  await expect(page.locator('#photoSourceActions')).toBeVisible();
+  await expect(page.locator('#photoModeBar')).toBeHidden();
+
+  const state=await page.evaluate(() => {
+    photoLoaded=true;
+    photoPanel.classList.add('show');
+    syncPhotoWorkflowUi();
+    return {
+      retake:document.getElementById('photoRetake').onclick===openPhotoCamera,
+      change:document.getElementById('photoChange').onclick===openPhotoPicker,
+      after:paletteArtifactBase()
+    };
+  });
+
+  await expect(page.locator('#photoSourceActions')).toBeHidden();
+  await expect(page.locator('#photoModeBar')).toBeVisible();
+  await expect(page.locator('#photoRetake')).toBeVisible();
+  await expect(page.locator('#photoChange')).toBeVisible();
+  expect(state.retake).toBe(true);
+  expect(state.change).toBe(true);
+  expect(state.after).toEqual(before);
+});
+
 test('WebKit V2.46 semantic Library search remains local and source-safe', async ({ page }) => {
   const before=await page.evaluate(() => paletteArtifactBase());
   const result=await page.evaluate(() => ({
