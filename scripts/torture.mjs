@@ -48,12 +48,12 @@ catch(e){console.error('FAIL reference board runtime syntax',e.message);process.
 try{new Function(gradientStudio)}
 catch(e){console.error('FAIL gradient studio runtime syntax',e.message);process.exit(1)}
 
-function findFunctionBodyOpen(start){
-  const paramsOpen=source.indexOf('(',start);
+function findFunctionBodyOpen(start,code=source){
+  const paramsOpen=code.indexOf('(',start);
   if(paramsOpen<0)throw new Error('missing parameter list');
   let depth=0,quote=null,escape=false,lineComment=false,blockComment=false;
-  for(let i=paramsOpen;i<source.length;i++){
-    const ch=source[i],next=source[i+1];
+  for(let i=paramsOpen;i<code.length;i++){
+    const ch=code[i],next=code[i+1];
     if(lineComment){if(ch==='\n')lineComment=false;continue}
     if(blockComment){if(ch==='*'&&next==='/'){blockComment=false;i++}continue}
     if(quote){
@@ -69,7 +69,7 @@ function findFunctionBodyOpen(start){
     else if(ch===')'){
       depth--;
       if(depth===0){
-        const body=source.indexOf('{',i+1);
+        const body=code.indexOf('{',i+1);
         if(body<0)throw new Error('missing function body');
         return body;
       }
@@ -78,13 +78,13 @@ function findFunctionBodyOpen(start){
   throw new Error('unterminated parameter list');
 }
 
-function extractFunction(name){
-  const start=source.indexOf('function '+name+'(');
+function extractFunction(name,code=source){
+  const start=code.indexOf('function '+name+'(');
   if(start<0)throw new Error('missing function '+name);
-  const open=findFunctionBodyOpen(start);
+  const open=findFunctionBodyOpen(start,code);
   let depth=0,quote=null,escape=false,lineComment=false,blockComment=false;
-  for(let i=open;i<source.length;i++){
-    const ch=source[i],next=source[i+1];
+  for(let i=open;i<code.length;i++){
+    const ch=code[i],next=code[i+1];
 
     if(lineComment){
       if(ch==='\n')lineComment=false;
@@ -106,7 +106,7 @@ function extractFunction(name){
     if(ch==='{')depth++;
     else if(ch==='}'){
       depth--;
-      if(depth===0)return source.slice(start,i+1);
+      if(depth===0)return code.slice(start,i+1);
     }
   }
   throw new Error('unterminated function '+name);
@@ -118,19 +118,22 @@ const functionNames=[
   'isLinearSrgbInGamut','gamutMapOKLCH','hueDistance','signedHueDelta',
   'hueToward','contrastRatio','ensureStructureContrast','cohesionPass','qualityRefineGenerated',
   'qualityMetrics','relationVector','relationVectorDistance',
-  'photoDominanceScore','semanticRolesFromClusters','photoCompositionProfile','photoPaletteFromRoles','recommendationDirection','paletteSurpriseScore','paletteAestheticCore','laneAestheticFloor',
+  'photoDominanceScore','semanticRolesFromClusters','photoPaletteFromRoles','recommendationDirection','paletteSurpriseScore','paletteAestheticCore','laneAestheticFloor',
   'toneFamilies','toneArchetypeMap','toneFamilyById','toneFamilyLabel','inferToneFamilyId','toneMixColor','tonalHarmonizeGenerated','tonalCohesionScore',
   'emptyPreferenceRole','emptyPreferenceRelation','emptyPreferenceModel','sanitizePreferenceRole','sanitizePreferenceRelation','preferenceRelationMetrics','sanitizePreferenceModel',
   'preferenceRoleAffinity','preferenceRelationAffinity','preferenceRoleDescriptor','preferenceSummaryFromModel','preferenceAffinityFromModel','preferenceAffinityForSetting','preferenceModelWithPalette','preferenceHueFamily'
 ];
 
+const photoRuntimeFunctionNames=['photoCompositionProfile'];
 const sandbox={console};
 sandbox.window=sandbox;
 vm.createContext(sandbox);
 vm.runInContext(toneSource,sandbox,{timeout:1000});
 vm.runInContext(
-  'const oklchCache=new Map();const luminanceCache=new Map();\n'+functionNames.map(extractFunction).join('\n')+
-  '\nthis.API={'+functionNames.join(',')+'};',
+  'const oklchCache=new Map();const luminanceCache=new Map();\n'+
+  functionNames.map(name=>extractFunction(name,source)).join('\n')+'\n'+
+  photoRuntimeFunctionNames.map(name=>extractFunction(name,photoPalette)).join('\n')+
+  '\nthis.API={'+[...functionNames,...photoRuntimeFunctionNames].join(',')+'};',
   sandbox,
   {timeout:2000}
 );
@@ -492,6 +495,18 @@ check('V2.32 storage runtime still carries V2.30 recovery safeguards',
   storageHardening.includes("storageTransaction(keys,()=>")&&
   storageHardening.includes("reader.onerror=()=>toast('備份檔讀取失敗')"),
   'recovery, rollback, and backup compatibility stay intact');
+check('V2.33 photo profile moved into photo runtime without duplicate ownership',
+  photoPalette.includes('function photoCompositionProfile(')&&
+  !html.includes('function photoCompositionProfile(')&&
+  photoPalette.includes('function photoCurrentRelationship(')&&
+  !html.includes('function photoCurrentRelationship('),
+  'photo analysis helpers have one runtime owner');
+check('V2.33 photo analysis stays read-only',
+  !photoPalette.includes('selectedColors=')&&
+  !photoPalette.includes('palette.base=')&&
+  !photoPalette.includes('palette.structure=')&&
+  !photoPalette.includes('palette.accent='),
+  'moved analysis helpers cannot mutate source palette');
 
 check('V2.18 context preview ships five realistic scene contracts',
   appText.includes('class="cp2 cp2-app"')&&
