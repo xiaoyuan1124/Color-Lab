@@ -3,6 +3,7 @@ import vm from 'node:vm';
 import fc from 'fast-check';
 
 const html=fs.readFileSync('index.html','utf8');
+const photoPalette=fs.readFileSync('runtime/photo-palette.js','utf8');
 const scriptMatch=html.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/);
 if(!scriptMatch){
   console.error('FAIL inline app script not found');
@@ -10,13 +11,13 @@ if(!scriptMatch){
 }
 const source=scriptMatch[1];
 
-function extractFunction(name){
-  const start=source.indexOf('function '+name+'(');
+function extractFunction(name,code=source){
+  const start=code.indexOf('function '+name+'(');
   if(start<0)throw new Error('missing function '+name);
-  const open=source.indexOf('{',start);
+  const open=code.indexOf('{',start);
   let depth=0,quote=null,escape=false,lineComment=false,blockComment=false;
-  for(let i=open;i<source.length;i++){
-    const ch=source[i],next=source[i+1];
+  for(let i=open;i<code.length;i++){
+    const ch=code[i],next=code[i+1];
     if(lineComment){if(ch==='\n')lineComment=false;continue}
     if(blockComment){if(ch==='*'&&next==='/'){blockComment=false;i++}continue}
     if(quote){
@@ -31,7 +32,7 @@ function extractFunction(name){
     if(ch==='{')depth++;
     else if(ch==='}'){
       depth--;
-      if(depth===0)return source.slice(start,i+1);
+      if(depth===0)return code.slice(start,i+1);
     }
   }
   throw new Error('unterminated function '+name);
@@ -43,16 +44,19 @@ const functionNames=[
   'isLinearSrgbInGamut','gamutMapOKLCH','hueDistance','signedHueDelta',
   'hueToward','contrastRatio','ensureStructureContrast','cohesionPass',
   'qualityRefineGenerated','qualityMetrics','relationVector','relationVectorDistance',
-  'photoDominanceScore','semanticRolesFromClusters','photoCompositionProfile',
+  'photoDominanceScore','semanticRolesFromClusters',
   'emptyPreferenceRole','emptyPreferenceRelation','emptyPreferenceModel','sanitizePreferenceRole','sanitizePreferenceRelation','preferenceRelationMetrics','sanitizePreferenceModel',
   'preferenceRoleAffinity','preferenceRelationAffinity','preferenceRoleDescriptor','preferenceSummaryFromModel','preferenceAffinityFromModel','preferenceAffinityForSetting','preferenceModelWithPalette','preferenceHueFamily'
 ];
 
+const photoRuntimeFunctionNames=['photoCompositionProfile'];
 const sandbox={console};
 vm.createContext(sandbox);
 vm.runInContext(
-  'const oklchCache=new Map();const luminanceCache=new Map();\n'+functionNames.map(extractFunction).join('\n')+
-  '\nthis.API={'+functionNames.join(',')+'};',
+  'const oklchCache=new Map();const luminanceCache=new Map();\n'+
+  functionNames.map(name=>extractFunction(name,source)).join('\n')+'\n'+
+  photoRuntimeFunctionNames.map(name=>extractFunction(name,photoPalette)).join('\n')+
+  '\nthis.API={'+[...functionNames,...photoRuntimeFunctionNames].join(',')+'};',
   sandbox,
   {timeout:2000}
 );

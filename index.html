@@ -2218,7 +2218,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.32.0</div>
+    <div class="version">V2.33.0</div>
   </div>
 
   <main class="app-main">
@@ -2593,7 +2593,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.32.0</div>
+  <div class="footer app-footer">Color Lab V2.33.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -3027,7 +3027,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v5',appVersion:'2.32.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.33.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -4995,51 +4995,7 @@ function semanticRolesFromClusters(clusters){
   }
   return rows;
 }
-function photoCompositionProfile(clusters,roles=[]){
-  if(!Array.isArray(clusters)||!clusters.length)return null;
-  const usable=clusters.filter(x=>x&&Number.isFinite(x.proportion)&&Number.isFinite(x.l)&&Number.isFinite(x.c));
-  if(!usable.length)return null;
-  const total=usable.reduce((sum,x)=>sum+x.proportion,0)||1;
-  const avgL=usable.reduce((sum,x)=>sum+x.l*x.proportion,0)/total;
-  const avgC=usable.reduce((sum,x)=>sum+x.c*x.proportion,0)/total;
-  const minL=Math.min(...usable.map(x=>x.l)),maxL=Math.max(...usable.map(x=>x.l));
-  const lightnessSpan=maxL-minL;
-  const primary=roles.find(x=>x.label==='主體')||roles[0]||null;
-  const vivid=roles.find(x=>x.label==='鮮明')||null;
-  const edgeCandidate=[...usable]
-    .filter(x=>(x.edgeShare||0)>=.58&&x.proportion>=.14&&x.c<.075)
-    .sort((a,b)=>(b.edgeShare*b.proportion)-(a.edgeShare*a.proportion))[0]||null;
 
-  const primaryShare=Number.isFinite(primary?.proportion)?primary.proportion:usable[0].proportion;
-  const subjectClusters=edgeCandidate&&edgeCandidate.hex!==primary?.hex
-    ?usable.filter(x=>x!==edgeCandidate)
-    :usable;
-  const subjectTotal=subjectClusters.reduce((sum,x)=>sum+x.proportion,0)||1;
-  const normalizedShares=subjectClusters.map(x=>x.proportion/subjectTotal).sort((a,b)=>b-a);
-  const normalizedPrimary=primaryShare/subjectTotal;
-  const secondShare=normalizedShares.find(x=>x<normalizedPrimary-.0001)??normalizedShares[1]??0;
-  const dominanceGap=Math.max(0,normalizedPrimary-secondShare);
-
-  const chromaBand=avgC<.045?'低彩度':avgC<.105?'中彩度':'高彩度';
-  const lightnessBand=avgL>.72?'偏明亮':avgL<.38?'偏深':'中等明度';
-  const contrastBand=lightnessSpan>.48?'明暗跨度大':lightnessSpan>.28?'明暗層次中等':'明暗較柔和';
-  const dominanceBand=normalizedPrimary>=.58?'單一主色明確'
-    :(normalizedPrimary>=.40&&dominanceGap>=.10?'主次清楚':'多色分布較平均');
-  const focusBand=vivid
-    ?(vivid.proportion<=.22?'少量高彩度形成焦點':'高彩度顏色占比明顯')
-    :'沒有強烈高彩度焦點';
-
-  return{
-    avgL,avgC,lightnessSpan,chromaBand,lightnessBand,contrastBand,dominanceBand,focusBand,
-    primaryHex:primary?.hex||usable[0].hex,
-    primaryShare,
-    accentHex:vivid?.hex||null,
-    accentShare:Number.isFinite(vivid?.proportion)?vivid.proportion:0,
-    edgeHex:edgeCandidate?.hex||null,
-    edgeProportion:edgeCandidate?.proportion||0,
-    edgeShare:edgeCandidate?.edgeShare||0
-  };
-}
 function photoPaletteFromRoles(roles){
   if(!Array.isArray(roles)||!roles.length)return null;
   const pick=label=>roles.find(x=>x.label===label)?.hex||null;
@@ -5051,12 +5007,7 @@ function photoPaletteFromRoles(roles){
   }
   return out.length===3?out:null;
 }
-function photoCurrentRelationship(photoColors){
-  const current=chosenColors();
-  if(current.length!==3||!photoColors)return'';
-  const distance=current.reduce((sum,hex,i)=>sum+perceptualDistance(hex,photoColors[i]),0)/3;
-  return distance<.10?'與目前三色關係接近':distance<.22?'與目前三色有可見差異':'與目前三色方向差異明顯';
-}
+
 function usePhotoPalette(){
   const selection=typeof photoPaletteSelection==='function'
     ?photoPaletteSelection(lastPhotoClusters,lastPhotoRoles,photoPaletteStyle)

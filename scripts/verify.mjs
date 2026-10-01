@@ -146,13 +146,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2320")) fail('service worker cache version is not V2.32.0');
+if(!sw.includes("color-lab-v2330")) fail('service worker cache version is not V2.33.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.32.0') fail('package version must be 2.32.0');
+if(pkg.version!=='2.33.0') fail('package version must be 2.33.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.32.0')||!html.includes('<div class="version">V2.32.0</div>')||!html.includes("appVersion:'2.32.0'")) fail('V2.32.0 UI or backup version metadata missing');
-else pass('V2.32.0 version metadata');
+if(!html.includes('Color Lab V2.33.0')||!html.includes('<div class="version">V2.33.0</div>')||!html.includes("appVersion:'2.33.0'")) fail('V2.33.0 UI or backup version metadata missing');
+else pass('V2.33.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -637,6 +637,23 @@ if(!appSource.includes('function openResilienceDB(')||
   fail('V2.32.0 storage behavior continuity contract missing');
 }else pass('V2.32.0 storage behavior continuity preserved through runtime boundary');
 
+if(!photoPalette.includes('function photoCompositionProfile(')||
+   !photoPalette.includes('function photoCurrentRelationship(')||
+   html.includes('function photoCompositionProfile(')||
+   html.includes('function photoCurrentRelationship(')){
+  fail('V2.33.0 photo analysis modularization contract missing');
+}else pass('V2.33.0 photo analysis helpers moved into photo runtime');
+
+if(!photoPalette.includes("const edgeCandidate=[...usable]")||
+   !photoPalette.includes("const focusBand=vivid")||
+   !photoPalette.includes("return distance<.10?'與目前三色關係接近':distance<.22?'與目前三色有可見差異':'與目前三色方向差異明顯'")||
+   photoPalette.includes('selectedColors=')||
+   photoPalette.includes('palette.base=')||
+   photoPalette.includes('palette.structure=')||
+   photoPalette.includes('palette.accent=')){
+  fail('V2.33.0 pure photo analysis behavior contract missing');
+}else pass('V2.33.0 photo analysis remains pure and behavior-equivalent');
+
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
    !html.includes("padding:10px 0 16px var(--app-gutter)")){
@@ -701,11 +718,11 @@ if(!appSource.includes('const LEARNING_CONCEPTS=')||!appSource.includes('data-le
   fail('V2.6 contextual learning layer missing');
 }else pass('V2.6 contextual learning layer');
 
-if(!html.includes('function photoPaletteFromRoles(')||!html.includes('function usePhotoPalette(')||!html.includes('id="photoUsePalette"')){
+if(!appSource.includes('function photoPaletteFromRoles(')||!appSource.includes('function usePhotoPalette(')||!html.includes('id="photoUsePalette"')){
   fail('V2.6 Photo to Compose bridge missing');
 }else pass('V2.6 Photo to Compose bridge');
 
-if(!html.includes('function photoCurrentRelationship(')||!html.includes('與目前三色')){
+if(!appSource.includes('function photoCurrentRelationship(')||!appSource.includes('與目前三色')){
   fail('V2.6 Compose to Photo comparison missing');
 }else pass('V2.6 Compose to Photo comparison');
 
@@ -1157,7 +1174,7 @@ if(!html.includes('selectDiverseRecommendations(candidates,30)')||
 
 
 for(const fn of ['photoCompositionProfile','renderPhotoInsight']){
-  if(!html.includes('function '+fn+'(')) fail('V1.9 photo intelligence function missing: '+fn);
+  if(!appSource.includes('function '+fn+'(')) fail('V1.9 photo intelligence function missing: '+fn);
 }
 pass('V1.9 photo intelligence functions present');
 
@@ -1172,7 +1189,7 @@ if(!html.includes("const clusters=fallbackPhotoClusters(region);")||!html.includ
 
 
 for(const fn of ['photoDominanceScore','photoCompositionProfile','detectPhotoColorCapability','updatePhotoColorSpaceNote']){
-  if(!html.includes('function '+fn+'(')) fail('V1.9 photo analysis function missing: '+fn);
+  if(!appSource.includes('function '+fn+'(')) fail('V1.9 photo analysis function missing: '+fn);
 }
 pass('V1.9 edge-aware photo analysis functions present');
 
