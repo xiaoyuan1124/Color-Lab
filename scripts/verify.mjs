@@ -1,6 +1,9 @@
 import fs from 'node:fs';
 
 const html=fs.readFileSync('index.html','utf8');
+const webkitConfig=fs.readFileSync('playwright.webkit.config.js','utf8');
+const webkitCore=fs.readFileSync('tests/e2e/webkit-core.spec.js','utf8');
+const qualityWorkflow=fs.readFileSync('.github/workflows/quality.yml','utf8');
 const storageHardening=fs.readFileSync('runtime/storage-hardening.js','utf8');
 const uxCleanup=fs.readFileSync('runtime/ux-cleanup.js','utf8');
 const uxCleanupCss=fs.readFileSync('runtime/ux-cleanup.css','utf8');
@@ -146,13 +149,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2330")) fail('service worker cache version is not V2.33.0');
+if(!sw.includes("color-lab-v2340")) fail('service worker cache version is not V2.34.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.33.0') fail('package version must be 2.33.0');
+if(pkg.version!=='2.34.0') fail('package version must be 2.34.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.33.0')||!html.includes('<div class="version">V2.33.0</div>')||!html.includes("appVersion:'2.33.0'")) fail('V2.33.0 UI or backup version metadata missing');
-else pass('V2.33.0 version metadata');
+if(!html.includes('Color Lab V2.34.0')||!html.includes('<div class="version">V2.34.0</div>')||!html.includes("appVersion:'2.34.0'")) fail('V2.34.0 UI or backup version metadata missing');
+else pass('V2.34.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -653,6 +656,35 @@ if(!photoPalette.includes("const edgeCandidate=[...usable]")||
    photoPalette.includes('palette.accent=')){
   fail('V2.33.0 pure photo analysis behavior contract missing');
 }else pass('V2.33.0 photo analysis remains pure and behavior-equivalent');
+
+if(!webkitConfig.includes("browserName: 'webkit'")||
+   !webkitConfig.includes("viewport: { width: 390, height: 844 }")||
+   !webkitConfig.includes("isMobile: true")||
+   !webkitConfig.includes("hasTouch: true")||
+   !webkitConfig.includes("outputFolder: 'playwright-report-webkit'")||
+   !webkitConfig.includes("outputDir: 'test-results-webkit'")){
+  fail('V2.34.0 WebKit mobile config contract missing');
+}else pass('V2.34.0 WebKit mobile config');
+
+if(pkg.scripts?.['test:webkit:core']!=='playwright test --config=playwright.webkit.config.js'||
+   !qualityWorkflow.includes('webkit:')||
+   !qualityWorkflow.includes('npx playwright install --with-deps webkit')||
+   !qualityWorkflow.includes('npm run test:webkit:core')||
+   !qualityWorkflow.includes('name: webkit-quality')){
+  fail('V2.34.0 WebKit GitHub Actions gate missing');
+}else pass('V2.34.0 WebKit CI gate wired separately');
+
+for(const marker of [
+  '75 / 18 / 7 visible',
+  'deepValidation',
+  "localStorage.getItem('colorlab.deepSection')",
+  '#clv=1&cl=112233-445566-AABBCC&ctx=room&theme=dark',
+  '#photoInput',
+  'lastPhotoClusters.length'
+]){
+  if(!webkitCore.includes(marker))fail('V2.34.0 WebKit core coverage missing: '+marker);
+}
+pass('V2.34.0 WebKit core risk coverage');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
