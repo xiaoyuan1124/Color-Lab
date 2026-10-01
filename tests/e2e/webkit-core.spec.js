@@ -161,3 +161,40 @@ test('WebKit loads V2.37 color quality core before dependent palette runtime', a
   expect(result.palette).toBeGreaterThan(result.core);
 });
 
+test('WebKit V2.38 invalidates pending Inspire work after leaving the route', async ({ page }) => {
+  await page.evaluate(() => ensureInspirationResources());
+  const result=await page.evaluate(async () => {
+    const originalEnsure=ensureInspirationResources;
+    const originalIdeas=renderIdeas;
+    const originalRecommendations=renderRecommendations;
+    const originalIdle=window.requestIdleCallback;
+    let ideas=0,recommendations=0,resolveFirst=null;
+
+    window.requestIdleCallback=cb=>setTimeout(()=>cb({didTimeout:false,timeRemaining:()=>50}),0);
+    renderIdeas=()=>{ideas++};
+    renderRecommendations=()=>{recommendations++};
+    ensureInspirationResources=()=>new Promise(resolve=>{resolveFirst=resolve});
+
+    switchTab('inspire',false);
+    await new Promise(resolve=>setTimeout(resolve,12));
+    switchTab('compose',false);
+    if(resolveFirst)resolveFirst([]);
+    await new Promise(resolve=>setTimeout(resolve,18));
+
+    const state={
+      ideas,
+      recommendations,
+      active:document.querySelector('.tab-view.active')?.dataset.view||'',
+      pending:secondaryRenderPending
+    };
+
+    ensureInspirationResources=originalEnsure;
+    renderIdeas=originalIdeas;
+    renderRecommendations=originalRecommendations;
+    window.requestIdleCallback=originalIdle;
+    return state;
+  });
+
+  expect(result).toEqual({ideas:0,recommendations:0,active:'compose',pending:false});
+});
+

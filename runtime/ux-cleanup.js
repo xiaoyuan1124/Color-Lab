@@ -5,6 +5,7 @@ const DEEP_DIVE_SECTIONS=['deepUnderstanding','deepValidation','deepApplication'
 const DEEP_DIVE_SECTION_KEY='colorlab.deepSection';
 let deepDiveUxBound=false;
 let deepDiveAccordionSync=false;
+let deepDiveRenderFrame=0;
 
 function deepDiveSectionOpen(id){
   return !!document.getElementById(id)?.open;
@@ -33,6 +34,13 @@ function renderDeepDiveVisible(){
     if(document.getElementById('customDesignPreviewDetails')?.open)renderCustomDesignPreview();
   }
 }
+function scheduleDeepDiveVisibleRender(){
+  if(deepDiveRenderFrame)return;
+  deepDiveRenderFrame=requestAnimationFrame(()=>{
+    deepDiveRenderFrame=0;
+    renderDeepDiveVisible();
+  });
+}
 function openDeepDiveSection(id){
   if(!DEEP_DIVE_SECTIONS.includes(id))return;
   deepDiveAccordionSync=true;
@@ -42,7 +50,7 @@ function openDeepDiveSection(id){
   });
   deepDiveAccordionSync=false;
   storageWriteRaw(DEEP_DIVE_SECTION_KEY,id,{silent:true});
-  requestAnimationFrame(renderDeepDiveVisible);
+  scheduleDeepDiveVisibleRender();
 }
 function initDeepDiveUx(){
   if(deepDiveUxBound)return;
