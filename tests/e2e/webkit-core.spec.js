@@ -121,3 +121,21 @@ test('WebKit PWA update prompt remains explicit and never mutates source colors'
   expect(result.action).toBe('更新');
   expect(result.after).toEqual(result.before);
 });
+
+
+test('WebKit keeps recommendation engine lazy until Inspire and preserves source roles', async ({ page }) => {
+  await setExactPalette(page,['#112233','#445566','#AABBCC']);
+  const before=await page.evaluate(() => paletteArtifactBase());
+  expect(await page.evaluate(() => typeof window.recommendationCombos)).toBe('undefined');
+
+  await page.locator('#cornerNavToggle').click();
+  await page.locator('#nav-inspire').click();
+  await expect(page.locator('.tab-view[data-view="inspire"]')).toBeVisible();
+
+  await expect.poll(() => page.evaluate(() => typeof window.recommendationCombos)).toBe('function');
+  await expect(page.locator('script[data-lazy-runtime="./data/recommendation-engine.js"]')).toHaveCount(1);
+  await expect(page.locator('#recommendationProgress')).toContainText('第 1 /');
+
+  const after=await page.evaluate(() => paletteArtifactBase());
+  expect(after).toEqual(before);
+});
