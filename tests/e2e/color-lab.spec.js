@@ -2175,6 +2175,38 @@ test('V2.46 exposes separate camera and gallery Photo sources through one load p
   expect(wiring.handler).toContain('loadPhoto(file)');
 });
 
+test('V2.48 Photo reveals analysis tools only after a photo is loaded', async ({ page }) => {
+  const before=await page.evaluate(() => {
+    switchTab('photo',false);
+    photoLoaded=false;
+    syncPhotoWorkflowUi();
+    return paletteArtifactBase();
+  });
+
+  await expect(page.locator('#photoSourceActions')).toBeVisible();
+  await expect(page.locator('#photoModeBar')).toBeHidden();
+
+  const state=await page.evaluate(() => {
+    photoLoaded=true;
+    syncPhotoWorkflowUi();
+    return {
+      retake:document.getElementById('photoRetake').onclick===openPhotoCamera,
+      gallery:document.getElementById('photoChange').onclick===openPhotoPicker,
+      loadHook:loadPhoto.toString().includes('syncPhotoWorkflowUi()'),
+      palette:paletteArtifactBase()
+    };
+  });
+
+  await expect(page.locator('#photoSourceActions')).toBeHidden();
+  await expect(page.locator('#photoModeBar')).toBeVisible();
+  await expect(page.locator('#photoRetake')).toHaveText('重拍');
+  await expect(page.locator('#photoChange')).toHaveText('相簿更換');
+  expect(state.retake).toBe(true);
+  expect(state.gallery).toBe(true);
+  expect(state.loadHook).toBe(true);
+  expect(state.palette).toEqual(before);
+});
+
 test('V2.46 Library semantic search finds color family and tone without changing saved data', async ({ page }) => {
   const before=await page.evaluate(() => {
     const blue=sanitizeSavedRecord({
