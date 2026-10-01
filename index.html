@@ -2230,7 +2230,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.39.0</div>
+    <div class="version">V2.40.0</div>
   </div>
 
   <main class="app-main">
@@ -2605,7 +2605,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.39.0</div>
+  <div class="footer app-footer">Color Lab V2.40.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2715,7 +2715,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 /* Color Lab V2.35.0 PWA / iPhone Update Hardening
    User-mediated service worker activation prevents mixed-version sessions. */
 
-const COLORLAB_APP_VERSION='2.39.0';
+const COLORLAB_APP_VERSION='2.40.0';
 const PWA_UPDATE_CHECK_INTERVAL=20*60*1000;
 let pwaRegistration=null;
 let pwaUpdateReady=false;
@@ -3140,7 +3140,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v5',appVersion:'2.39.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.40.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -3446,9 +3446,7 @@ function setPreferenceEnabled(next){
   preferenceEnabled=!!next;
   try{localStorage.setItem('colorlab.preferenceEnabled',JSON.stringify(preferenceEnabled))}catch(_){}
   invalidatePreferenceScoring();scheduleResilienceBackup();updatePreferenceStatus(false);
-  if(document.querySelector('.tab-view.active')?.dataset.view==='inspire'){
-    ensureInspirationResources().then(()=>{renderIdeas();renderRecommendations()}).catch(()=>toast('推薦資源載入失敗，請稍後再試'));
-  }
+  if(inspirationRouteActive())scheduleSecondaryRender();
   toast(preferenceEnabled?'已開啟本機個人化':'已關閉本機個人化');
 }
 function togglePreferenceModel(){setPreferenceEnabled(!preferenceEnabled)}
@@ -3457,9 +3455,7 @@ function resetPreferenceModel(){
   preferenceState=emptyPreferenceModel();
   try{localStorage.setItem('colorlab.preferenceV1',JSON.stringify(preferenceState))}catch(_){}
   invalidatePreferenceScoring();scheduleResilienceBackup();updatePreferenceStatus(false);
-  if(document.querySelector('.tab-view.active')?.dataset.view==='inspire'){
-    ensureInspirationResources().then(()=>{renderIdeas();renderRecommendations()}).catch(()=>toast('推薦資源載入失敗，請稍後再試'));
-  }
+  if(inspirationRouteActive())scheduleSecondaryRender();
   toast('已重置本機配色偏好');
 }
 
@@ -4360,6 +4356,20 @@ function render(){
   if(deep?.open)scheduleDeepDiveVisibleRender();
   scheduleSecondaryRender();
 }
+function inspirationRouteActive(){
+  return (document.querySelector('.tab-view.active')?.dataset.view||'compose')==='inspire';
+}
+function runInspirationAction(action){
+  const token=secondaryRenderToken;
+  if(!inspirationRouteActive())return Promise.resolve(false);
+  return ensureInspirationResources().then(()=>{
+    if(token!==secondaryRenderToken||!inspirationRouteActive())return false;
+    action();return true;
+  }).catch(()=>{
+    if(token===secondaryRenderToken&&inspirationRouteActive())toast('推薦資源載入失敗，請稍後再試');
+    return false;
+  });
+}
 function scheduleSecondaryRender(){
   secondaryRenderToken++;
   if(secondaryRenderPending)return;
@@ -4367,15 +4377,12 @@ function scheduleSecondaryRender(){
   const run=()=>{
     secondaryRenderPending=false;
     const token=secondaryRenderToken;
-    const active=document.querySelector('.tab-view.active')?.dataset.view||'compose';
-    if(active!=='inspire')return;
+    if(!inspirationRouteActive())return;
     ensureInspirationResources().then(()=>{
-      const stillActive=(document.querySelector('.tab-view.active')?.dataset.view||'compose')==='inspire';
-      if(token!==secondaryRenderToken||!stillActive)return;
+      if(token!==secondaryRenderToken||!inspirationRouteActive())return;
       renderIdeas();renderRecommendations();
     }).catch(()=>{
-      const stillActive=(document.querySelector('.tab-view.active')?.dataset.view||'compose')==='inspire';
-      if(token===secondaryRenderToken&&stillActive)toast('推薦資源載入失敗，請稍後再試');
+      if(token===secondaryRenderToken&&inspirationRouteActive())toast('推薦資源載入失敗，請稍後再試');
     });
   };
   if('requestIdleCallback'in window)requestIdleCallback(run,{timeout:180});
@@ -4898,12 +4905,8 @@ $('#generate').onclick=async()=>{
   finally{button.disabled=false;button.textContent=label}
 };
 $('#save').onclick=save;
-$('#previousRecommendations').onclick=()=>ensureInspirationResources()
-  .then(()=>previousRecommendationBatch())
-  .catch(()=>toast('推薦資源載入失敗，請稍後再試'));
-$('#nextRecommendations').onclick=()=>ensureInspirationResources()
-  .then(()=>nextRecommendationBatch())
-  .catch(()=>toast('推薦資源載入失敗，請稍後再試'));
+$('#previousRecommendations').onclick=()=>runInspirationAction(previousRecommendationBatch);
+$('#nextRecommendations').onclick=()=>runInspirationAction(nextRecommendationBatch);
 document.addEventListener('click',e=>{
   const pm=e.target.closest('[data-photo-mode]');if(pm){setPhotoMode(pm.dataset.photoMode);return}
   const learn=e.target.closest('[data-learn]');if(learn){showLearningConcept(learn.dataset.learn);return}
