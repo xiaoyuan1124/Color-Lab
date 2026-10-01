@@ -705,9 +705,10 @@ check('V2.46 semantic Library search is derived and schema-free',
   'search terms are derived from saved colors without mutating storage or Compose source state');
 
 check('V2.46 semantic search keeps exact legacy fields in the index',
-  appText.includes('(x.name&&x.name.trim())')&&
-  appText.includes('x.seed,x.palette?.base,x.palette?.structure,x.palette?.accent')&&
-  appText.includes('...tags,x.folder||\'\',localProjectSearchText(x)'),
+  librarySearchCore.includes('(x?.name&&x.name.trim())')&&
+  librarySearchCore.includes('x?.seed,x?.palette?.base,x?.palette?.structure,x?.palette?.accent')&&
+  librarySearchCore.includes('...(x?.selectedColors||[]),...tags,x?.folder||\'\',projectName')&&
+  localProjects.includes('librarySearchDocument(x,localProjectSearchText(x))'),
   'name, HEX, tags, folders, and project names remain searchable alongside semantic color terms');
 
 check('V2.46 use-case search terms are derived from measurable palette relationships',
