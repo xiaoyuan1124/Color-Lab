@@ -37,3 +37,19 @@ function libraryPaletteSemanticTerms(x){
   if(accent.c>Math.max(.08,roleC*1.25))terms.push('品牌','brand','海報');
   return [...new Set(terms)];
 }
+
+function librarySearchDocument(x,projectName=''){
+  const tags=Array.isArray(x?.tags)?x.tags:[];
+  return [
+    (x?.name&&x.name.trim())||'未命名配色',
+    x?.seed,x?.palette?.base,x?.palette?.structure,x?.palette?.accent,
+    ...(x?.selectedColors||[]),...tags,x?.folder||'',projectName,
+    ...libraryPaletteSemanticTerms(x)
+  ].filter(Boolean).join(' ').toLowerCase();
+}
+function librarySearchDocumentMatches(x,query,projectName=''){
+  const terms=String(query||'').trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if(!terms.length)return true;
+  const haystack=librarySearchDocument(x,projectName);
+  return terms.every(term=>haystack.includes(term));
+}
