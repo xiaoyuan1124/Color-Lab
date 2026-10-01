@@ -744,7 +744,11 @@ if(html.includes('<script src="./data/recommendation-engine.js"></script>')||
    !html.includes("loadScriptOnce('./data/recommendation-engine.js','recommendationCombos')")||
    !recommendationEngine.includes('prioritizeUnseenRecommendations(selectDiverseRecommendations(candidates,30))')||
    !recommendationEngine.includes('recommendationBatchHistoryIndex')||
-   !recommendationEngine.includes('learnPalettePreference(r.palette,.25)')){
+   !recommendationEngine.includes('learnPalettePreference(r.palette,.25)')||
+   html.includes("$('#previousRecommendations').onclick=previousRecommendationBatch")||
+   html.includes("$('#nextRecommendations').onclick=nextRecommendationBatch")||
+   !html.includes("$('#previousRecommendations').onclick=()=>ensureInspirationResources()")||
+   !html.includes("$('#nextRecommendations').onclick=()=>ensureInspirationResources()")){
   fail('V2.36.0 lazy-load or recommendation behavior-preservation contract missing');
 }else pass('V2.36.0 Inspire-only lazy load + anti-repeat/batch/personalization semantics preserved');
 
