@@ -2074,7 +2074,11 @@ test('V2.43 localizes high-frequency Photo and Library actions', async ({ page }
 
 
 test('V2.44 shows lightweight guidance only for a true first run and persists dismissal locally', async ({ page }) => {
-  await page.evaluate(() => localStorage.clear());
+  await page.addInitScript(() => {
+    if(sessionStorage.getItem('v244FreshPrepared')==='1')return;
+    localStorage.clear();
+    sessionStorage.setItem('v244FreshPrepared','1');
+  });
   await page.reload();
   await expect(page.locator('#firstRunGuide')).toBeVisible();
   await expect(page.locator('#firstRunGuide')).toContainText('選 1–3 色');
@@ -2093,7 +2097,8 @@ test('V2.44 shows lightweight guidance only for a true first run and persists di
 });
 
 test('V2.44 suppresses onboarding for returning users with an existing draft', async ({ page }) => {
-  await page.evaluate(() => {
+  await page.addInitScript(() => {
+    if(sessionStorage.getItem('v244ReturningPrepared')==='1')return;
     localStorage.clear();
     localStorage.setItem('colorlab.draft',JSON.stringify({
       selectedColors:['#112233','#445566','#AABBCC'],
@@ -2102,6 +2107,7 @@ test('V2.44 suppresses onboarding for returning users with an existing draft', a
       mode:'quiet',
       comboName:'Returning'
     }));
+    sessionStorage.setItem('v244ReturningPrepared','1');
   });
   await page.reload();
   await expect(page.locator('#firstRunGuide')).toBeHidden();
