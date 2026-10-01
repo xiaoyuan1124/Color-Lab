@@ -162,13 +162,37 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2420")) fail('service worker cache version is not V2.42.0');
+if(!sw.includes("color-lab-v2430")) fail('service worker cache version is not V2.43.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.42.0') fail('package version must be 2.42.0');
+if(pkg.version!=='2.43.0') fail('package version must be 2.43.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.42.0')||!html.includes('<div class="version">V2.42.0</div>')||!html.includes("appVersion:'2.42.0'")) fail('V2.42.0 UI or backup version metadata missing');
-else pass('V2.42.0 version metadata');
+if(!html.includes('Color Lab V2.43.0')||!html.includes('<div class="version">V2.43.0</div>')||!html.includes("appVersion:'2.43.0'")) fail('V2.43.0 UI or backup version metadata missing');
+else pass('V2.43.0 version metadata');
+
+if(!html.includes('id="compareMore"')||
+   !html.includes('<b>匯出</b>')||
+   !html.includes('<b>比較配色</b>')||
+   !html.includes('data-export-format="tokens">Design Tokens</button>')||
+   !html.includes('data-export-format="svg">SVG 色票</button>')||
+   !html.includes('id="openStudioPicker">精準選色</button>')||
+   !html.includes('主體 75% · 結構 18% · 點綴 7%')||
+   !html.includes('<b>進階分析</b><small>理解 · 可用性 · 情境</small>')||
+   !html.includes('function updateGenerateActionLabel(')||
+   !html.includes("complete?'分析這組配色':'補齊配色'")||
+   !photoPalette.includes("return style==='muted'?'柔和':style==='vivid'?'鮮明':'平衡'")||
+   html.includes('id="openStudioPicker">Color Lab 色盤</button>')||
+   html.includes('id="generate">完成三色組合')){
+  fail('V2.43.0 UX consolidation contract missing');
+}else pass('V2.43.0 consolidated actions + task language');
+
+if(!html.includes('id="togglePreference" aria-pressed="true">關閉個人化</button>')||
+   !html.includes("toggle.textContent=preferenceEnabled?'關閉個人化':'開啟個人化'")||
+   !html.includes('id="installAppBtn">加入主畫面</button>')||
+   !html.includes('id="photoUsePalette" hidden>帶入配色 →</button>')||
+   !html.includes('data-jump="compose">回到配色</button>')){
+  fail('V2.43.0 explicit action wording contract missing');
+}else pass('V2.43.0 explicit mobile action wording');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -706,7 +730,7 @@ if(!html.includes('id="pwaHealthMount"')||
    html.includes("navigator.serviceWorker.register('./sw.js').catch(()=>{})")||
    sw.includes('./runtime/pwa-health.js')||
    sw.includes('./runtime/pwa-health.css')||
-   !pwaHealth.includes("const COLORLAB_APP_VERSION='2.42.0'")||
+   !pwaHealth.includes("const COLORLAB_APP_VERSION='2.43.0'")||
    !pwaHealthCss.includes('.pwa-health{')){
   fail('V2.35.0 shell-integrated PWA health / UI contract missing');
 }else pass('V2.35.0 shell-integrated PWA controller + compact UI');
@@ -829,8 +853,8 @@ if(!html.includes('photoPointerId=null,photoMagnifierHideTimer=0')||
 
 if(!visionAccessibility.includes("if(document.getElementById('composeDeepDive')?.open&&document.getElementById('deepApplication')?.open)renderContextPreview();")||
    /renderVision\(\);\s*renderContextPreview\(\);/.test(visionAccessibility)){
-  fail('V2.42.0 hidden Context Preview render isolation contract missing');
-}else pass('V2.42.0 Vision updates only rerender Context Preview when Application is visible');
+  fail('V2.43.0 hidden Context Preview render isolation contract missing');
+}else pass('V2.43.0 Vision updates only rerender Context Preview when Application is visible');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||

@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.42.0**
+**目前版本：V2.43.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,21 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.43.0 UX Consolidation
+
+這一版不新增後端、AI、付費 API 或第三方 runtime 依賴，專門把已經成熟的功能收斂成更直覺的手機操作：
+
+- Compose 主按鈕改為依狀態顯示「補齊配色」或「分析這組配色」，減少「完成三色組合」的語意猜測
+- 「Color Lab 色盤」改為「精準選色」；75 / 18 / 7 說明縮成「主體 75% · 結構 18% · 點綴 7%」
+- 「深入理解」改為「進階分析」，內部分成「理解 / 可用性 / 情境預覽」，名稱直接對應使用者任務
+- CSS / JSON / Design Tokens / Tailwind / SwiftUI / SVG 全部收進單一「匯出」 disclosure，不再和主要動作同級平鋪
+- A / B 設定收進「比較配色」，保留既有比較資料與功能但降低首屏按鈕密度
+- Photo 的 Balanced / Muted / Vivid 改為「平衡 / 柔和 / 鮮明」，「使用照片三色」改為「帶入配色」
+- 本機個人化與 PWA 按鈕改為完整動詞：「關閉/開啟個人化」、「加入主畫面」
+- V2.43 不改推薦公式、Photo 分析、source palette、75 / 18 / 7、Local-first 或任何既有 export artifact
+- 零現金開發成本：GitHub Pages + 本機儲存 + 現有開源/自製 runtime，不加入付費服務
+- Size / Verify / Visual / Torture / Property / Playwright + axe / WebKit / Lighthouse / CodeQL 門檻維持原值
 
 ## V2.42.0 Deep Dive Render Isolation
 

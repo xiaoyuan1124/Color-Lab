@@ -927,14 +927,17 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
 .preview-app-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .preview-app-card{min-height:64px;padding:12px;border:1px solid currentColor;border-radius:14px;opacity:.86}
 .preview-app-card b{display:block;font-size:11px;margin-bottom:5px}.preview-app-card span{font-size:9px;opacity:.72}
-.handoff-block{margin-top:var(--space-4);padding-top:var(--space-4);border-top:1px solid var(--hairline)}
-.handoff-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-3)}
-.handoff-more{margin-top:10px}
-.handoff-more summary{list-style:none;cursor:pointer;min-height:38px;display:flex;align-items:center;justify-content:space-between;color:var(--text-2);font-size:11px;font-weight:700}
+.action-disclosures{margin-top:var(--space-4);border-top:1px solid var(--hairline)}
+.handoff-more{margin:0;border-bottom:1px solid var(--hairline)}
+.handoff-more summary{list-style:none;cursor:pointer;min-height:54px;display:flex;align-items:center;justify-content:space-between;color:var(--text-2);font-size:11px;font-weight:700}
 .handoff-more summary::-webkit-details-marker{display:none}
 .handoff-more summary::after{content:"＋";font-size:16px;font-weight:400;color:var(--text-3)}
 .handoff-more[open] summary::after{content:"−"}
-.handoff-more-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-3);padding-top:4px}
+.handoff-more summary>span{display:grid;gap:2px}
+.handoff-more summary b{font-size:13px;color:var(--text-1)}
+.handoff-more summary small{font-size:10px;font-weight:550;color:var(--text-3)}
+.handoff-more-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-3);padding:0 0 12px}
+.action-disclosure .compare-actions{margin:0;padding:0 0 12px}
 .preview-brand-logo{font-size:11px;letter-spacing:.22em;font-weight:800}
 .preview-brand-name{font-size:34px;line-height:1;letter-spacing:-.05em;font-weight:750;max-width:7ch;margin-top:12px}
 .preview-room{position:relative;min-height:230px;overflow:hidden}
@@ -2230,7 +2233,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.42.0</div>
+    <div class="version">V2.43.0</div>
   </div>
 
   <main class="app-main">
@@ -2255,7 +2258,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
             <div class="seed-note">選色槽後可用色盤或 HEX</div>
             <div class="seed-inline-actions">
               <button type="button" class="lock-toggle" id="slotLockToggle" aria-pressed="false">鎖定此色</button>
-              <button type="button" class="lock-toggle picker-open" id="openStudioPicker">Color Lab 色盤</button>
+              <button type="button" class="lock-toggle picker-open" id="openStudioPicker">精準選色</button>
             </div>
           </div>
         </div>
@@ -2272,7 +2275,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
           <div class="recent-colors" id="recentColors"></div>
         </div>
 
-        <button class="primary" id="generate">完成三色組合 <span class="arrow">→</span></button>
+        <button class="primary" id="generate">補齊配色 <span class="arrow">→</span></button>
       </section>
 
       <section class="section app-section" id="result">
@@ -2280,7 +2283,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
           <div>
             <div class="eyebrow">75 / 18 / 7</div>
             <h2>這組顏色的關係</h2>
-            <div class="section-desc">Color 1 / 2 / 3 對應 75 / 18 / 7 不重新排序</div>
+            <div class="section-desc">主體 75% · 結構 18% · 點綴 7%</div>
           </div>
         </div>
 
@@ -2301,14 +2304,14 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 
         <details class="compose-deep-dive" id="composeDeepDive">
           <summary>
-            <span><b>深入理解</b><small>明暗、色相、色覺與使用情境</small></span>
+            <span><b>進階分析</b><small>理解 · 可用性 · 情境</small></span>
             <span class="deep-dive-mark" aria-hidden="true">＋</span>
           </summary>
           <div class="deep-dive-body">
             <details class="deep-section" id="deepUnderstanding" open>
               <summary>
                 <span class="deep-section-index">01</span>
-                <span class="deep-section-copy"><b>理解配色</b><small>關係 · Tone · Role Scale</small></span>
+                <span class="deep-section-copy"><b>理解</b><small>關係 · Tone · Role Scale</small></span>
                 <span class="deep-section-mark" aria-hidden="true">＋</span>
               </summary>
               <div class="deep-section-body">
@@ -2351,15 +2354,15 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
             <details class="deep-section" id="deepValidation">
               <summary>
                 <span class="deep-section-index">02</span>
-                <span class="deep-section-copy"><b>驗證可用性</b><small>WCAG · 色覺模擬 · 修正建議</small></span>
+                <span class="deep-section-copy"><b>可用性</b><small>WCAG · 色覺 · 修正</small></span>
                 <span class="deep-section-mark" aria-hidden="true">＋</span>
               </summary>
               <div class="deep-section-body">
                 <div class="validation-lab">
                   <div class="micro-head"><span>可讀性矩陣</span><span>WCAG 2.x · 不改原色</span></div>
                   <div class="context-theme-modes validation-theme-modes" id="validationThemeModes" role="group" aria-label="可讀性驗證模式">
-                    <button type="button" data-validation-theme="original" aria-pressed="true">Light / 原色</button>
-                    <button type="button" data-validation-theme="dark" aria-pressed="false">Dark 預覽</button>
+                    <button type="button" data-validation-theme="original" aria-pressed="true">原色</button>
+                    <button type="button" data-validation-theme="dark" aria-pressed="false">深色介面</button>
                   </div>
                   <div class="validation-summary" id="validationSummary"></div>
                   <div class="validation-table-wrap" id="accessibilityMatrix"></div>
@@ -2382,7 +2385,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
             <details class="deep-section" id="deepApplication">
               <summary>
                 <span class="deep-section-index">03</span>
-                <span class="deep-section-copy"><b>套用情境</b><small>App · Brand · Room · Gradient · SVG</small></span>
+                <span class="deep-section-copy"><b>情境預覽</b><small>App · 品牌 · 室內 · 穿搭 · 簡報</small></span>
                 <span class="deep-section-mark" aria-hidden="true">＋</span>
               </summary>
               <div class="deep-section-body">
@@ -2412,29 +2415,29 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
         </details>
 
         <div class="palette-actions palette-actions-three">
-          <button type="button" class="utility-btn" id="copyPalette">複製</button>
+          <button type="button" class="utility-btn" id="copyPalette">複製 HEX</button>
           <button type="button" class="utility-btn" id="sharePalette">分享</button>
-          <button type="button" class="utility-btn" id="exportPaletteImage">圖片</button>
+          <button type="button" class="utility-btn" id="exportPaletteImage">PNG</button>
         </div>
-        <div class="handoff-block">
-          <div class="micro-head"><span>交付格式</span><span>原色 · 75 / 18 / 7</span></div>
-          <div class="handoff-actions">
-            <button type="button" class="utility-btn" data-export-format="css">CSS</button>
-            <button type="button" class="utility-btn" data-export-format="json">JSON</button>
-            <button type="button" class="utility-btn" data-export-format="tokens">Tokens</button>
-          </div>
-          <details class="handoff-more" id="handoffMore">
-            <summary>更多格式</summary>
+        <div class="action-disclosures" aria-label="更多配色操作">
+          <details class="handoff-more action-disclosure" id="handoffMore">
+            <summary><span><b>匯出</b><small>CSS · JSON · Design Tokens · App</small></span></summary>
             <div class="handoff-more-actions">
+              <button type="button" class="utility-btn" data-export-format="css">CSS</button>
+              <button type="button" class="utility-btn" data-export-format="json">JSON</button>
+              <button type="button" class="utility-btn" data-export-format="tokens">Design Tokens</button>
               <button type="button" class="utility-btn" data-export-format="tailwind">Tailwind</button>
               <button type="button" class="utility-btn" data-export-format="swiftui">SwiftUI</button>
-              <button type="button" class="utility-btn" data-export-format="svg">SVG Sheet</button>
+              <button type="button" class="utility-btn" data-export-format="svg">SVG 色票</button>
             </div>
           </details>
-        </div>
-        <div class="compare-actions">
-          <button type="button" class="utility-btn" id="setCompareA">設為 A</button>
-          <button type="button" class="utility-btn" id="setCompareB">設為 B</button>
+          <details class="handoff-more action-disclosure" id="compareMore">
+            <summary><span><b>比較配色</b><small>把目前方案放進 A / B</small></span></summary>
+            <div class="compare-actions">
+              <button type="button" class="utility-btn" id="setCompareA">設為方案 A</button>
+              <button type="button" class="utility-btn" id="setCompareB">設為方案 B</button>
+            </div>
+          </details>
         </div>
 
         <div class="name-field">
@@ -2529,16 +2532,16 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
               <div class="photo-auto-note" id="photoColorSpaceNote">主體／鮮明／柔和／深色／淺色 · sRGB 分析</div>
             </div>
             <div class="photo-strategy-bar" id="photoStrategyBar" role="group" aria-label="照片三色抽取策略">
-              <button type="button" class="active" data-photo-strategy="balanced" aria-pressed="true">Balanced</button>
-              <button type="button" data-photo-strategy="muted" aria-pressed="false">Muted</button>
-              <button type="button" data-photo-strategy="vivid" aria-pressed="false">Vivid</button>
+              <button type="button" class="active" data-photo-strategy="balanced" aria-pressed="true">平衡</button>
+              <button type="button" data-photo-strategy="muted" aria-pressed="false">柔和</button>
+              <button type="button" data-photo-strategy="vivid" aria-pressed="false">鮮明</button>
             </div>
             <div class="photo-palette-preview" id="photoPalettePreview" hidden aria-live="polite"></div>
             <div class="photo-swatches" id="photoSwatches" aria-live="polite" aria-label="照片分析配色"></div>
             <div class="photo-insight" id="photoInsight" hidden>
               <strong id="photoInsightLead"></strong>
               <p id="photoInsightText"></p>
-              <button type="button" class="text-action photo-use-palette" id="photoUsePalette" hidden>使用照片三色 →</button>
+              <button type="button" class="text-action photo-use-palette" id="photoUsePalette" hidden>帶入配色 →</button>
             </div>
           </div>
         </div>
@@ -2546,7 +2549,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
         <div class="photo-target-note">
           <span>目前會加入</span>
           <strong id="photoTarget">COLOR 1</strong>
-          <button type="button" class="text-action" data-jump="compose">切換色槽</button>
+          <button type="button" class="text-action" data-jump="compose">回到配色</button>
         </div>
       </section>
     </section>
@@ -2583,7 +2586,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
               <span id="preferenceSummary">尚未建立偏好輪廓</span>
             </details>
           </div>
-          <button type="button" class="utility-btn preference-toggle" id="togglePreference" aria-pressed="true">關閉</button>
+          <button type="button" class="utility-btn preference-toggle" id="togglePreference" aria-pressed="true">關閉個人化</button>
         </div>
         <div class="library-tools">
           <button type="button" class="utility-btn" id="exportBackup">匯出備份</button>
@@ -2598,14 +2601,14 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
             <strong>把 Color Lab 裝成 App</strong>
             <p id="installCopy">從主畫面直接開啟 並保留獨立 App 體驗</p>
           </div>
-          <button type="button" class="utility-btn" id="installAppBtn">安裝</button>
+          <button type="button" class="utility-btn" id="installAppBtn">加入主畫面</button>
         </div>
         <div class="data-status" id="dataStatus">配色資料與偏好只保存在此裝置</div>
       </section>
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.42.0</div>
+  <div class="footer app-footer">Color Lab V2.43.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2715,7 +2718,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 /* Color Lab V2.35.0 PWA / iPhone Update Hardening
    User-mediated service worker activation prevents mixed-version sessions. */
 
-const COLORLAB_APP_VERSION='2.42.0';
+const COLORLAB_APP_VERSION='2.43.0';
 const PWA_UPDATE_CHECK_INTERVAL=20*60*1000;
 let pwaRegistration=null;
 let pwaUpdateReady=false;
@@ -3140,7 +3143,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v5',appVersion:'2.42.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.43.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -3436,7 +3439,7 @@ function updatePreferenceStatus(backedUp=false){
   if(s)s.textContent=(backedUp?'本機雙重備份已啟用':'資料保存在此裝置')+' · 偏好只存在此裝置 · '+state;
   if(reset)reset.disabled=weight<=0;
   if(toggle){
-    toggle.textContent=preferenceEnabled?'關閉':'開啟';
+    toggle.textContent=preferenceEnabled?'關閉個人化':'開啟個人化';
     toggle.setAttribute('aria-pressed',preferenceEnabled?'true':'false');
     toggle.setAttribute('aria-label',preferenceEnabled?'關閉本機個人化':'開啟本機個人化');
   }
@@ -4161,10 +4164,16 @@ function removeSlot(i){
   generate(false);
   pushHistory();
 }
+function updateGenerateActionLabel(){
+  const button=$('#generate');if(!button)return;
+  const complete=chosenColors().length===3;
+  button.innerHTML=(complete?'分析這組配色':'補齊配色')+' <span class="arrow">→</span>';
+}
 function renderComboSlots(){
   const box=$('#comboSlots'); if(!box)return;
   box.innerHTML='';
   $('#comboCount').textContent=chosenColors().length+' / 3';
+  updateGenerateActionLabel();
   selectedColors.forEach((hex,i)=>{
     const wrap=document.createElement('div');wrap.className='slot-wrap '+(hex?'filled-wrap':'empty-wrap');
     const btn=document.createElement('button');
@@ -4909,10 +4918,10 @@ photoCanvas.addEventListener('pointercancel',e=>{
 $('#color').addEventListener('input',e=>{setColorAtActive(e.target.value.toUpperCase())});
 $('#hex').addEventListener('change',e=>{const h=normHex(e.target.value);if(h)setColorAtActive(h);else e.target.value=selectedColors[activeSlot]||seed});
 $('#generate').onclick=async()=>{
-  const button=$('#generate'),label=button.textContent;
-  button.disabled=true;button.textContent='準備靈感資料…';
+  const button=$('#generate');
+  button.disabled=true;button.textContent='準備配色資料…';
   try{await ensureRecommendationReferences();generate(true)}
-  finally{button.disabled=false;button.textContent=label}
+  finally{button.disabled=false;updateGenerateActionLabel()}
 };
 $('#save').onclick=save;
 $('#previousRecommendations').onclick=()=>runInspirationAction(previousRecommendationBatch);

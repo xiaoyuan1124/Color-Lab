@@ -613,6 +613,32 @@ check('V2.42 Vision mode does not rerender hidden Application previews',
   !/renderVision\(\);\s*renderContextPreview\(\);/.test(visionAccessibility),
   'Validation-only vision changes defer Context Preview work until Application becomes visible');
 
+check('V2.43 primary action surface uses progressive disclosure',
+  html.includes('class="action-disclosures"')&&
+  html.includes('id="handoffMore"')&&
+  html.includes('id="compareMore"')&&
+  html.includes('<b>匯出</b>')&&
+  html.includes('<b>比較配色</b>')&&
+  !html.includes('<div class="handoff-actions">'),
+  'developer handoff and A/B setup are no longer permanent peer buttons');
+
+check('V2.43 generate CTA describes the current task without mutating palette state',
+  appText.includes('function updateGenerateActionLabel(')&&
+  appText.includes("complete?'分析這組配色':'補齊配色'")&&
+  appText.includes('updateGenerateActionLabel();')&&
+  !/function updateGenerateActionLabel\([\s\S]{0,500}selectedColors\s*=/.test(appText)&&
+  !/function updateGenerateActionLabel\([\s\S]{0,500}palette\.(?:base|structure|accent)\s*=/.test(appText),
+  '1–2 colors say 補齊配色, complete trios say 分析這組配色, label updates stay view-only');
+
+check('V2.43 user-facing action labels are concise and localized',
+  html.includes('id="openStudioPicker">精準選色</button>')&&
+  html.includes('data-photo-strategy="balanced" aria-pressed="true">平衡</button>')&&
+  html.includes('data-photo-strategy="muted" aria-pressed="false">柔和</button>')&&
+  html.includes('data-photo-strategy="vivid" aria-pressed="false">鮮明</button>')&&
+  html.includes('id="photoUsePalette" hidden>帶入配色 →</button>')&&
+  html.includes('id="installAppBtn">加入主畫面</button>'),
+  'high-frequency mobile actions no longer require product-specific or mixed-language interpretation');
+
 check('V2.32 resilience lifecycle lives inside the storage runtime',
   storageHardening.includes('function openResilienceDB(')&&
   storageHardening.includes('async function writeResilienceSnapshot(')&&
