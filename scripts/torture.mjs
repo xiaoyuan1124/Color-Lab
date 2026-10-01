@@ -3,6 +3,7 @@ import vm from 'node:vm';
 
 const html=fs.readFileSync('index.html','utf8');
 const storageHardening=fs.readFileSync('runtime/storage-hardening.js','utf8');
+const uxCleanup=fs.readFileSync('runtime/ux-cleanup.js','utf8');
 const paletteTools=fs.readFileSync('runtime/palette-tools.js','utf8');
 const toneExplorer=fs.readFileSync('runtime/tone-explorer.js','utf8');
 const photoPalette=fs.readFileSync('runtime/photo-palette.js','utf8');
@@ -13,7 +14,7 @@ const visionAccessibility=fs.readFileSync('runtime/vision-accessibility.js','utf
 const localProjects=fs.readFileSync('runtime/local-projects.js','utf8');
 const referenceBoard=fs.readFileSync('runtime/reference-board.js','utf8');
 const gradientStudio=fs.readFileSync('runtime/gradient-studio.js','utf8');
-const appText=html+'\n'+storageHardening+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio;
+const appText=html+'\n'+storageHardening+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio;
 const toneSource=fs.readFileSync('data/tone-families.js','utf8');
 const inlineScripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
 const scriptMatch=inlineScripts.at(-1);
@@ -24,6 +25,8 @@ if(!scriptMatch){
 const source=scriptMatch[1];
 try{new Function(storageHardening)}
 catch(e){console.error('FAIL storage hardening runtime syntax',e.message);process.exit(1)}
+try{new Function(uxCleanup)}
+catch(e){console.error('FAIL ux cleanup runtime syntax',e.message);process.exit(1)}
 try{new Function(paletteTools)}
 catch(e){console.error('FAIL palette tools runtime syntax',e.message);process.exit(1)}
 try{new Function(toneExplorer)}
@@ -446,6 +449,32 @@ check('V2.30 backup and project multi-key writes have rollback boundaries',
   appText.includes("storageTransaction(keys,()=>")&&
   localProjects.includes("storageTransaction(['colorlab.saved',LOCAL_PROJECTS_KEY]"),
   'multi-key writes restore captured local state on failure');
+check('V2.31 deep dive exposes exactly three editorial sections',
+  uxCleanup.includes("const DEEP_DIVE_SECTIONS=['deepUnderstanding','deepValidation','deepApplication']")&&
+  html.includes('id="deepUnderstanding"')&&
+  html.includes('id="deepValidation"')&&
+  html.includes('id="deepApplication"'),
+  'understand validate apply');
+check('V2.31 deep dive renders only the visible section family',
+  uxCleanup.includes("if(section==='deepUnderstanding')")&&
+  uxCleanup.includes("}else if(section==='deepValidation')")&&
+  uxCleanup.includes("}else if(section==='deepApplication')")&&
+  uxCleanup.includes('renderRelationshipExplanation();')&&
+  uxCleanup.includes('renderPaletteValidation();')&&
+  uxCleanup.includes('renderContextPreview();'),
+  'section-specific renderer dispatch');
+check('V2.31 deep dive state stays local and non-mutating',
+  uxCleanup.includes("DEEP_DIVE_SECTION_KEY='colorlab.deepSection'")&&
+  uxCleanup.includes("storageWriteRaw(DEEP_DIVE_SECTION_KEY,id,{silent:true})")&&
+  !uxCleanup.includes('selectedColors=')&&
+  !uxCleanup.includes('palette.base=')&&
+  !uxCleanup.includes('palette.structure=')&&
+  !uxCleanup.includes('palette.accent='),
+  'remembered section only; source palette untouched');
+check('V2.31 compose render avoids duplicate deep-dive work',
+  html.includes("if(deep?.open)renderDeepDiveVisible();")&&
+  !html.includes("if(active==='compose'){\n      const deep=$('#composeDeepDive');\n      if(deep?.open)renderDeepDiveVisible()"),
+  'visible section renders once per compose palette render');
 
 check('V2.18 context preview ships five realistic scene contracts',
   appText.includes('class="cp2 cp2-app"')&&
