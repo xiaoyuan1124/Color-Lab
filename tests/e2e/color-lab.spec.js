@@ -1738,3 +1738,87 @@ test('V2.37 core color quality module preserves exact complete source palettes',
   expect(result.palette.palette).toEqual({base:'#112233',structure:'#445566',accent:'#AABBCC'});
 });
 
+test('V2.38 Deep Dive scheduler coalesces repeated frame requests without mutating source colors', async ({ page }) => {
+  const before=await page.evaluate(() => paletteArtifactBase());
+  const state=await page.evaluate(async () => {
+    const deep=document.getElementById('composeDeepDive');
+    deep.open=true;
+    openDeepDiveSection('deepUnderstanding');
+    const first=deepDiveRenderFrame;
+    scheduleDeepDiveVisibleRender();
+    const second=deepDiveRenderFrame;
+    scheduleDeepDiveVisibleRender();
+    const third=deepDiveRenderFrame;
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    return{first,second,third,after:deepDiveRenderFrame};
+  });
+  expect(state.first).not.toBe(0);
+  expect(state.second).toBe(state.first);
+  expect(state.third).toBe(state.first);
+  expect(state.after).toBe(0);
+  expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before);
+});
+
+test('V2.38 Inspire scheduler invalidates stale async work and coalesces rapid route switches', async ({ page }) => {
+  await page.evaluate(() => ensureInspirationResources());
+  await page.waitForTimeout(220);
+  const result=await page.evaluate(async () => {
+    const originalEnsure=ensureInspirationResources;
+    const originalIdeas=renderIdeas;
+    const originalRecommendations=renderRecommendations;
+    const originalIdle=window.requestIdleCallback;
+    let ideas=0,recommendations=0,ensures=0,resolveFirst=null;
+
+    window.requestIdleCallback=cb=>setTimeout(()=>cb({didTimeout:false,timeRemaining:()=>50}),0);
+    renderIdeas=()=>{ideas++};
+    renderRecommendations=()=>{recommendations++};
+    ensureInspirationResources=()=>{
+      ensures++;
+      return new Promise(resolve=>{resolveFirst=resolve});
+    };
+
+    switchTab('inspire',false);
+    await new Promise(resolve=>setTimeout(resolve,12));
+    const tokenAfterInspire=secondaryRenderToken;
+    switchTab('compose',false);
+    const tokenAfterLeave=secondaryRenderToken;
+    if(resolveFirst)resolveFirst([]);
+    await new Promise(resolve=>setTimeout(resolve,12));
+    const stale={ideas,recommendations,ensures,active:document.querySelector('.tab-view.active')?.dataset.view||''};
+
+    ensureInspirationResources=()=>{ensures++;return Promise.resolve([])};
+    switchTab('inspire',false);
+    switchTab('compose',false);
+    switchTab('inspire',false);
+    switchTab('inspire',false);
+    const pendingDuring=secondaryRenderPending;
+    await new Promise(resolve=>setTimeout(resolve,24));
+
+    const final={
+      ideas,
+      recommendations,
+      ensures,
+      pendingDuring,
+      pendingAfter:secondaryRenderPending,
+      active:document.querySelector('.tab-view.active')?.dataset.view||'',
+      tokenAfterInspire,
+      tokenAfterLeave
+    };
+
+    ensureInspirationResources=originalEnsure;
+    renderIdeas=originalIdeas;
+    renderRecommendations=originalRecommendations;
+    window.requestIdleCallback=originalIdle;
+    return{stale,final};
+  });
+
+  expect(result.stale).toEqual({ideas:0,recommendations:0,ensures:1,active:'compose'});
+  expect(result.final.tokenAfterLeave).toBeGreaterThan(result.final.tokenAfterInspire);
+  expect(result.final.pendingDuring).toBe(true);
+  expect(result.final.pendingAfter).toBe(false);
+  expect(result.final.active).toBe('inspire');
+  expect(result.final.ensures).toBe(2);
+  expect(result.final.ideas).toBe(1);
+  expect(result.final.recommendations).toBe(1);
+});
+
