@@ -4,6 +4,7 @@ import vm from 'node:vm';
 const html=fs.readFileSync('index.html','utf8');
 const storageHardening=fs.readFileSync('runtime/storage-hardening.js','utf8');
 const colorQuality=fs.readFileSync('core/color-quality.js','utf8');
+const librarySearchCore=fs.readFileSync('core/library-search.js','utf8');
 const pwaStart=html.indexOf('/* Color Lab V2.35.0 PWA / iPhone Update Hardening');
 const pwaEnd=html.indexOf('\nconst MODES={',pwaStart);
 const pwaHealth=pwaStart>=0&&pwaEnd>pwaStart?html.slice(pwaStart,pwaEnd):'';
@@ -19,7 +20,7 @@ const localProjects=fs.readFileSync('runtime/local-projects.js','utf8');
 const referenceBoard=fs.readFileSync('runtime/reference-board.js','utf8');
 const gradientStudio=fs.readFileSync('runtime/gradient-studio.js','utf8');
 const recommendationEngine=fs.readFileSync('data/recommendation-engine.js','utf8');
-const appText=html+'\n'+storageHardening+'\n'+colorQuality+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio+'\n'+recommendationEngine;
+const appText=html+'\n'+storageHardening+'\n'+colorQuality+'\n'+librarySearchCore+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio+'\n'+recommendationEngine;
 const toneSource=fs.readFileSync('data/tone-families.js','utf8');
 const inlineScripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
 const scriptMatch=inlineScripts.at(-1);
@@ -28,11 +29,13 @@ if(!scriptMatch){
   process.exit(1);
 }
 const source=scriptMatch[1];
-const testSource=colorQuality+'\n'+source;
+const testSource=colorQuality+'\n'+librarySearchCore+'\n'+source;
 try{new Function(storageHardening)}
 catch(e){console.error('FAIL storage hardening runtime syntax',e.message);process.exit(1)}
 try{new Function(colorQuality)}
 catch(e){console.error('FAIL core color quality syntax',e.message);process.exit(1)}
+try{new Function(librarySearchCore)}
+catch(e){console.error('FAIL core library search syntax',e.message);process.exit(1)}
 try{new Function(pwaHealth)}
 catch(e){console.error('FAIL pwa health runtime syntax',e.message);process.exit(1)}
 try{new Function(uxCleanup)}
@@ -693,12 +696,12 @@ check('V2.46 camera and gallery inputs share one Photo load path',
   'camera capture and gallery selection converge on the existing loadPhoto lifecycle');
 
 check('V2.46 semantic Library search is derived and schema-free',
-  appText.includes('function libraryColorSemanticTerms(')&&
-  appText.includes('function libraryPaletteSemanticTerms(')&&
+  librarySearchCore.includes('function libraryColorSemanticTerms(')&&
+  librarySearchCore.includes('function libraryPaletteSemanticTerms(')&&
   appText.includes('function librarySearchMatches(')&&
   appText.includes('return terms.every(term=>haystack.includes(term))')&&
-  !/function libraryPaletteSemanticTerms\([\s\S]{0,1800}storageWrite/.test(appText)&&
-  !/function libraryPaletteSemanticTerms\([\s\S]{0,1800}selectedColors\s*=/.test(appText),
+  !/function libraryPaletteSemanticTerms\([\s\S]{0,1800}storageWrite/.test(librarySearchCore)&&
+  !/function libraryPaletteSemanticTerms\([\s\S]{0,1800}selectedColors\s*=/.test(librarySearchCore),
   'search terms are derived from saved colors without mutating storage or Compose source state');
 
 check('V2.46 semantic search keeps exact legacy fields in the index',
@@ -708,10 +711,10 @@ check('V2.46 semantic search keeps exact legacy fields in the index',
   'name, HEX, tags, folders, and project names remain searchable alongside semantic color terms');
 
 check('V2.46 use-case search terms are derived from measurable palette relationships',
-  appText.includes("if(baseStructureContrast>=4.5)terms.push('app','網頁','介面','ui','簡報')")&&
-  appText.includes("if(avgC<.11)terms.push('室內','穿搭','interior','fashion')")&&
-  appText.includes("if(accent.c>Math.max(.08,roleC*1.25))terms.push('品牌','brand','海報')")&&
-  appText.includes('const baseStructureContrast=contrastRatio(colors[0],colors[1])'),
+  librarySearchCore.includes("if(baseStructureContrast>=4.5)terms.push('app','網頁','介面','ui','簡報')")&&
+  librarySearchCore.includes("if(avgC<.11)terms.push('室內','穿搭','interior','fashion')")&&
+  librarySearchCore.includes("if(accent.c>Math.max(.08,roleC*1.25))terms.push('品牌','brand','海報')")&&
+  librarySearchCore.includes('const baseStructureContrast=contrastRatio(colors[0],colors[1])'),
   'context terms reuse local contrast/chroma evidence instead of stored profile metadata or remote classification');
 
 check('V2.32 resilience lifecycle lives inside the storage runtime',
