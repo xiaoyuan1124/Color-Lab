@@ -11,6 +11,7 @@ async function openDeepSection(page,id){
   const section=page.locator('#'+id);
   if(!(await section.evaluate(el=>el.open)))await section.locator(':scope > summary').click();
   await expect(section).toHaveAttribute('open','');
+  await page.evaluate(() => new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
 }
 
 test('mobile Compose keeps the 75 / 18 / 7 contract visible', async ({ page }) => {
@@ -1914,4 +1915,74 @@ test('V2.40 delayed Inspire action is invalidated after leaving the route', asyn
   expect(result.history).toBe(before.history);
   expect(result.active).toBe('compose');
   expect(await page.evaluate(() => paletteArtifactBase())).toEqual(before.palette);
+});
+
+
+test('V2.41 Photo pointer lifecycle ignores unrelated touch pointers and stale hide timers', async ({ page }) => {
+  await page.evaluate(() => switchTab('photo',false));
+  const result=await page.evaluate(async () => {
+    setPhotoMode('point');
+    cancelPhotoPointerInteraction();
+    photoPanel.classList.add('show');
+    photoCanvas.width=120;photoCanvas.height=80;
+    const ctx=photoCanvas.getContext('2d');
+    ctx.fillStyle='#112233';ctx.fillRect(0,0,60,80);
+    ctx.fillStyle='#AABBCC';ctx.fillRect(60,0,60,80);
+
+    const rect=photoCanvas.getBoundingClientRect();
+    const left={x:rect.left+rect.width*.25,y:rect.top+rect.height*.5};
+    const right={x:rect.left+rect.width*.75,y:rect.top+rect.height*.5};
+    const fire=(type,pointerId,p)=>photoCanvas.dispatchEvent(new PointerEvent(type,{
+      bubbles:true,pointerType:'touch',pointerId,clientX:p.x,clientY:p.y
+    }));
+
+    fire('pointerdown',11,left);
+    const first={id:photoPointerId,picking:photoPicking,picked:lastPicked};
+
+    fire('pointerdown',22,right);
+    fire('pointermove',22,right);
+    fire('pointerup',22,right);
+    const foreign={id:photoPointerId,picking:photoPicking,picked:lastPicked};
+
+    fire('pointermove',11,right);
+    const ownerMove={id:photoPointerId,picking:photoPicking,picked:lastPicked};
+    fire('pointerup',11,right);
+    const afterOwnerUp={
+      id:photoPointerId,picking:photoPicking,picked:lastPicked,
+      timer:photoMagnifierHideTimer,selected:selectedColors[activeSlot]
+    };
+
+    fire('pointerdown',33,left);
+    const restarted={
+      id:photoPointerId,picking:photoPicking,timer:photoMagnifierHideTimer,
+      display:magnifier.style.display,picked:lastPicked
+    };
+    await new Promise(resolve=>setTimeout(resolve,160));
+    const afterOldTimer={
+      id:photoPointerId,picking:photoPicking,timer:photoMagnifierHideTimer,
+      display:magnifier.style.display
+    };
+
+    fire('pointercancel',44,left);
+    const foreignCancel={id:photoPointerId,picking:photoPicking};
+    fire('pointercancel',33,left);
+    const ownerCancel={
+      id:photoPointerId,picking:photoPicking,timer:photoMagnifierHideTimer,
+      display:magnifier.style.display
+    };
+    return{first,foreign,ownerMove,afterOwnerUp,restarted,afterOldTimer,foreignCancel,ownerCancel};
+  });
+
+  expect(result.first).toEqual({id:11,picking:true,picked:'#112233'});
+  expect(result.foreign).toEqual({id:11,picking:true,picked:'#112233'});
+  expect(result.ownerMove).toEqual({id:11,picking:true,picked:'#AABBCC'});
+  expect(result.afterOwnerUp.id).toBeNull();
+  expect(result.afterOwnerUp.picking).toBe(false);
+  expect(result.afterOwnerUp.picked).toBe('#AABBCC');
+  expect(result.afterOwnerUp.timer).not.toBe(0);
+  expect(result.afterOwnerUp.selected).toBe('#AABBCC');
+  expect(result.restarted).toEqual({id:33,picking:true,timer:0,display:'block',picked:'#112233'});
+  expect(result.afterOldTimer).toEqual({id:33,picking:true,timer:0,display:'block'});
+  expect(result.foreignCancel).toEqual({id:33,picking:true});
+  expect(result.ownerCancel).toEqual({id:null,picking:false,timer:0,display:'none'});
 });

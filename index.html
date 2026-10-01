@@ -2230,7 +2230,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.40.0</div>
+    <div class="version">V2.41.0</div>
   </div>
 
   <main class="app-main">
@@ -2605,7 +2605,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.40.0</div>
+  <div class="footer app-footer">Color Lab V2.41.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2715,7 +2715,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 /* Color Lab V2.35.0 PWA / iPhone Update Hardening
    User-mediated service worker activation prevents mixed-version sessions. */
 
-const COLORLAB_APP_VERSION='2.40.0';
+const COLORLAB_APP_VERSION='2.41.0';
 const PWA_UPDATE_CHECK_INTERVAL=20*60*1000;
 let pwaRegistration=null;
 let pwaUpdateReady=false;
@@ -3140,7 +3140,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v5',appVersion:'2.40.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.41.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -4554,7 +4554,7 @@ const photoInput=$('#photoInput'),photoCanvas=$('#photoCanvas'),photoPanel=$('#p
 const photoCtx=photoCanvas.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'});
 let lastPhotoRoles=[],lastPhotoClusters=[];
 const magnifier=$('#magnifier'),magnifierCanvas=$('#magnifierCanvas'),magnifierCtx=magnifierCanvas.getContext('2d',{willReadFrequently:true,colorSpace:'srgb'}),pickReadout=$('#pickReadout');
-let photoObjectURL=null,photoLoadToken=0,photoLoadImage=null,photoLoaded=false,photoPicking=false,lastPicked=null;
+let photoObjectURL=null,photoLoadToken=0,photoLoadImage=null,photoLoaded=false,photoPicking=false,photoPointerId=null,photoMagnifierHideTimer=0,lastPicked=null;
 
 function renderPhotoPalette(items){
   const host=$('#photoAuto'),box=$('#photoSwatches');if(!host||!box)return;
@@ -4768,9 +4768,14 @@ function cancelPendingPhotoLoad(){
   if(photoLoadImage){photoLoadImage.onload=null;photoLoadImage.onerror=null;photoLoadImage=null}
   if(photoObjectURL)releasePhotoObjectURL(photoObjectURL);
 }
+function cancelPhotoPointerInteraction(){
+  photoPicking=false;photoPointerId=null;regionStart=null;
+  if(photoMagnifierHideTimer){clearTimeout(photoMagnifierHideTimer);photoMagnifierHideTimer=0}
+  magnifier.style.display='none';$('#regionBox').style.display='none';
+}
 function loadPhoto(file){
   if(!file||!file.type.startsWith('image/'))return;
-  cancelPendingPhotoLoad();
+  cancelPendingPhotoLoad();cancelPhotoPointerInteraction();
   const token=photoLoadToken,objectURL=URL.createObjectURL(file),img=new Image();
   photoObjectURL=objectURL;photoLoadImage=img;
   const isCurrent=()=>token===photoLoadToken&&photoLoadImage===img&&photoObjectURL===objectURL;
@@ -4860,7 +4865,9 @@ $('#photoUsePalette').onclick=usePhotoPalette;
 photoInput.addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(file)loadPhoto(file);e.target.value=''});
 
 photoCanvas.addEventListener('pointerdown',e=>{
-  photoPicking=true;
+  if(photoPointerId!==null&&photoPointerId!==e.pointerId)return;
+  if(photoMagnifierHideTimer){clearTimeout(photoMagnifierHideTimer);photoMagnifierHideTimer=0}
+  photoPointerId=e.pointerId;photoPicking=true;
   try{photoCanvas.setPointerCapture(e.pointerId)}catch(_){}
   if(photoMode==='region'){
     regionStart=mapPhotoPoint(e.clientX,e.clientY);
@@ -4871,7 +4878,7 @@ photoCanvas.addEventListener('pointerdown',e=>{
   }
 });
 photoCanvas.addEventListener('pointermove',e=>{
-  if(!photoPicking)return;
+  if(!photoPicking||photoPointerId!==e.pointerId)return;
   e.preventDefault();
   if(photoMode==='region'){
     const p=mapPhotoPoint(e.clientX,e.clientY);updateRegionBox(regionStart,p);
@@ -4880,20 +4887,23 @@ photoCanvas.addEventListener('pointermove',e=>{
   }
 });
 function finishPhotoPick(e){
-  if(!photoPicking)return;
-  photoPicking=false;
+  if(!photoPicking||photoPointerId!==e.pointerId)return;
+  photoPicking=false;photoPointerId=null;
   if(photoMode==='region'){
     const p=mapPhotoPoint(e.clientX,e.clientY);updateRegionBox(regionStart,p);finishPhotoRegion(p);regionStart=null;
   }else{
     updatePhotoPick(e.clientX,e.clientY,true);
-    setTimeout(()=>magnifier.style.display='none',120);
+    photoMagnifierHideTimer=setTimeout(()=>{
+      photoMagnifierHideTimer=0;
+      if(!photoPicking)magnifier.style.display='none';
+    },120);
   }
   try{photoCanvas.releasePointerCapture(e.pointerId)}catch(_){}
 }
 photoCanvas.addEventListener('pointerup',finishPhotoPick);
-photoCanvas.addEventListener('pointercancel',()=>{
-  photoPicking=false;regionStart=null;
-  magnifier.style.display='none';$('#regionBox').style.display='none';
+photoCanvas.addEventListener('pointercancel',e=>{
+  if(photoPointerId!==e.pointerId)return;
+  cancelPhotoPointerInteraction();
 });
 
 $('#color').addEventListener('input',e=>{setColorAtActive(e.target.value.toUpperCase())});
@@ -5079,7 +5089,7 @@ document.addEventListener('keydown',e=>{
   else if(!$('#installBackdrop').hidden)closeInstallGuide();
   else if(!document.getElementById('projectPickerBackdrop')?.hidden)closeProjectPicker();
 });
-window.addEventListener('pagehide',()=>{cancelPendingPhotoLoad();persistDraft();writeResilienceSnapshot()});
+window.addEventListener('pagehide',()=>{cancelPendingPhotoLoad();cancelPhotoPointerInteraction();persistDraft();writeResilienceSnapshot()});
 $('#setCompareA').onclick=()=>saveCompare('A');
 $('#setCompareB').onclick=()=>saveCompare('B');
 $('#exportPaletteImage').onclick=exportPaletteImage;

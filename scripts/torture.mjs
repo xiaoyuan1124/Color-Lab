@@ -576,7 +576,7 @@ check('V2.39 photo presence is canvas-backed and pending loads clean up on pageh
   referenceBoard.includes("typeof photoLoaded!=='undefined'&&photoLoaded")&&
   !referenceBoard.includes("typeof photoObjectURL!=='undefined'&&!!photoObjectURL")&&
   appText.includes('photoLoaded=true;finish()')&&
-  appText.includes("window.addEventListener('pagehide',()=>{cancelPendingPhotoLoad();persistDraft();writeResilienceSnapshot()})"),
+  appText.includes("window.addEventListener('pagehide',()=>{cancelPendingPhotoLoad();cancelPhotoPointerInteraction();persistDraft();writeResilienceSnapshot()})"),
   'successful decode releases its blob URL while preserving local canvas availability');
 check('V2.40 Inspire explicit actions are route-token guarded',
   appText.includes('function inspirationRouteActive(')&&
@@ -591,6 +591,22 @@ check('V2.40 preference refreshes reuse the coalesced Inspire scheduler',
   appText.includes('if(inspirationRouteActive())scheduleSecondaryRender();')&&
   !appText.includes("ensureInspirationResources().then(()=>{renderIdeas();renderRecommendations()})"),
   'preference changes no longer bypass route-aware render scheduling');
+
+check('V2.41 Photo pointer ownership ignores unrelated touch pointers',
+  appText.includes('photoPointerId=null,photoMagnifierHideTimer=0')&&
+  appText.includes("if(photoPointerId!==null&&photoPointerId!==e.pointerId)return")&&
+  appText.includes("if(!photoPicking||photoPointerId!==e.pointerId)return")&&
+  appText.includes('photoPicking=false;photoPointerId=null')&&
+  appText.includes("photoCanvas.addEventListener('pointercancel',e=>{")&&
+  appText.includes('function cancelPhotoPointerInteraction('),
+  'only the active pointer can move, commit, cancel, or end a Photo pick');
+check('V2.41 magnifier hide timer cannot cancel a newer Photo interaction',
+  appText.includes('if(photoMagnifierHideTimer){clearTimeout(photoMagnifierHideTimer);photoMagnifierHideTimer=0}')&&
+  appText.includes('photoMagnifierHideTimer=setTimeout(()=>')&&
+  appText.includes("if(!photoPicking)magnifier.style.display='none'")&&
+  appText.includes('cancelPendingPhotoLoad();cancelPhotoPointerInteraction();')&&
+  appText.includes("cancelPhotoPointerInteraction();persistDraft();writeResilienceSnapshot()"),
+  'new loads and pagehide clear pointer state and stale delayed magnifier work');
 
 check('V2.32 resilience lifecycle lives inside the storage runtime',
   storageHardening.includes('function openResilienceDB(')&&

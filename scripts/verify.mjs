@@ -162,13 +162,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2400")) fail('service worker cache version is not V2.40.0');
+if(!sw.includes("color-lab-v2410")) fail('service worker cache version is not V2.41.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.40.0') fail('package version must be 2.40.0');
+if(pkg.version!=='2.41.0') fail('package version must be 2.41.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.40.0')||!html.includes('<div class="version">V2.40.0</div>')||!html.includes("appVersion:'2.40.0'")) fail('V2.40.0 UI or backup version metadata missing');
-else pass('V2.40.0 version metadata');
+if(!html.includes('Color Lab V2.41.0')||!html.includes('<div class="version">V2.41.0</div>')||!html.includes("appVersion:'2.41.0'")) fail('V2.41.0 UI or backup version metadata missing');
+else pass('V2.41.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -706,7 +706,7 @@ if(!html.includes('id="pwaHealthMount"')||
    html.includes("navigator.serviceWorker.register('./sw.js').catch(()=>{})")||
    sw.includes('./runtime/pwa-health.js')||
    sw.includes('./runtime/pwa-health.css')||
-   !pwaHealth.includes("const COLORLAB_APP_VERSION='2.40.0'")||
+   !pwaHealth.includes("const COLORLAB_APP_VERSION='2.41.0'")||
    !pwaHealthCss.includes('.pwa-health{')){
   fail('V2.35.0 shell-integrated PWA health / UI contract missing');
 }else pass('V2.35.0 shell-integrated PWA controller + compact UI');
@@ -796,7 +796,7 @@ if(!html.includes('let photoObjectURL=null,photoLoadToken=0,photoLoadImage=null,
    !html.includes('const isCurrent=()=>token===photoLoadToken&&photoLoadImage===img&&photoObjectURL===objectURL')||
    !html.includes('photoLoaded=true;finish()')||
    !html.includes('img.src=objectURL')||
-   !html.includes("window.addEventListener('pagehide',()=>{cancelPendingPhotoLoad();persistDraft();writeResilienceSnapshot()})")||
+   !html.includes("window.addEventListener('pagehide',()=>{cancelPendingPhotoLoad();cancelPhotoPointerInteraction();persistDraft();writeResilienceSnapshot()})")||
    !referenceBoard.includes("typeof photoLoaded!=='undefined'&&photoLoaded")||
    referenceBoard.includes("typeof photoObjectURL!=='undefined'&&!!photoObjectURL")||
    html.includes('URL.revokeObjectURL(photoObjectURL);photoObjectURL=null')){
@@ -813,6 +813,19 @@ if(!html.includes('function inspirationRouteActive(')||
    (html.match(/ensureInspirationResources\(\)\.then\(\(\)=>\{renderIdeas\(\);renderRecommendations\(\)\}\)/g)||[]).length){
   fail('V2.40.0 Inspire async action lifecycle contract missing');
 }else pass('V2.40.0 Inspire actions are route/token guarded and preference refreshes use the scheduler');
+
+if(!html.includes('photoPointerId=null,photoMagnifierHideTimer=0')||
+   !html.includes('function cancelPhotoPointerInteraction(')||
+   !html.includes("if(photoPointerId!==null&&photoPointerId!==e.pointerId)return")||
+   !html.includes("if(!photoPicking||photoPointerId!==e.pointerId)return")||
+   !html.includes('photoPicking=false;photoPointerId=null')||
+   !html.includes('photoMagnifierHideTimer=setTimeout(()=>')||
+   !html.includes("if(!photoPicking)magnifier.style.display='none'")||
+   !html.includes("photoCanvas.addEventListener('pointercancel',e=>{")||
+   !html.includes('cancelPendingPhotoLoad();cancelPhotoPointerInteraction();')||
+   !html.includes("cancelPhotoPointerInteraction();persistDraft();writeResilienceSnapshot()")){
+  fail('V2.41.0 photo pointer lifecycle / multi-touch isolation contract missing');
+}else pass('V2.41.0 Photo pointer lifecycle is single-owner, timer-safe, and cleaned on replacement/pagehide');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
