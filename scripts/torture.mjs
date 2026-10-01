@@ -4,6 +4,7 @@ import vm from 'node:vm';
 const html=fs.readFileSync('index.html','utf8');
 const storageHardening=fs.readFileSync('runtime/storage-hardening.js','utf8');
 const colorQuality=fs.readFileSync('core/color-quality.js','utf8');
+const colorHandoff=fs.readFileSync('core/color-handoff.js','utf8');
 const librarySearchCore=fs.readFileSync('core/library-search.js','utf8');
 const pwaStart=html.indexOf('/* Color Lab V2.35.0 PWA / iPhone Update Hardening');
 const pwaEnd=html.indexOf('\nconst MODES={',pwaStart);
@@ -34,6 +35,8 @@ try{new Function(storageHardening)}
 catch(e){console.error('FAIL storage hardening runtime syntax',e.message);process.exit(1)}
 try{new Function(colorQuality)}
 catch(e){console.error('FAIL core color quality syntax',e.message);process.exit(1)}
+try{new Function(colorHandoff)}
+catch(e){console.error('FAIL core color handoff syntax',e.message);process.exit(1)}
 try{new Function(librarySearchCore)}
 catch(e){console.error('FAIL core library search syntax',e.message);process.exit(1)}
 try{new Function(pwaHealth)}
@@ -280,6 +283,20 @@ check('V2.13 dark validation is derived only',
 const quietAesthetic=A.paletteAestheticCore(['#E9E1D2','#25313A','#4D739B']);
 const vividAesthetic=A.paletteAestheticCore(['#286B69','#D0A32E','#A94B38']);
 const noisyAesthetic=A.paletteAestheticCore(['#FF4B55','#FF5A4D','#FF6A45']);
+check('V2.51 Display-P3 conversion stays local and source-safe',
+  colorHandoff.includes('HANDOFF_XYZ_D65_TO_P3')&&
+  colorHandoff.includes('function hexToDisplayP3(')&&
+  colorHandoff.includes('function displayP3CssFromHex(')&&
+  !/localStorage|sessionStorage|fetch\(|XMLHttpRequest|selectedColors\s*=|palette\s*=/.test(colorHandoff),
+  'P3 core math only; no storage network or palette writes');
+check('V2.51 P3 CSS handoff retains exact sRGB fallback',
+  html.includes('function professionalP3Css(')&&
+  html.includes('@supports (color: color(display-p3 1 1 1))')&&
+  html.includes('@media (color-gamut: p3)')&&
+  html.includes('Source = exact sRGB HEX')&&
+  html.includes('not gamut expansion'),
+  'sRGB fallback + guarded Display-P3 override');
+
 check('V2.20 professional export formats are present',
   appText.includes("if(kind==='tailwind')")&&
   appText.includes("if(kind==='swiftui')")&&
