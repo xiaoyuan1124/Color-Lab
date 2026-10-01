@@ -2,7 +2,7 @@
 
 手機優先、Local-first、零後端的私人配色實驗室。
 
-**目前版本：V2.38.0**
+**目前版本：V2.39.0**
 
 Color Lab 的核心不是替使用者決定「最好看的顏色」，而是把顏色之間的關係變得可看、可比較、可保存、可反覆學習。
 
@@ -143,6 +143,19 @@ Lighthouse 精確定位到 75 / 18 / 7 預覽中的中間明度色塊。舊版�
 - 邊緣背景提示
 
 Color Lab 會偵測瀏覽器是否具有 Display-P3 canvas 能力，但**目前照片分析仍統一轉為 sRGB / HEX**，不宣稱是真正的 P3 原色取樣。
+
+## V2.39.0 Photo Load Lifecycle Hardening
+
+這一版不改照片分析演算法，專門修正快速換圖與 Blob URL 生命週期的競態：
+
+- 每次照片載入都有獨立 token、Image 與 Object URL ownership；新請求會先取消舊請求
+- 舊圖片即使晚到 onload / onerror，也必須通過 current-request guard，不能覆蓋較新的照片
+- 成功、失敗、被取代與 pagehide 都會集中釋放 request-local Object URL，避免長時間使用後累積 Blob URL
+- 成功解碼後不再用 Blob URL 是否存在判斷照片狀態；改用 `photoLoaded` + 本機 canvas，讓 Reference Board 仍能安全使用已載入照片
+- 載入新照片失敗時，不會因舊 callback 誤清除新請求，也不會改寫 Compose source palette
+- Chromium regression 模擬 stale callback / rapid replacement；WebKit regression 驗證實際 SVG decode 後 URL 已釋放、canvas 照片仍可用
+- Size / Verify / Visual / Torture / Property / Playwright + axe / Lighthouse / CodeQL 門檻維持不變
+- 不新增後端、登入、Supabase、AI、付費 API 或新的網路依賴
 
 ## V2.38.0 Render Scheduling Hardening
 
