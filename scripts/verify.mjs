@@ -30,9 +30,10 @@ const localProjectsCss=fs.readFileSync('runtime/local-projects.css','utf8');
 const referenceBoard=fs.readFileSync('runtime/reference-board.js','utf8');
 const gradientStudio=fs.readFileSync('runtime/gradient-studio.js','utf8');
 const gradientStudioCss=fs.readFileSync('runtime/gradient-studio.css','utf8');
+const recommendationEngine=fs.readFileSync('data/recommendation-engine.js','utf8');
 const qrVendor=fs.readFileSync('vendor/qrcode.min.js','utf8');
 const qrLicense=fs.readFileSync('vendor/qrcode.LICENSE.txt','utf8');
-const appSource=html+'\n'+storageHardening+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio;
+const appSource=html+'\n'+storageHardening+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+customDesignPreview+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio+'\n'+recommendationEngine;
 const sw=fs.readFileSync('sw.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('manifest.json','utf8'));
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -79,6 +80,8 @@ try { new Function(referenceBoard); pass('reference board runtime syntax'); }
 catch(e){ fail('reference board runtime syntax: '+e.message); }
 try { new Function(gradientStudio); pass('gradient studio runtime syntax'); }
 catch(e){ fail('gradient studio runtime syntax: '+e.message); }
+try { new Function(recommendationEngine); pass('recommendation engine syntax'); }
+catch(e){ fail('recommendation engine syntax: '+e.message); }
 try { new Function(qrVendor); pass('local QR vendor syntax'); }
 catch(e){ fail('local QR vendor syntax: '+e.message); }
 
@@ -135,7 +138,8 @@ const lazyScripts=[
   ['./data/fashion-palettes.js','FASHION_PALETTES'],
   ['./data/ig-style-patterns.js','IG_STYLE_PATTERNS'],
   ['./data/inspiration-atlas.js','INSPIRATION_ATLAS'],
-  ['./data/tone-families.js','TONE_FAMILIES']
+  ['./data/tone-families.js','TONE_FAMILIES'],
+  ['./data/recommendation-engine.js','recommendationCombos']
 ];
 for(const [src] of lazyScripts){
   if(html.includes('<script src="'+src+'"></script>')) fail('lazy dependency regressed to eager script: '+src);
@@ -155,13 +159,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2350")) fail('service worker cache version is not V2.35.0');
+if(!sw.includes("color-lab-v2360")) fail('service worker cache version is not V2.36.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.35.0') fail('package version must be 2.35.0');
+if(pkg.version!=='2.36.0') fail('package version must be 2.36.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.35.0')||!html.includes('<div class="version">V2.35.0</div>')||!html.includes("appVersion:'2.35.0'")) fail('V2.35.0 UI or backup version metadata missing');
-else pass('V2.35.0 version metadata');
+if(!html.includes('Color Lab V2.36.0')||!html.includes('<div class="version">V2.36.0</div>')||!html.includes("appVersion:'2.36.0'")) fail('V2.36.0 UI or backup version metadata missing');
+else pass('V2.36.0 version metadata');
 
 if(!html.includes('<script src="./runtime/palette-tools.js"></script>')||
    !sw.includes('./runtime/palette-tools.js')||
@@ -699,7 +703,7 @@ if(!html.includes('id="pwaHealthMount"')||
    html.includes("navigator.serviceWorker.register('./sw.js').catch(()=>{})")||
    sw.includes('./runtime/pwa-health.js')||
    sw.includes('./runtime/pwa-health.css')||
-   !pwaHealth.includes("const COLORLAB_APP_VERSION='2.35.0'")||
+   !pwaHealth.includes("const COLORLAB_APP_VERSION='2.36.0'")||
    !pwaHealthCss.includes('.pwa-health{')){
   fail('V2.35.0 shell-integrated PWA health / UI contract missing');
 }else pass('V2.35.0 shell-integrated PWA controller + compact UI');
@@ -723,6 +727,30 @@ if(!pwaHealth.includes("if(typeof persistDraft==='function')persistDraft()")||
    !webkitCore.includes('WebKit PWA update prompt remains explicit')){
   fail('V2.35.0 safe-update persistence / connectivity / WebKit coverage contract missing');
 }else pass('V2.35.0 save-before-update + offline state + throttled checks + WebKit coverage');
+
+if(html.includes('function recommendationCombos(')||
+   html.includes('function renderRecommendations(')||
+   !recommendationEngine.includes('function recommendationCombos(')||
+   !recommendationEngine.includes('function renderRecommendations(')||
+   !recommendationEngine.includes('function selectDiverseRecommendations(')||
+   !recommendationEngine.includes('function archetypeCombos(')||
+   !html.includes("loadScriptOnce('./data/recommendation-engine.js','recommendationCombos')")||
+   !sw.includes('./data/recommendation-engine.js')){
+  fail('V2.36.0 lazy recommendation engine extraction contract missing');
+}else pass('V2.36.0 recommendation engine moved out of index + offline cached');
+
+if(html.includes('<script src="./data/recommendation-engine.js"></script>')||
+   !html.includes('function ensureInspirationResources(')||
+   !html.includes("loadScriptOnce('./data/recommendation-engine.js','recommendationCombos')")||
+   !recommendationEngine.includes('prioritizeUnseenRecommendations(selectDiverseRecommendations(candidates,30))')||
+   !recommendationEngine.includes('recommendationBatchHistoryIndex')||
+   !recommendationEngine.includes('learnPalettePreference(r.palette,.25)')||
+   html.includes("$('#previousRecommendations').onclick=previousRecommendationBatch")||
+   html.includes("$('#nextRecommendations').onclick=nextRecommendationBatch")||
+   !html.includes("$('#previousRecommendations').onclick=()=>ensureInspirationResources()")||
+   !html.includes("$('#nextRecommendations').onclick=()=>ensureInspirationResources()")){
+  fail('V2.36.0 lazy-load or recommendation behavior-preservation contract missing');
+}else pass('V2.36.0 Inspire-only lazy load + anti-repeat/batch/personalization semantics preserved');
 
 if(!html.includes("--app-gutter:clamp(20px,5.8vw,28px)")||
    !html.includes("margin:0 0 var(--space-7) calc(-1 * var(--app-gutter))")||
@@ -780,7 +808,7 @@ if(!fs.existsSync('scripts/visual-audit.mjs')) fail('V2.5 visual audit script mi
 else pass('V2.5 visual audit script present');
 
 
-if(!html.includes('function recommendationDirection(')||!html.includes('rec-direction')||!html.includes('direction.reason')){
+if(!recommendationEngine.includes('function recommendationDirection(')||!recommendationEngine.includes('rec-direction')||!recommendationEngine.includes('direction.reason')){
   fail('V2.6 recommendation direction explanation missing');
 }else pass('V2.6 recommendation directions');
 
@@ -833,14 +861,14 @@ if(atlasCount<40) fail('inspiration atlas too small: '+atlasCount);
 else pass('inspiration atlas size '+atlasCount);
 
 for(const fn of ['inspirationRefineGenerated','paletteSurpriseScore','paletteAestheticCore','paletteAestheticScore','laneAestheticFloor','archetypeCombos','inspirationUtility','inspirationVariations']){
-  if(!html.includes('function '+fn+'(')) fail('V2.11.0 inspiration function missing: '+fn);
+  if(!appSource.includes('function '+fn+'(')) fail('V2.11.0 inspiration function missing: '+fn);
 }
-if(html.includes("const lanes=['editorial','atmospheric','fashion','expressive','unexpected']")){
+if(appSource.includes("const lanes=['editorial','atmospheric','fashion','expressive','unexpected']")){
   fail('V2.11.0 still forces one recommendation per lane');
-}else if(!html.includes("item.aesthetic>=laneAestheticFloor(recommendationLane(item))")){
+}else if(!appSource.includes("item.aesthetic>=laneAestheticFloor(recommendationLane(item))")){
   fail('V2.11.0 aesthetic eligibility gate missing');
 }else pass('V2.11.0 beauty-first diversity gate');
-if(!html.includes('...archetypeCombos(inputs)')||!html.includes('inspirationRefineGenerated(x.colors,inputs.length)')){
+if(!recommendationEngine.includes('...archetypeCombos(inputs)')||!recommendationEngine.includes('inspirationRefineGenerated(x.colors,inputs.length)')){
   fail('V2.7 relation-first recommendation sources missing');
 }else pass('V2.7 relation-first recommendation sources');
 const v27IdeaStart=html.indexOf('function renderIdeas(){');
@@ -865,9 +893,9 @@ if(startupRenderBlock.includes('renderRelationshipExplanation();scheduleSecondar
 }else pass('V2.11.0 hidden relationship rendering deferred');
 
 
-if(!html.includes('const beautyGuard=clamp((aesthetic-.48)/.34)')||
-   !html.includes('return aesthetic*3.85+tonal*2.10')||
-   !html.includes('Tonal Cohesion × Aesthetic Gate × Atlas')){
+if(!recommendationEngine.includes('const beautyGuard=clamp((aesthetic-.48)/.34)')||
+   !recommendationEngine.includes('return aesthetic*3.85+tonal*2.10')||
+   !appSource.includes('Tonal Cohesion × Aesthetic Gate × Atlas')){
   fail('V2.11.0 aesthetic-first utility or UI contract missing');
 }else pass('V2.11.0 aesthetic-first utility');
 
@@ -883,8 +911,8 @@ else pass('V2.11.0 tone family database size 8');
 for(const fn of ['toneFamilyById','inferToneFamilyId','toneMixColor','tonalHarmonizeGenerated','tonalCohesionScore','toneFamilyLabel']){
   if(!html.includes('function '+fn+'(')) fail('V2.11.0 tonal function missing: '+fn);
 }
-if(!html.includes("item.tonal>=.52")||
-   !html.includes("Tonal Cohesion × Aesthetic Gate")||
+if(!recommendationEngine.includes("item.tonal>=.52")||
+   !appSource.includes("Tonal Cohesion × Aesthetic Gate")||
    !html.includes("loadScriptOnce('./data/tone-families.js','TONE_FAMILIES')")){
   fail('V2.11.0 tonal cohesion recommendation contract missing');
 }else pass('V2.11.0 tonal cohesion recommendation contract');
@@ -894,7 +922,7 @@ else pass('V2.11.0 tone family offline cache');
 
 
 for(const fn of ['roleAlternativeContext','candidateExploreConfig','isPerceptualDuplicate','roleAlternativePool','prepareRoleCandidateSession','moveRoleAlternative','recommendationBatch','nextRecommendationBatch']){
-  if(!html.includes('function '+fn+'(')) fail('V2.11.0 exploration function missing: '+fn);
+  if(!appSource.includes('function '+fn+'(')) fail('V2.11.0 exploration function missing: '+fn);
 }
 if(html.includes("Math.floor(Math.random()*Math.min(5,opts.length))")){
   fail('V2.11.0 legacy five-color shuffle cap still active');
@@ -907,20 +935,20 @@ if(!html.includes('state.pool=roleAlternativePool(role,36,state.familyId)')||
 }else pass('V2.11.0 deep role alternative pool');
 
 if(!html.includes('const recommendationBatchSize=5')||
-   !html.includes('selectDiverseRecommendations(candidates,30)')||
+   !recommendationEngine.includes('selectDiverseRecommendations(candidates,30)')||
    !html.includes('id="nextRecommendations"')){
   fail('V2.11.0 recommendation batching contract missing');
 }else pass('V2.11.0 recommendation batching contract');
 
-if(!html.includes("progress.textContent=recs.length?'第 '+batchNumber+' / '+recommendationBatchCount(recs)+' 批 · '+start+'–'+end+' / '+recs.length+' 組'")){
+if(!recommendationEngine.includes("progress.textContent=recs.length?'第 '+batchNumber+' / '+recommendationBatchCount(recs)+' 批 · '+start+'–'+end+' / '+recs.length+' 組'")){
   fail('V2.11.1 recommendation batch progress missing');
 }else pass('V2.11.1 recommendation batch progress');
 
 if(!html.includes('id="previousRecommendations"')||
-   !html.includes('function resetRecommendationBatchSession(')||
-   !html.includes('function moveRecommendationBatch(direction=1)')||
-   !html.includes('recommendationBatchHistory=[0]')||
-   !html.includes("if(nextOffset>=recs.length){toast('已看完這輪所有候選');return}")){
+   !recommendationEngine.includes('function resetRecommendationBatchSession(')||
+   !recommendationEngine.includes('function moveRecommendationBatch(direction=1)')||
+   !recommendationEngine.includes('recommendationBatchHistory=[0]')||
+   !recommendationEngine.includes("if(nextOffset>=recs.length){toast('已看完這輪所有候選');return}")){
   fail('V2.11.1 Inspire history or anti-repeat contract missing');
 }else pass('V2.11.1 Inspire history and anti-repeat contract');
 
@@ -1082,11 +1110,11 @@ if(fashionCount<50) fail('fashion reference library too small: '+fashionCount);
 else pass('fashion reference library size '+fashionCount);
 
 for(const fn of ['fashionAffinity','fashionTransferPool','fashionReferenceCombos','getFashionReferenceRows']){
-  if(!html.includes('function '+fn+'(')) fail('fashion function missing: '+fn);
+  if(!appSource.includes('function '+fn+'(')) fail('fashion function missing: '+fn);
 }
 pass('fashion recommendation functions present');
 
-if(!html.includes("Tonal Cohesion × Aesthetic Gate × Atlas × Fashion × IG")) fail('fashion recommendation description missing');
+if(!appSource.includes("Tonal Cohesion × Aesthetic Gate × Atlas × Fashion × IG")) fail('fashion recommendation description missing');
 else pass('fashion recommendation UI description');
 
 
@@ -1098,11 +1126,11 @@ if(igPatternCount<12) fail('IG style pattern library too small: '+igPatternCount
 else pass('IG style pattern library size '+igPatternCount);
 
 for(const fn of ['igPatternAffinity','igStyleTransferPool','igStyleCombos','applyStyleDelta']){
-  if(!html.includes('function '+fn+'(')) fail('IG style function missing: '+fn);
+  if(!appSource.includes('function '+fn+'(')) fail('IG style function missing: '+fn);
 }
 pass('IG style recommendation functions present');
 
-if(!html.includes("Tonal Cohesion × Aesthetic Gate × Atlas × Fashion × IG")) fail('IG styling recommendation description missing');
+if(!appSource.includes("Tonal Cohesion × Aesthetic Gate × Atlas × Fashion × IG")) fail('IG styling recommendation description missing');
 else pass('IG styling recommendation UI description');
 
 
@@ -1111,7 +1139,7 @@ for(const fn of ['gamutMapOKLCH','cohesionPass','qualityRefineGenerated','qualit
 }
 pass('V1.5 quality engine functions present');
 
-if(!html.includes('Tonal Cohesion × Aesthetic Gate × Atlas × Fashion × IG')) fail('V1.5 intelligence description missing');
+if(!appSource.includes('Tonal Cohesion × Aesthetic Gate × Atlas × Fashion × IG')) fail('V1.5 intelligence description missing');
 else pass('V1.5 intelligence description');
 
 if(!html.includes('主體／鮮明／柔和／深色／淺色')) fail('semantic photo swatch UI missing');
@@ -1121,14 +1149,14 @@ if(!html.includes("if(chosen.length===3)return orderedPalette(chosen);")){
   fail('V1.5 must preserve all three user-selected colors');
 }else pass('three user-selected colors remain untouched');
 
-const recommendStart=html.indexOf('function recommendationCombos(){');
-const recommendEnd=html.indexOf('function applyRecommendation',recommendStart);
-const recommendBlock=recommendStart>=0&&recommendEnd>recommendStart?html.slice(recommendStart,recommendEnd):'';
+const recommendStart=recommendationEngine.indexOf('function recommendationCombos(){');
+const recommendEnd=recommendationEngine.indexOf('function applyRecommendation',recommendStart);
+const recommendBlock=recommendStart>=0&&recommendEnd>recommendStart?recommendationEngine.slice(recommendStart,recommendEnd):'';
 if(!recommendBlock.includes('inspirationRefineGenerated')||!recommendBlock.includes('qualityRefineGenerated')){
   fail('recommendations missing inspiration or safety refinement paths');
 }else pass('recommendations use inspiration and safety refinement paths');
 
-if(!html.includes("added:inputs.length===1?[refined[1],refined[2]]:[refined[2]]")){
+if(!recommendationEngine.includes("added:inputs.length===1?[refined[1],refined[2]]:[refined[2]]")){
   fail('refined recommendation colors are not applied');
 }else pass('recommendation preview and applied colors aligned');
 
@@ -1228,7 +1256,7 @@ if(completeBody.includes('for(let i=0;i<pool.length;i++){')&&completeBody.includ
 
 
 for(const fn of ['paletteQualityProfile','recommendationDistance','selectDiverseRecommendations']){
-  if(!html.includes('function '+fn+'(')) fail('V1.9 quality function missing: '+fn);
+  if(!appSource.includes('function '+fn+'(')) fail('V1.9 quality function missing: '+fn);
 }
 pass('V1.9 quality ranking functions present');
 
@@ -1237,8 +1265,8 @@ for(const key of ['hierarchy','distinctiveness','cohesion','focus','practicality
 }
 pass('V1.9 quality dimensions present');
 
-if(!html.includes('selectDiverseRecommendations(candidates,30)')||
-   !html.includes('prioritizeUnseenRecommendations(selectDiverseRecommendations(candidates,30))')){
+if(!recommendationEngine.includes('selectDiverseRecommendations(candidates,30)')||
+   !recommendationEngine.includes('prioritizeUnseenRecommendations(selectDiverseRecommendations(candidates,30))')){
   fail('V2.15.0 deep recommendation selector / fresh-first wrapper not active');
 }else pass('V2.15.0 deep recommendation selector + fresh-first wrapper');
 
@@ -1290,10 +1318,10 @@ if(!html.includes("colorlab.preferenceV1")||!html.includes('id="resetPreference"
   fail('V2.3 local preference storage or reset control missing');
 }else pass('V2.3 preference storage and reset control');
 
-if(!html.includes("learnPalettePreference(palette,1)")||
-   !html.includes("learnPalettePreference(palette,.35)")||
-   !html.includes("learnPalettePreference(r.palette,.25)")||
-   !html.includes("learnPalettePreference(x.palette,.35)")){
+if(!appSource.includes("learnPalettePreference(palette,1)")||
+   !appSource.includes("learnPalettePreference(palette,.35)")||
+   !appSource.includes("learnPalettePreference(r.palette,.25)")||
+   !appSource.includes("learnPalettePreference(x.palette,.35)")){
   fail('V2.3 explicit preference learning signals missing');
 }else pass('V2.3 explicit preference learning signals');
 
@@ -1391,9 +1419,9 @@ if(!storageHardening.includes("typeof data.preferenceEnabled==='boolean'")){
   fail('backup v4 personalization setting validation missing');
 }else pass('backup v4 personalization setting validation');
 
-if(!html.includes("personalHint=preferenceIsMature()")||
-   !html.includes("profile?.personal>=.52")||
-   !html.includes("本機排序微調")){
+if(!recommendationEngine.includes("personalHint=preferenceIsMature()")||
+   !recommendationEngine.includes("profile?.personal>=.52")||
+   !recommendationEngine.includes("本機排序微調")){
   fail('personalized recommendation explanation missing');
 }else pass('personalized recommendation explanation');
 

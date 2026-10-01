@@ -204,6 +204,7 @@ test('V2.14 Dark validation never offers source-color apply actions', async ({ p
 });
 
 test('V2.15 Inspire recent memory prioritizes fresh palettes without deleting seen ones', async ({ page }) => {
+  await page.evaluate(() => ensureInspirationResources());
   const result = await page.evaluate(() => {
     const item = (a,b,c) => ({ palette:{ base:a, structure:b, accent:c } });
     const seen = item('#111111','#222222','#333333');
@@ -220,6 +221,7 @@ test('V2.15 Inspire recent memory prioritizes fresh palettes without deleting se
 });
 
 test('V2.15 Inspire recent memory stays bounded to 24 fingerprints', async ({ page }) => {
+  await page.evaluate(() => ensureInspirationResources());
   const state = await page.evaluate(() => {
     recommendationRecentFingerprints=[];
     const items=Array.from({length:30},(_,i)=>{
@@ -1669,4 +1671,47 @@ test('V2.35 offline state temporarily overrides but does not erase a pending upd
   const state=await page.evaluate(() => ({ready:pwaUpdateReady,requested:pwaUpdateRequested}));
   expect(state.ready).toBe(true);
   expect(state.requested).toBe(false);
+});
+
+
+test('V2.36 recommendation engine stays lazy on Compose and loads only with Inspire', async ({ page }) => {
+  const before=await page.evaluate(() => paletteArtifactBase());
+  expect(await page.evaluate(() => typeof window.recommendationCombos)).toBe('undefined');
+  await expect(page.locator('script[data-lazy-runtime="./data/recommendation-engine.js"]')).toHaveCount(0);
+
+  await page.locator('#cornerNavToggle').click();
+  await page.locator('#nav-inspire').click();
+  await expect(page.locator('.tab-view[data-view="inspire"]')).toBeVisible();
+
+  await expect.poll(() => page.evaluate(() => typeof window.recommendationCombos)).toBe('function');
+  await expect(page.locator('script[data-lazy-runtime="./data/recommendation-engine.js"]')).toHaveCount(1);
+  await expect(page.locator('#recommendationProgress')).toContainText('第 1 /');
+
+  const after=await page.evaluate(() => paletteArtifactBase());
+  expect(after).toEqual(before);
+});
+
+test('V2.36 Inspire lazy engine preserves anti-repeat and batch semantics', async ({ page }) => {
+  await page.evaluate(() => ensureInspirationResources());
+  const result=await page.evaluate(() => {
+    const item=(a,b,c)=>({palette:{base:a,structure:b,accent:c}});
+    const seen=item('#111111','#222222','#333333');
+    const fresh=item('#AAAAAA','#BBBBBB','#CCCCCC');
+    recommendationRecentFingerprints=[recommendationFingerprint(seen)];
+    const ordered=prioritizeUnseenRecommendations([seen,fresh]);
+    recommendationBatchOffset=0;
+    recommendationBatchHistory=[0];
+    recommendationBatchHistoryIndex=0;
+    const batch=recommendationBatch(Array.from({length:7},(_,i)=>({id:i})));
+    return{
+      order:ordered.map(recommendationFingerprint),
+      fresh:recommendationFingerprint(fresh),
+      seen:recommendationFingerprint(seen),
+      batch:batch.map(x=>x.id),
+      size:recommendationBatchSize
+    };
+  });
+  expect(result.order).toEqual([result.fresh,result.seen]);
+  expect(result.batch).toEqual([0,1,2,3,4]);
+  expect(result.size).toBe(5);
 });

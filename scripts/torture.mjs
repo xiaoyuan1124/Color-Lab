@@ -17,7 +17,8 @@ const visionAccessibility=fs.readFileSync('runtime/vision-accessibility.js','utf
 const localProjects=fs.readFileSync('runtime/local-projects.js','utf8');
 const referenceBoard=fs.readFileSync('runtime/reference-board.js','utf8');
 const gradientStudio=fs.readFileSync('runtime/gradient-studio.js','utf8');
-const appText=html+'\n'+storageHardening+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio;
+const recommendationEngine=fs.readFileSync('data/recommendation-engine.js','utf8');
+const appText=html+'\n'+storageHardening+'\n'+uxCleanup+'\n'+paletteTools+'\n'+toneExplorer+'\n'+photoPalette+'\n'+colorRelationship+'\n'+roleScale+'\n'+shareSnapshot+'\n'+visionAccessibility+'\n'+localProjects+'\n'+referenceBoard+'\n'+gradientStudio+'\n'+recommendationEngine;
 const toneSource=fs.readFileSync('data/tone-families.js','utf8');
 const inlineScripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
 const scriptMatch=inlineScripts.at(-1);
@@ -52,6 +53,8 @@ try{new Function(referenceBoard)}
 catch(e){console.error('FAIL reference board runtime syntax',e.message);process.exit(1)}
 try{new Function(gradientStudio)}
 catch(e){console.error('FAIL gradient studio runtime syntax',e.message);process.exit(1)}
+try{new Function(recommendationEngine)}
+catch(e){console.error('FAIL recommendation engine syntax',e.message);process.exit(1)}
 
 function findFunctionBodyOpen(start,code=source){
   const paramsOpen=code.indexOf('(',start);
@@ -123,13 +126,14 @@ const functionNames=[
   'isLinearSrgbInGamut','gamutMapOKLCH','hueDistance','signedHueDelta',
   'hueToward','contrastRatio','ensureStructureContrast','cohesionPass','qualityRefineGenerated',
   'qualityMetrics','relationVector','relationVectorDistance',
-  'photoDominanceScore','semanticRolesFromClusters','photoPaletteFromRoles','recommendationDirection','paletteSurpriseScore','paletteAestheticCore','laneAestheticFloor',
+  'photoDominanceScore','semanticRolesFromClusters','photoPaletteFromRoles','paletteSurpriseScore','paletteAestheticCore','laneAestheticFloor',
   'toneFamilies','toneArchetypeMap','toneFamilyById','toneFamilyLabel','inferToneFamilyId','toneMixColor','tonalHarmonizeGenerated','tonalCohesionScore',
   'emptyPreferenceRole','emptyPreferenceRelation','emptyPreferenceModel','sanitizePreferenceRole','sanitizePreferenceRelation','preferenceRelationMetrics','sanitizePreferenceModel',
   'preferenceRoleAffinity','preferenceRelationAffinity','preferenceRoleDescriptor','preferenceSummaryFromModel','preferenceAffinityFromModel','preferenceAffinityForSetting','preferenceModelWithPalette','preferenceHueFamily'
 ];
 
 const photoRuntimeFunctionNames=['photoCompositionProfile'];
+const recommendationRuntimeFunctionNames=['recommendationDirection'];
 const sandbox={console};
 sandbox.window=sandbox;
 vm.createContext(sandbox);
@@ -137,8 +141,9 @@ vm.runInContext(toneSource,sandbox,{timeout:1000});
 vm.runInContext(
   'const oklchCache=new Map();const luminanceCache=new Map();\n'+
   functionNames.map(name=>extractFunction(name,source)).join('\n')+'\n'+
-  photoRuntimeFunctionNames.map(name=>extractFunction(name,photoPalette)).join('\n')+
-  '\nthis.API={'+[...functionNames,...photoRuntimeFunctionNames].join(',')+'};',
+  photoRuntimeFunctionNames.map(name=>extractFunction(name,photoPalette)).join('\n')+'\n'+
+  recommendationRuntimeFunctionNames.map(name=>extractFunction(name,recommendationEngine)).join('\n')+
+  '\nthis.API={'+[...functionNames,...photoRuntimeFunctionNames,...recommendationRuntimeFunctionNames].join(',')+'};',
   sandbox,
   {timeout:2000}
 );
@@ -213,7 +218,7 @@ check('V2.11 exploration hue scaffold has at least 20 directions',
   html.includes("const hueOffsets=[0,10,-10,20,-20,32,-32,46,-46,62,-62,82,-82,104,-104,128,-128,154,-154,180]"),
   '20 hue directions');
 check('V2.10 recommendation pool is deeper than visible batch',
-  html.includes('selectDiverseRecommendations(candidates,30)')&&html.includes('const recommendationBatchSize=5'),
+  recommendationEngine.includes('selectDiverseRecommendations(candidates,30)')&&html.includes('const recommendationBatchSize=5'),
   '30 candidate pool / 5 visible');
 check('V2.10 legacy random five-option shuffle removed',
   !html.includes('Math.floor(Math.random()*Math.min(5,opts.length))'),
@@ -222,12 +227,12 @@ check('V2.10 legacy random five-option shuffle removed',
 
 check('V2.11.1 Inspire batches are reversible',
   html.includes('id="previousRecommendations"')&&
-  html.includes('function previousRecommendationBatch()')&&
-  html.includes('recommendationBatchHistoryIndex--'),
+  recommendationEngine.includes('function previousRecommendationBatch()')&&
+  recommendationEngine.includes('recommendationBatchHistoryIndex--'),
   'previous batch + history cursor');
 check('V2.11.1 Inspire does not wrap rejected batches',
-  html.includes("if(nextOffset>=recs.length){toast('已看完這輪所有候選');return}")&&
-  !html.includes('if(recommendationBatchOffset>=recs.length)recommendationBatchOffset=0;'),
+  recommendationEngine.includes("if(nextOffset>=recs.length){toast('已看完這輪所有候選');return}")&&
+  !recommendationEngine.includes('if(recommendationBatchOffset>=recs.length)recommendationBatchOffset=0;'),
   'stop at end instead of wrap');
 
 
@@ -505,6 +510,23 @@ check('V2.35 offline state preserves update readiness',
   pwaHealth.includes("if(pwaUpdateReady)")&&
   pwaHealth.includes("window.addEventListener('online',()=>{pwaConnectivityState();pwaCheckForUpdate(true)})"),
   'offline status wins temporarily and update prompt returns online');
+check('V2.36 recommendation engine is lazy and absent from startup HTML',
+  !html.includes('<script src="./data/recommendation-engine.js"></script>')&&
+  html.includes("loadScriptOnce('./data/recommendation-engine.js','recommendationCombos')")&&
+  !html.includes('function recommendationCombos(')&&
+  recommendationEngine.includes('function recommendationCombos('),
+  'Inspire engine is fetched only through lazy orchestration');
+check('V2.36 recommendation semantics survive extraction',
+  recommendationEngine.includes('prioritizeUnseenRecommendations(selectDiverseRecommendations(candidates,30))')&&
+  recommendationEngine.includes('recommendationBatchHistoryIndex')&&
+  recommendationEngine.includes('learnPalettePreference(r.palette,.25)')&&
+  recommendationEngine.includes("fresh.concat(seen)"),
+  'anti-repeat, batch history and preference signal preserved');
+check('V2.36 core two-color completion stays in startup path',
+  html.includes('function intelligentPool(')&&
+  html.includes('const pool=intelligentPool(chosen,style)')&&
+  !recommendationEngine.includes('function intelligentPool('),
+  'Compose two-color completion does not depend on lazy Inspire engine');
 check('V2.32 resilience lifecycle lives inside the storage runtime',
   storageHardening.includes('function openResilienceDB(')&&
   storageHardening.includes('async function writeResilienceSnapshot(')&&
