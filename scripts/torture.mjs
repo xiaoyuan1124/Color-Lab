@@ -608,6 +608,11 @@ check('V2.41 magnifier hide timer cannot cancel a newer Photo interaction',
   appText.includes("cancelPhotoPointerInteraction();persistDraft();writeResilienceSnapshot()"),
   'new loads and pagehide clear pointer state and stale delayed magnifier work');
 
+check('V2.42 Vision mode does not rerender hidden Application previews',
+  visionAccessibility.includes("if(document.getElementById('composeDeepDive')?.open&&document.getElementById('deepApplication')?.open)renderContextPreview();")&&
+  !/renderVision\(\);\s*renderContextPreview\(\);/.test(visionAccessibility),
+  'Validation-only vision changes defer Context Preview work until Application becomes visible');
+
 check('V2.32 resilience lifecycle lives inside the storage runtime',
   storageHardening.includes('function openResilienceDB(')&&
   storageHardening.includes('async function writeResilienceSnapshot(')&&
