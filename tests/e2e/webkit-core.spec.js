@@ -140,7 +140,7 @@ test('WebKit keeps recommendation engine lazy until Inspire and preserves source
 
   await expect.poll(() => page.evaluate(() => typeof window.recommendationCombos)).toBe('function');
   await expect(page.locator('script[data-lazy-runtime="./data/recommendation-engine.js"]')).toHaveCount(1);
-  await expect(page.locator('#recommendationProgress')).toContainText('第 1 /');
+  await expect(page.locator('#recommendationProgress')).toContainText('三色已完整');
 
   const after=await page.evaluate(() => paletteArtifactBase());
   expect(after).toEqual(before);
