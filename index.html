@@ -773,6 +773,14 @@ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
   pointer-events:none;
 }
 .palette-actions-three{grid-template-columns:repeat(3,1fr)}
+.context-preview-head{align-items:center}
+.context-preview-export{display:flex;align-items:center;gap:10px}
+.context-preview-export .text-action{min-height:32px;padding:0 2px;white-space:nowrap}
+@media(max-width:360px){
+  .context-preview-export{gap:7px}
+  .context-preview-export .text-action{font-size:10px}
+}
+
 .professional-handoff{
   margin-top:var(--space-4);
   padding-top:var(--space-4);
@@ -2414,7 +2422,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.51.0</div>
+    <div class="version">V2.52.0</div>
   </div>
 
   <main class="app-main">
@@ -2593,7 +2601,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
               </summary>
               <div class="deep-section-body">
                 <div class="real-preview-wrap">
-                  <div class="micro-head"><span>情境預覽</span><span>75 / 18 / 7</span></div>
+                  <div class="micro-head context-preview-head"><span>情境預覽</span><div class="context-preview-export"><span>75 / 18 / 7</span><button type="button" class="text-action" id="exportContextPreview">輸出 SVG</button></div></div>
                   <div class="context-tabs" id="contextTabs">
                     <button type="button" class="context-tab active" data-context="app">App</button>
                     <button type="button" class="context-tab" data-context="brand">品牌</button>
@@ -2849,7 +2857,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.51.0</div>
+  <div class="footer app-footer">Color Lab V2.52.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2961,7 +2969,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 /* Color Lab V2.35.0 PWA / iPhone Update Hardening
    User-mediated service worker activation prevents mixed-version sessions. */
 
-const COLORLAB_APP_VERSION='2.51.0';
+const COLORLAB_APP_VERSION='2.52.0';
 const PWA_UPDATE_CHECK_INTERVAL=20*60*1000;
 let pwaRegistration=null;
 let pwaUpdateReady=false;
@@ -3435,6 +3443,45 @@ function useCompare(which){
   syncEditor();renderModes();render();pushHistory();switchTab('compose',false);toast('已套用方案 '+which);
 }
 function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+function contextPreviewSnapshotCss(){
+  const chunks=[];
+  for(const sheet of Array.from(document.styleSheets)){
+    let rules;
+    try{rules=sheet.cssRules}catch(_){continue}
+    for(const rule of Array.from(rules||[])){
+      const css=rule.cssText||'';
+      if(css.includes('.cp2')||css.includes('.real-preview'))chunks.push(css);
+    }
+  }
+  return chunks.join('\n');
+}
+function contextPreviewSnapshotSvg(){
+  renderContextPreview();
+  const host=$('#uiPreview');if(!host||!host.firstElementChild)return null;
+  const labels={app:'App-Web',brand:'Brand',room:'Interior',outfit:'Outfit',slides:'Slides'};
+  const title=(($('#comboName')?.value||currentComboName||'Color Lab').trim()||'Color Lab');
+  const css=contextPreviewSnapshotCss().replace(/]]>/g,']]]]><![CDATA[>');
+  const markup=new XMLSerializer().serializeToString(host);
+  const label=labels[previewContext]||'Context';
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="390" height="292" viewBox="0 0 390 292" role="img" aria-labelledby="title desc">'+
+    '<title id="title">'+artifactXmlEscape(title+' · '+label)+'</title>'+
+    '<desc id="desc">Color Lab '+label+' context preview using the current 75 / 18 / 7 palette and preview state.</desc>'+
+    '<foreignObject x="0" y="0" width="390" height="292">'+
+      '<div xmlns="http://www.w3.org/1999/xhtml" style="width:390px;height:292px;overflow:hidden"><style><![CDATA['+css+']]></style>'+markup+'</div>'+
+    '</foreignObject></svg>';
+}
+async function exportContextPreviewSvg(){
+  const svg=contextPreviewSnapshotSvg();if(!svg){toast('先開啟情境預覽');return}
+  const safe=((($('#comboName')?.value||'color-lab').trim()||'color-lab').replace(/[^\w\u4e00-\u9fff-]+/g,'-')).slice(0,40);
+  const file=new File([svg],safe+'.context-'+previewContext+'-'+previewTheme+'.svg',{type:'image/svg+xml'});
+  if(navigator.canShare?.({files:[file]})&&navigator.share){
+    try{await navigator.share({files:[file],title:'Color Lab 情境預覽'});return}catch(e){if(e?.name==='AbortError')return}
+  }
+  const url=URL.createObjectURL(file),a=document.createElement('a');
+  a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出情境 SVG');
+}
+
 function drawPaletteCard(){
   const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=1350;const x=canvas.getContext('2d');
   const title=(($('#comboName')?.value||currentComboName||'Color Lab').trim()||'Color Lab');
@@ -3474,7 +3521,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v5',appVersion:'2.51.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.52.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -5481,6 +5528,7 @@ window.addEventListener('pagehide',()=>{cancelPendingPhotoLoad();cancelPhotoPoin
 $('#setCompareA').onclick=()=>saveCompare('A');
 $('#setCompareB').onclick=()=>saveCompare('B');
 $('#exportPaletteImage').onclick=exportPaletteImage;
+$('#exportContextPreview').onclick=exportContextPreviewSvg;
 $('#exportBackup').onclick=exportBackup;
 $('#importBackup').onclick=()=>$('#backupInput').click();
 $('#resetPreference').onclick=resetPreferenceModel;
