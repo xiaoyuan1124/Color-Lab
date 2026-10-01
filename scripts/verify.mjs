@@ -1250,8 +1250,8 @@ if(!html.includes("localStorage.setItem('colorlab.preferenceV1',JSON.stringify(p
   fail('V2.3 intentional preference reset marker missing');
 }else pass('V2.3 reset cannot be resurrected by stale shadow');
 
-if(!html.includes("const needsPreference=rawPreference===null;")||
-   !html.includes("if(needsPreference&&snap.preference)")){
+if(!storageHardening.includes("const needsPreference=rawPreference===null;")||
+   !storageHardening.includes("if(needsPreference&&snap.preference)")){
   fail('V2.3 independent preference shadow restore missing');
 }else pass('V2.3 independent preference shadow restore');
 
