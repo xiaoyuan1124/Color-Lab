@@ -2232,6 +2232,9 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
   margin-bottom:var(--space-5);
 }
 .photo-source-actions .photo-select{margin:0}
+.photo-source-actions[hidden],.photo-mode-bar[hidden]{display:none!important}
+.photo-change-actions{display:flex;align-items:center;gap:12px;flex:0 0 auto}
+.photo-change-actions .photo-change{white-space:nowrap}
 .photo-gallery-select{
   min-height:52px;
   border:1px solid var(--border-strong);
@@ -2338,7 +2341,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div class="app">
   <div class="topline app-topbar">
     <div class="brand">COLOR LAB</div>
-    <div class="version">V2.47.0</div>
+    <div class="version">V2.48.0</div>
   </div>
 
   <main class="app-main">
@@ -2631,14 +2634,14 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
       </header>
 
       <section class="photo-screen app-section first">
-        <div class="photo-source-actions" role="group" aria-label="照片來源">
+        <div class="photo-source-actions" id="photoSourceActions" role="group" aria-label="照片來源">
           <button class="primary photo-select" id="photoCameraTrigger" type="button">拍照取色 <span class="arrow">＋</span></button>
           <button class="photo-gallery-select" id="photoTrigger" type="button">從相簿選擇</button>
         </div>
         <input id="photoCameraInput" type="file" accept="image/*" capture="environment" hidden>
         <input id="photoInput" type="file" accept="image/*" hidden>
 
-        <div class="photo-mode-bar" id="photoModeBar">
+        <div class="photo-mode-bar" id="photoModeBar" hidden>
           <button type="button" class="photo-mode active" data-photo-mode="point">精準取色</button>
           <button type="button" class="photo-mode" data-photo-mode="region">區域分析</button>
         </div>
@@ -2655,7 +2658,10 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
           </div>
           <div class="photo-caption">
             <div class="photo-hint">按住拖動 精準取色</div>
-            <button class="photo-change" id="photoChange" type="button">更換照片</button>
+            <div class="photo-change-actions" role="group" aria-label="更換照片來源">
+              <button class="photo-change" id="photoRetake" type="button">重拍</button>
+              <button class="photo-change" id="photoChange" type="button">相簿更換</button>
+            </div>
           </div>
           <div class="photo-auto" id="photoAuto" hidden>
             <div class="photo-auto-head">
@@ -2751,7 +2757,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
     </section>
   </main>
 
-  <div class="footer app-footer">Color Lab V2.47.0</div>
+  <div class="footer app-footer">Color Lab V2.48.0</div>
 </div>
 
 <div class="corner-nav" id="cornerNav">
@@ -2862,7 +2868,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 /* Color Lab V2.35.0 PWA / iPhone Update Hardening
    User-mediated service worker activation prevents mixed-version sessions. */
 
-const COLORLAB_APP_VERSION='2.47.0';
+const COLORLAB_APP_VERSION='2.48.0';
 const PWA_UPDATE_CHECK_INTERVAL=20*60*1000;
 let pwaRegistration=null;
 let pwaUpdateReady=false;
@@ -3311,7 +3317,7 @@ async function exportPaletteImage(){
   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('已輸出圖片');
 }
 async function exportBackup(){
-  const payload={schema:'color-lab-backup-v5',appVersion:'2.47.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
+  const payload={schema:'color-lab-backup-v5',appVersion:'2.48.0',exportedAt:new Date().toISOString(),saved:readSavedData(),projects:readLocalProjects(),recent:recentColors,draft:snapshotState(),compareA,compareB,preference:sanitizePreferenceModel(preferenceState),preferenceEnabled};
   const name='color-lab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const file=new File([blob],name,{type:'application/json'});
@@ -4916,6 +4922,11 @@ function extractPhotoPalette(region=null){
   renderPhotoInsight(clusters,roles);
   if(typeof renderPhotoStrategyPreview==='function')renderPhotoStrategyPreview(clusters,roles);
 }
+function syncPhotoWorkflowUi(){
+  const sources=$('#photoSourceActions'),modes=$('#photoModeBar');
+  if(sources)sources.hidden=photoLoaded;
+  if(modes)modes.hidden=!photoLoaded;
+}
 function setPhotoMode(next){
   photoMode=next==='region'?'region':'point';
   $$('#photoModeBar [data-photo-mode]').forEach(b=>b.classList.toggle('active',b.dataset.photoMode===photoMode));
@@ -4976,7 +4987,7 @@ function loadPhoto(file){
     pickMarker.style.display='none';
     magnifier.style.display='none';
     $('#regionBox').style.display='none';regionStart=null;
-    photoLoaded=true;finish();
+    photoLoaded=true;syncPhotoWorkflowUi();finish();
     toast(photoMode==='region'?'拖曳框選區域':'按住照片拖動取色');
   };
   img.onerror=()=>{
@@ -5040,6 +5051,7 @@ function updatePhotoPick(clientX,clientY,commit=false){
 $('#comboSlots').addEventListener('keydown',handleSlotKeyboard);
 $('#photoTrigger').onclick=openPhotoPicker;
 $('#photoCameraTrigger').onclick=openPhotoCamera;
+$('#photoRetake').onclick=openPhotoCamera;
 $('#photoChange').onclick=openPhotoPicker;
 $('#photoUsePalette').onclick=usePhotoPalette;
 function handlePhotoInputChange(e){
@@ -5187,7 +5199,7 @@ function switchTab(name,scrollTop=true){
   storageWriteRaw('colorlab.tab',name,{silent:true});
   updatePhotoTarget();
   if(name==='library'){renderSaved();updateInstallCard()}
-  if(name==='photo'){setPhotoMode(photoMode);updatePhotoColorSpaceNote()}
+  if(name==='photo'){setPhotoMode(photoMode);updatePhotoColorSpaceNote();syncPhotoWorkflowUi()}
   if(name==='inspire')renderCompare();
   scheduleSecondaryRender();
   if(name==='compose'&&$('#composeDeepDive')?.open)scheduleDeepDiveVisibleRender();
