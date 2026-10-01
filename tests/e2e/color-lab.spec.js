@@ -1741,9 +1741,7 @@ test('V2.37 core color quality module preserves exact complete source palettes',
 test('V2.38 Deep Dive scheduler coalesces repeated frame requests without mutating source colors', async ({ page }) => {
   const before=await page.evaluate(() => paletteArtifactBase());
   const state=await page.evaluate(async () => {
-    const deep=document.getElementById('composeDeepDive');
-    deep.open=true;
-    openDeepDiveSection('deepUnderstanding');
+    scheduleDeepDiveVisibleRender();
     const first=deepDiveRenderFrame;
     scheduleDeepDiveVisibleRender();
     const second=deepDiveRenderFrame;
