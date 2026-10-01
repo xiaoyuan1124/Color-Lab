@@ -5448,7 +5448,7 @@ $$('[data-validation-theme]').forEach(b=>b.addEventListener('click',()=>setValid
 initCrossPlatformHandoff();
 $('#handoffMore').addEventListener('toggle',e=>{if(e.currentTarget.open)renderProfessionalHandoff()});
 $('#copyProfessionalHandoff').onclick=()=>copy(professionalHandoffText());
-$('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
+document.querySelectorAll('[data-export-format]').forEach(b=>b.addEventListener('click',()=>exportPaletteArtifact(b.dataset.exportFormat)));
 const LIBRARY_QUICK_TERMS=['藍','柔和','深色','品牌','室內','簡報'];
 function libraryQuickQueryTerms(){
   const input=$('#librarySearch');
