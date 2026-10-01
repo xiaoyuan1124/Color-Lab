@@ -165,13 +165,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2460")) fail('service worker cache version is not V2.46.0');
+if(!sw.includes("color-lab-v2470")) fail('service worker cache version is not V2.47.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.46.0') fail('package version must be 2.46.0');
+if(pkg.version!=='2.47.0') fail('package version must be 2.47.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.46.0')||!html.includes('<div class="version">V2.46.0</div>')||!html.includes("appVersion:'2.46.0'")) fail('V2.46.0 UI or backup version metadata missing');
-else pass('V2.46.0 version metadata');
+if(!html.includes('Color Lab V2.47.0')||!html.includes('<div class="version">V2.47.0</div>')||!html.includes("appVersion:'2.47.0'")) fail('V2.47.0 UI or backup version metadata missing');
+else pass('V2.47.0 version metadata');
 
 if(!html.includes('id="compareMore"')||
    !html.includes('<b>匯出</b>')||
@@ -257,6 +257,21 @@ if(!html.includes('搜尋名稱、HEX、標籤、色系或調性')||
    !html.includes('return librarySearchMatches(x,q);')){
   fail('V2.46.0 semantic Library search contract missing');
 }else pass('V2.46.0 local semantic Library search');
+
+if(!html.includes('id="libraryQuickSearch" role="group" aria-label="快速搜尋收藏"')||
+   !html.includes('id="libraryQuickClear" hidden>清除搜尋</button>')||
+   !html.includes('data-library-quick-term="藍" aria-pressed="false"')||
+   !html.includes('data-library-quick-term="室內" aria-pressed="false"')||
+   !html.includes("const LIBRARY_QUICK_TERMS=['藍','柔和','深色','品牌','室內','簡報']")||
+   !html.includes('function syncLibraryQuickSearch(')||
+   !html.includes("document.querySelectorAll('#libraryQuickSearch [data-library-quick-term]').forEach")||
+   !html.includes('function toggleLibraryQuickSearch(')||
+   !html.includes('function clearLibraryQuickSearch(')||
+   !html.includes("input.value=terms.join(' ')")||
+   !html.includes("$('#libraryQuickClear').onclick=clearLibraryQuickSearch")||
+   !html.includes('.library-quick-chips button[aria-pressed="true"]')){
+  fail('V2.47.0 Library quick-filter UX contract missing');
+}else pass('V2.47.0 Library quick filters + AND search UX');
 
 if(!librarySearchCore.includes("terms.push('中性','灰','灰色','neutral')")||
    !librarySearchCore.includes("terms.push('藍','藍色','blue')")||
