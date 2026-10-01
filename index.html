@@ -3473,7 +3473,9 @@ function setPreferenceEnabled(next){
   preferenceEnabled=!!next;
   try{localStorage.setItem('colorlab.preferenceEnabled',JSON.stringify(preferenceEnabled))}catch(_){}
   invalidatePreferenceScoring();scheduleResilienceBackup();updatePreferenceStatus(false);
-  if(document.querySelector('.tab-view.active')?.dataset.view==='inspire'){renderIdeas();renderRecommendations()}
+  if(document.querySelector('.tab-view.active')?.dataset.view==='inspire'){
+    ensureInspirationResources().then(()=>{renderIdeas();renderRecommendations()}).catch(()=>toast('推薦資源載入失敗，請稍後再試'));
+  }
   toast(preferenceEnabled?'已開啟本機個人化':'已關閉本機個人化');
 }
 function togglePreferenceModel(){setPreferenceEnabled(!preferenceEnabled)}
@@ -3482,7 +3484,9 @@ function resetPreferenceModel(){
   preferenceState=emptyPreferenceModel();
   try{localStorage.setItem('colorlab.preferenceV1',JSON.stringify(preferenceState))}catch(_){}
   invalidatePreferenceScoring();scheduleResilienceBackup();updatePreferenceStatus(false);
-  if(document.querySelector('.tab-view.active')?.dataset.view==='inspire'){renderIdeas();renderRecommendations()}
+  if(document.querySelector('.tab-view.active')?.dataset.view==='inspire'){
+    ensureInspirationResources().then(()=>{renderIdeas();renderRecommendations()}).catch(()=>toast('推薦資源載入失敗，請稍後再試'));
+  }
   toast('已重置本機配色偏好');
 }
 
