@@ -1145,14 +1145,14 @@ if(!html.includes("if(chosen.length===3)return orderedPalette(chosen);")){
   fail('V1.5 must preserve all three user-selected colors');
 }else pass('three user-selected colors remain untouched');
 
-const recommendStart=html.indexOf('function recommendationCombos(){');
-const recommendEnd=html.indexOf('function applyRecommendation',recommendStart);
-const recommendBlock=recommendStart>=0&&recommendEnd>recommendStart?html.slice(recommendStart,recommendEnd):'';
+const recommendStart=recommendationEngine.indexOf('function recommendationCombos(){');
+const recommendEnd=recommendationEngine.indexOf('function applyRecommendation',recommendStart);
+const recommendBlock=recommendStart>=0&&recommendEnd>recommendStart?recommendationEngine.slice(recommendStart,recommendEnd):'';
 if(!recommendBlock.includes('inspirationRefineGenerated')||!recommendBlock.includes('qualityRefineGenerated')){
   fail('recommendations missing inspiration or safety refinement paths');
 }else pass('recommendations use inspiration and safety refinement paths');
 
-if(!html.includes("added:inputs.length===1?[refined[1],refined[2]]:[refined[2]]")){
+if(!recommendationEngine.includes("added:inputs.length===1?[refined[1],refined[2]]:[refined[2]]")){
   fail('refined recommendation colors are not applied');
 }else pass('recommendation preview and applied colors aligned');
 
