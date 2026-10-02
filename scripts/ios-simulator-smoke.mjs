@@ -47,11 +47,11 @@ async function installWithRetry(udid,attempts=8){
   }
   throw new Error(`Color Lab install failed after ${attempts} attempts; last status=${last?.status} timedOut=${!!last?.timedOut}`);
 }
-async function launchWithRetry(udid,attempts=4){
+async function launchWithRetry(udid,attempts=5){
   let last=null;
   for(let attempt=1;attempt<=attempts;attempt++){
     console.log(`[native-smoke] launch attempt ${attempt}/${attempts}`);
-    last=simctl('launch Color Lab',['launch',udid,BUNDLE_ID],20000,{allowFailure:true,allowTimeout:true});
+    last=simctl('launch Color Lab',['launch',udid,BUNDLE_ID],30000,{allowFailure:true,allowTimeout:true});
     if(!last.timedOut&&last.status===0&&(last.stdout||'').includes(BUNDLE_ID+':'))return last;
     if(attempt<attempts)await sleep(5000);
   }
@@ -73,7 +73,7 @@ try{
   }
   await installWithRetry(udid,8);
 
-  const launch=await launchWithRetry(udid,4);
+  const launch=await launchWithRetry(udid,5);
   fs.writeFileSync(LAUNCH_LOG,(launch.stdout||'')+(launch.stderr||''));
 
   await sleep(3000);
