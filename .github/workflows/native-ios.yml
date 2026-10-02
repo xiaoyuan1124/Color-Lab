@@ -1,0 +1,60 @@
+name: Color Lab iOS Native
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: color-lab-ios-native-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios-simulator:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Verify Xcode 26
+        run: |
+          xcodebuild -version
+          xcodebuild -version | grep -E '^Xcode 26\.'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Native web bundle preflight
+        run: npm run test:native
+      - name: Generate iOS project
+        run: npm run ios:init
+      - name: Verify native permissions and version
+        run: |
+          grep -q NSCameraUsageDescription ios/App/App/Info.plist
+          grep -q NSPhotoLibraryUsageDescription ios/App/App/Info.plist
+          grep -q ITSAppUsesNonExemptEncryption ios/App/App/Info.plist
+          grep -q 'MARKETING_VERSION = 1.0.0;' ios/App/App.xcodeproj/project.pbxproj
+          grep -q 'CURRENT_PROJECT_VERSION = 1;' ios/App/App.xcodeproj/project.pbxproj
+          grep -q 'TARGETED_DEVICE_FAMILY = 1;' ios/App/App.xcodeproj/project.pbxproj
+      - name: Build unsigned iOS Simulator app
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -derivedDataPath .native-derived \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+      - name: Upload generated native project
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: color-lab-ios-native
+          path: |
+            ios
+            dist/native-build.json
+          if-no-files-found: error
+          retention-days: 7

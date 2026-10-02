@@ -16,7 +16,12 @@
     "test:visual-regression": "playwright test tests/e2e/visual-regression.spec.js",
     "test:browser:core": "playwright test tests/e2e/color-lab.spec.js tests/e2e/accessibility.spec.js",
     "test:browser": "playwright test",
-    "test:webkit:core": "playwright test --config=playwright.webkit.config.js"
+    "test:webkit:core": "playwright test --config=playwright.webkit.config.js",
+    "build:native": "node scripts/build-native.mjs",
+    "test:native": "npm run build:native && node scripts/native-preflight.mjs",
+    "ios:init": "npm run build:native && npx cap add ios && node scripts/patch-ios-project.mjs",
+    "ios:sync": "npm run build:native && npx cap sync ios && node scripts/patch-ios-project.mjs",
+    "ios:open": "npx cap open ios"
   },
   "devDependencies": {
     "@lhci/cli": "0.15.1",
@@ -24,6 +29,11 @@
     "@axe-core/playwright": "4.13.0",
     "@playwright/test": "1.63.0",
     "pixelmatch": "7.2.0",
-    "pngjs": "7.0.0"
+    "pngjs": "7.0.0",
+    "@capacitor/cli": "8.5.2",
+    "@capacitor/ios": "8.5.2"
+  },
+  "dependencies": {
+    "@capacitor/core": "8.5.2"
   }
 }
