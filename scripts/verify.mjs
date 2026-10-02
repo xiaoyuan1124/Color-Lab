@@ -168,13 +168,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2510")) fail('service worker cache version is not V2.51.0');
+if(!sw.includes("color-lab-v2520")) fail('service worker cache version is not V2.52.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.51.0') fail('package version must be 2.51.0');
+if(pkg.version!=='2.52.0') fail('package version must be 2.52.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.51.0')||!html.includes('<div class="version">V2.51.0</div>')||!html.includes("appVersion:'2.51.0'")) fail('V2.51.0 UI or backup version metadata missing');
-else pass('V2.51.0 version metadata');
+if(!html.includes('Color Lab V2.52.0')||!html.includes('<div class="version">V2.52.0</div>')||!html.includes("appVersion:'2.52.0'")) fail('V2.52.0 UI or backup version metadata missing');
+else pass('V2.52.0 version metadata');
 
 if(!html.includes('id="compareMore"')||
    !html.includes('<b>匯出</b>')||
@@ -330,6 +330,23 @@ if(!html.includes('Display-P3 是目前 sRGB HEX 的等色換算')||
    !html.includes('not gamut expansion')){
   fail('V2.51.0 truthful sRGB-source P3 wording missing');
 }else pass('V2.51.0 P3 handoff does not claim synthetic gamut expansion');
+
+if(!html.includes('id="exportContextPreview">輸出 SVG</button>')||
+   !html.includes('function contextPreviewSnapshotCss(')||
+   !html.includes('function contextPreviewSnapshotSvg(')||
+   !html.includes('function exportContextPreviewSvg(')||
+   !html.includes('document.styleSheets')||
+   !html.includes('sheet.cssRules')||
+   !html.includes("css.includes('.cp2')||css.includes('.real-preview')")||
+   !html.includes('new XMLSerializer().serializeToString(host)')||
+   !html.includes('<foreignObject x="0" y="0" width="390" height="292">')||
+   !html.includes("$('#exportContextPreview').onclick=exportContextPreviewSvg")){
+  fail('V2.52.0 Context Preview SVG snapshot contract missing');
+}else pass('V2.52.0 current-DOM Context Preview SVG export');
+
+if(html.includes('html2canvas')||html.includes('dom-to-image')||html.includes('html-to-image')){
+  fail('V2.52.0 Context Preview export must remain dependency-free');
+}else pass('V2.52.0 Context Preview snapshot adds no capture dependency');
 
 if(!html.includes('搜尋名稱、HEX、標籤、色系或調性')||
    !html.includes('可搜尋：藍、紅、柔和、鮮明、深色、淺色')||
