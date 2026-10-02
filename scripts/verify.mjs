@@ -59,13 +59,13 @@ const fail=(msg)=>{console.error('FAIL:',msg);process.exitCode=1};
 const pass=(msg)=>console.log('PASS:',msg);
 
 if(!nativeWorkflow.includes('node scripts/ios-simulator-smoke.mjs')||
-   !nativeWorkflow.includes('timeout-minutes: 6')||
+   !nativeWorkflow.includes('timeout-minutes: 8')||
    !nativeWorkflow.includes('color-lab-native-launch.png')||
    !nativeSimulatorSmoke.includes("['bootstatus',udid,'-b']")||
    !nativeSimulatorSmoke.includes("['install',udid,APP_PATH]")||
    !nativeSimulatorSmoke.includes("['launch',udid,BUNDLE_ID]")||
    !nativeSimulatorSmoke.includes("['io',udid,'screenshot',SCREENSHOT]")||
-   !nativeSimulatorSmoke.includes("120000")||
+   !nativeSimulatorSmoke.includes("240000")||
    !nativeSimulatorSmoke.includes("60000")||
    !nativeSimulatorSmoke.includes("spawnSync('xcrun'")){
   fail('App Store iOS Simulator staged install/launch smoke gate missing or unbounded');

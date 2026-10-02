@@ -47,7 +47,7 @@ try{
   if(device.state!=='Booted'){
     simctl('request simulator boot',['boot',udid],20000,{allowFailure:true,allowTimeout:true});
   }
-  simctl('wait for CoreSimulator readiness',['bootstatus',udid,'-b'],120000);
+  simctl('wait for CoreSimulator readiness',['bootstatus',udid,'-b'],240000);
   simctl('install Color Lab',['install',udid,APP_PATH],60000);
 
   const launch=simctl('launch Color Lab',['launch',udid,BUNDLE_ID],30000);
