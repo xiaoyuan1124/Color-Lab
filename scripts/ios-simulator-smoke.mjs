@@ -33,28 +33,15 @@ function runXcrun(label,args,timeoutMs,{allowFailure=false,allowTimeout=false}={
 const simctl=(label,args,timeoutMs,options)=>runXcrun(label,['simctl',...args],timeoutMs,options);
 
 function availableDevices(){
-  const list=simctl('list available devices',['list','devices','available','-j'],15000);
+  const list=simctl('list available devices',['list','devices','available','-j'],30000);
   const groups=JSON.parse(list.stdout||'{}').devices||{};
   return Object.values(groups).flat().filter(device=>device&&device.isAvailable!==false);
 }
-function deviceState(udid){
-  return availableDevices().find(device=>device.udid===udid)?.state||'Unknown';
-}
-async function waitForBootedDevice(udid,timeoutMs=90000){
-  const deadline=Date.now()+timeoutMs;
-  while(Date.now()<deadline){
-    const state=deviceState(udid);
-    console.log(`[native-smoke] device state ${state}`);
-    if(state==='Booted')return;
-    await sleep(5000);
-  }
-  throw new Error(`Simulator did not reach Booted state within ${timeoutMs}ms`);
-}
-async function installWithRetry(udid,attempts=6){
+async function installWithRetry(udid,attempts=8){
   let last=null;
   for(let attempt=1;attempt<=attempts;attempt++){
     console.log(`[native-smoke] install attempt ${attempt}/${attempts}`);
-    last=simctl('install Color Lab',['install',udid,APP_PATH],30000,{allowFailure:true,allowTimeout:true});
+    last=simctl('install Color Lab',['install',udid,APP_PATH],20000,{allowFailure:true,allowTimeout:true});
     if(!last.timedOut&&last.status===0)return;
     if(attempt<attempts)await sleep(10000);
   }
@@ -64,7 +51,7 @@ async function launchWithRetry(udid,attempts=4){
   let last=null;
   for(let attempt=1;attempt<=attempts;attempt++){
     console.log(`[native-smoke] launch attempt ${attempt}/${attempts}`);
-    last=simctl('launch Color Lab',['launch',udid,BUNDLE_ID],30000,{allowFailure:true,allowTimeout:true});
+    last=simctl('launch Color Lab',['launch',udid,BUNDLE_ID],20000,{allowFailure:true,allowTimeout:true});
     if(!last.timedOut&&last.status===0&&(last.stdout||'').includes(BUNDLE_ID+':'))return last;
     if(attempt<attempts)await sleep(5000);
   }
@@ -82,9 +69,9 @@ console.log(`[native-smoke] selected ${device.name} ${udid} state=${device.state
 try{
   if(device.state!=='Booted'){
     simctl('request simulator boot',['boot',udid],20000,{allowFailure:true,allowTimeout:true});
+    await sleep(10000);
   }
-  await waitForBootedDevice(udid,90000);
-  await installWithRetry(udid,6);
+  await installWithRetry(udid,8);
 
   const launch=await launchWithRetry(udid,4);
   fs.writeFileSync(LAUNCH_LOG,(launch.stdout||'')+(launch.stderr||''));
@@ -97,9 +84,8 @@ try{
   console.log('[native-smoke] PASS install + launch smoke');
 }catch(error){
   console.error('[native-smoke] FAIL',error);
-  try{simctl('diagnostic device list',['list','devices'],15000,{allowFailure:true})}catch(_){}
   process.exitCode=1;
 }finally{
-  try{simctl('terminate Color Lab',['terminate',udid,BUNDLE_ID],15000,{allowFailure:true})}catch(_){}
-  try{simctl('shutdown simulator',['shutdown',udid],15000,{allowFailure:true})}catch(_){}
+  try{simctl('terminate Color Lab',['terminate',udid,BUNDLE_ID],15000,{allowFailure:true,allowTimeout:true})}catch(_){}
+  try{simctl('shutdown simulator',['shutdown',udid],15000,{allowFailure:true,allowTimeout:true})}catch(_){}
 }
