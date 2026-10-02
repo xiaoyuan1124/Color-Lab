@@ -21,6 +21,17 @@ for(const dep of ['@capacitor/cli','@capacitor/ios']){
   if(pkg.devDependencies?.[dep]!=='8.5.2')fail(dep+' must be pinned to 8.5.2');else pass(dep+' 8.5.2');
 }
 
+const capacitorPrivacyPath=path.join(root,'node_modules','@capacitor','ios','Capacitor','PrivacyInfo.xcprivacy');
+if(!fs.existsSync(capacitorPrivacyPath)){
+  fail('Capacitor PrivacyInfo.xcprivacy missing');
+}else{
+  const manifest=fs.readFileSync(capacitorPrivacyPath,'utf8');
+  for(const key of ['NSPrivacyAccessedAPITypes','NSPrivacyCollectedDataTypes','NSPrivacyTrackingDomains','NSPrivacyTracking']){
+    if(!manifest.includes('<key>'+key+'</key>'))fail('Capacitor privacy manifest missing '+key);
+  }
+  if(!process.exitCode)pass('Capacitor privacy manifest present');
+}
+
 const required=[
   'dist/index.html','dist/manifest.json','dist/privacy.html','dist/native-build.json',
   'dist/core/color-quality.js','dist/core/color-handoff.js','dist/runtime/palette-tools.js'
