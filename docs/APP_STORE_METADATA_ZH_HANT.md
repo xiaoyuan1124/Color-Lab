@@ -53,7 +53,7 @@ Color Lab 的目的不是產生更多顏色，而是讓你更快知道：
 
 `配色工具,色彩設計,調色盤,取色工具,對比檢查,品牌配色,簡報配色,室內配色`
 
-UTF-8 size: 100 bytes（Apple limit: 100 bytes）
+Length: 38 characters（Apple limit: 100 characters）
 
 Canonical machine-readable source: `app-store/submission.v1.0.json`; CI validation: `npm run test:app-store-metadata`.
 
