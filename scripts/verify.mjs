@@ -46,9 +46,67 @@ const fashion=fs.readFileSync('data/fashion-palettes.js','utf8');
 const igStyles=fs.readFileSync('data/ig-style-patterns.js','utf8');
 const inspirationAtlas=fs.readFileSync('data/inspiration-atlas.js','utf8');
 const toneFamilies=fs.readFileSync('data/tone-families.js','utf8');
+const nativeConfig=JSON.parse(fs.readFileSync('capacitor.config.json','utf8'));
+const nativeBuild=fs.readFileSync('scripts/build-native.mjs','utf8');
+const nativePreflight=fs.readFileSync('scripts/native-preflight.mjs','utf8');
+const nativePatch=fs.readFileSync('scripts/patch-ios-project.mjs','utf8');
+const nativeWorkflow=fs.readFileSync('.github/workflows/native-ios.yml','utf8');
+const privacyPolicy=fs.readFileSync('privacy.html','utf8');
 
 const fail=(msg)=>{console.error('FAIL:',msg);process.exitCode=1};
 const pass=(msg)=>console.log('PASS:',msg);
+
+if(nativeConfig.appId!=='com.sy1124.colorlab'||nativeConfig.appName!=='Color Lab'||nativeConfig.webDir!=='dist'||nativeConfig.server?.url){
+  fail('App Store native config must use local bundled assets and stable bundle id');
+}else pass('App Store local Capacitor config');
+
+if(pkg.dependencies?.['@capacitor/core']!=='8.5.2'||
+   pkg.devDependencies?.['@capacitor/cli']!=='8.5.2'||
+   pkg.devDependencies?.['@capacitor/ios']!=='8.5.2'||
+   pkg.scripts?.['build:native']!=='node scripts/build-native.mjs'||
+   !pkg.scripts?.['ios:init']?.includes('patch-ios-project.mjs')){
+  fail('Capacitor 8.5.2 iOS toolchain contract missing');
+}else pass('Capacitor 8.5.2 pinned native toolchain');
+
+if(!html.includes('function isNativeAppShell(')||
+   !html.includes("location.protocol==='capacitor:'")||
+   !html.includes('if(isNativeAppShell()){pwaHealthHide();return null}')||
+   !html.includes('return isNativeAppShell()||window.matchMedia')){
+  fail('native shell PWA/install bypass contract missing');
+}else pass('native shell keeps PWA-only behavior out of iOS app');
+
+if(!nativeBuild.includes("const dirs=['core','data','runtime','vendor']")||
+   !nativeBuild.includes("'privacy.html'")||
+   !nativePreflight.includes("server.url is forbidden for App Store build")||
+   !nativePreflight.includes("all runtime script/style assets bundled locally")){
+  fail('native local-asset build/preflight contract missing');
+}else pass('native bundle excludes remote runtime dependency');
+
+if(!nativePatch.includes('NSCameraUsageDescription')||
+   !nativePatch.includes('NSPhotoLibraryUsageDescription')||
+   !nativePatch.includes('ITSAppUsesNonExemptEncryption')||
+   !nativePatch.includes('TARGETED_DEVICE_FAMILY = 1;')||
+   !nativePatch.includes('MARKETING_VERSION = 1.0.0;')||
+   !nativePatch.includes('CURRENT_PROJECT_VERSION = 1;')){
+  fail('iOS permissions/version/target patch contract missing');
+}else pass('iOS permissions + version + iPhone target patch');
+
+if(!nativeWorkflow.includes('runs-on: macos-26')||
+   !nativeWorkflow.includes("grep -E '^Xcode 26")||
+   !nativeWorkflow.includes('npm run test:native')||
+   !nativeWorkflow.includes('npm run ios:init')||
+   !nativeWorkflow.includes('CODE_SIGNING_ALLOWED=NO')||
+   !nativeWorkflow.includes('xcodebuild')){
+  fail('Xcode 26 unsigned iOS CI gate missing');
+}else pass('Xcode 26 native compile CI gate');
+
+if(!privacyPolicy.includes('Color Lab 隱私權政策')||
+   !privacyPolicy.includes('Local-first')||
+   !privacyPolicy.includes('不要求註冊帳號')||
+   !privacyPolicy.includes('不使用廣告追蹤')){
+  fail('App Store privacy policy contract missing');
+}else pass('App Store privacy policy page');
+
 
 const inlineScripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
 const inline=inlineScripts.at(-1);
