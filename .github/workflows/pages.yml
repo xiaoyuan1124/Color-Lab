@@ -51,6 +51,16 @@ jobs:
             test-results
           if-no-files-found: ignore
           retention-days: 7
+      - name: Write Pages deployment identity
+        run: |
+          cat > deploy-info.json <<EOF
+          {
+            "sha": "${GITHUB_SHA}",
+            "ref": "${GITHUB_REF}",
+            "repository": "${GITHUB_REPOSITORY}"
+          }
+          EOF
+          node -e "const x=require('./deploy-info.json'); if(x.sha!==process.env.GITHUB_SHA||x.ref!==process.env.GITHUB_REF||x.repository!==process.env.GITHUB_REPOSITORY) process.exit(1)"
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
