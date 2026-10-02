@@ -117,7 +117,8 @@ if(!nativePatch.includes('NSCameraUsageDescription')||
   fail('iOS permissions/version/target patch contract missing');
 }else pass('iOS permissions + version + iPhone target patch');
 
-if(!nativeWorkflow.includes('runs-on: macos-26-intel')||
+if(!nativeWorkflow.includes('runs-on: macos-15-intel')||
+   !nativeWorkflow.includes('sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer')||
    !nativeWorkflow.includes("grep -E '^Xcode 26")||
    !nativeWorkflow.includes('npm run test:native')||
    !nativeWorkflow.includes('npm run ios:init')||
