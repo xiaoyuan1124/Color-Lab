@@ -1,0 +1,98 @@
+name: iOS App Store Preflight
+
+on:
+  push:
+    branches: [release/ios-appstore-v1]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: color-lab-ios-appstore-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios-preflight:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: App Store metadata and privacy preflight
+        run: npm run test:appstore-preflight
+
+      - name: Build bundled mobile web assets
+        run: npm run build:mobile
+
+      - name: Bootstrap Capacitor iOS project
+        shell: bash
+        run: |
+          if [ ! -d ios ]; then
+            npx cap add ios --packagemanager SPM
+          fi
+          npx cap sync ios
+          npm run ios:configure
+
+      - name: Verify Xcode and SDK baseline
+        shell: bash
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          MAJOR="$(xcodebuild -version | awk '/Xcode/{split($2,a,"."); print a[1]}')"
+          if [ "${MAJOR:-0}" -lt 26 ]; then
+            echo "Xcode 26+ is required for the current App Store baseline"
+            exit 1
+          fi
+
+      - name: Unsigned iOS build
+        shell: bash
+        run: |
+          set -o pipefail
+          xcodebuild             -project ios/App/App.xcodeproj             -scheme App             -configuration Debug             -sdk iphonesimulator             -destination 'generic/platform=iOS Simulator'             CODE_SIGNING_ALLOWED=NO             build
+
+      - name: Verify native package contract
+        shell: bash
+        run: |
+          test -f ios/App/App/Info.plist
+          test -f ios/App/App/PrivacyInfo.xcprivacy
+          grep -q "NSCameraUsageDescription" ios/App/App/Info.plist
+          grep -q "NSPhotoLibraryUsageDescription" ios/App/App/Info.plist
+          grep -q "NSPrivacyTracking" ios/App/App/PrivacyInfo.xcprivacy
+          if grep -R "xiaoyuan1124.github.io/Color-Lab" ios/App/App/public 2>/dev/null | grep -v -E "privacy\.html|support\.html"; then
+            echo "Remote production runtime URL leaked into native bundle"
+            exit 1
+          fi
+
+      - name: Commit generated iOS scaffold
+        if: github.ref == 'refs/heads/release/ios-appstore-v1'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json ios
+          if git diff --cached --quiet; then
+            echo "No generated native changes to commit"
+          else
+            git commit -m "chore: bootstrap Capacitor iOS project [ios-bootstrap]"
+            git push origin HEAD:release/ios-appstore-v1
+          fi
+
+      - name: Upload unsigned iOS scaffold
+        uses: actions/upload-artifact@v7
+        with:
+          name: color-lab-ios-scaffold
+          path: |
+            ios
+            capacitor.config.json
+            appstore
+          retention-days: 7
