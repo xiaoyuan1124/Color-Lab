@@ -1,0 +1,39 @@
+name: Color Lab App Store Screenshots
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: color-lab-app-store-screenshots-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Install screenshot tools
+        run: npm install --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Generate 6.9-inch App Store screenshots
+        run: npx playwright test tests/e2e/app-store-screenshots.spec.js
+      - name: Verify screenshot set
+        run: |
+          test "$(find artifacts/app-store-screenshots -name '*.png' | wc -l | tr -d ' ')" = "6"
+          ls -lh artifacts/app-store-screenshots
+      - name: Upload App Store screenshot pack
+        uses: actions/upload-artifact@v7
+        with:
+          name: color-lab-app-store-screenshots-6.9
+          path: artifacts/app-store-screenshots
+          if-no-files-found: error
+          retention-days: 14
