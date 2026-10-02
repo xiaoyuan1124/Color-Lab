@@ -67,19 +67,22 @@ if(!pagesWorkflow.includes('deploy-info.json')||
 }else pass('Pages deployment SHA proof');
 
 if(!nativeWorkflow.includes('node scripts/ios-simulator-smoke.mjs')||
-   !nativeWorkflow.includes('timeout-minutes: 10')||
+   !nativeWorkflow.includes('timeout-minutes: 15')||
    !nativeWorkflow.includes('color-lab-native-launch.png')||
+   !nativeSimulatorSmoke.includes('async function resetCoreSimulator(')||
+   !nativeSimulatorSmoke.includes('async function runSessionAttempt(')||
+   !nativeSimulatorSmoke.includes('for(let session=1;session<=2;session++)')||
+   !nativeSimulatorSmoke.includes("['-9','com.apple.CoreSimulator.CoreSimulatorService']")||
+   !nativeSimulatorSmoke.includes("['-a','Simulator','--args','-CurrentDeviceUDID',udid]")||
    !nativeSimulatorSmoke.includes("['install',udid,APP_PATH],120000")||
    !nativeSimulatorSmoke.includes("spawn('xcrun',['simctl','launch',udid,BUNDLE_ID]")||
    !nativeSimulatorSmoke.includes("['spawn',udid,'launchctl','list']")||
    !nativeSimulatorSmoke.includes("'UIKitApplication:'+BUNDLE_ID")||
-   !nativeSimulatorSmoke.includes('waitForUIKitProcess(udid,8)')||
+   !nativeSimulatorSmoke.includes('waitForUIKitProcess(udid,6)')||
    !nativeSimulatorSmoke.includes('captureScreenshotWithRetry(udid,3)')||
-   !nativeSimulatorSmoke.includes("['io',udid,'screenshot',SCREENSHOT]")||
-   !nativeSimulatorSmoke.includes('await sleep(45000)')||
-   !nativeSimulatorSmoke.includes("spawnSync('xcrun'")){
-  fail('App Store iOS Simulator UIKit-process launch smoke gate missing or unbounded');
-}else pass('App Store iOS Simulator UIKit-process launch smoke gate');
+   !nativeSimulatorSmoke.includes("['io',udid,'screenshot',SCREENSHOT]")){
+  fail('App Store iOS Simulator full-session recovery launch gate missing or unbounded');
+}else pass('App Store iOS Simulator full-session recovery launch gate');
 
 if(nativeConfig.appId!=='com.sy1124.colorlab'||nativeConfig.appName!=='Color Lab'||nativeConfig.webDir!=='dist'||nativeConfig.server?.url){
   fail('App Store native config must use local bundled assets and stable bundle id');
