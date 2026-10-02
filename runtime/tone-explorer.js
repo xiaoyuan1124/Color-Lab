@@ -23,15 +23,6 @@ function toneExplorerHueCandidate(colors,delta){
     return gamutMapOKLCH(o.l,o.c,o.h+delta);
   });
 }
-function toneExplorerHueDrift(a,b){
-  return a.map((hex,i)=>hueDistance(toOKLCH(hex).h,toOKLCH(b[i]).h));
-}
-function toneExplorerToneDelta(a,b){
-  return a.map((hex,i)=>{
-    const x=toOKLCH(hex),y=toOKLCH(b[i]);
-    return{light:Math.abs(x.l-y.l),chroma:Math.abs(x.c-y.c)};
-  });
-}
 function toneExplorerCandidates(){
   const origin=toneExplorerColors();
   if(toneExplorerMode==='hue'){
