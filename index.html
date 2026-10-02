@@ -3046,7 +3046,11 @@ async function pwaCheckForUpdate(force=false){
   pwaLastUpdateCheck=now;
   try{await pwaRegistration.update();return true}catch(_){return false}
 }
+function colorLabIsNativeApp(){
+  try{return !!globalThis.Capacitor?.isNativePlatform?.()}catch(_){return false}
+}
 async function initPwaHealth(){
+  if(colorLabIsNativeApp()){pwaHealthHide();return null}
   pwaHealthEnsureUi();
   if(pwaBound){pwaConnectivityState();return pwaRegistration}
   pwaBound=true;
