@@ -58,6 +58,14 @@ const privacyPolicy=fs.readFileSync('privacy.html','utf8');
 const fail=(msg)=>{console.error('FAIL:',msg);process.exitCode=1};
 const pass=(msg)=>console.log('PASS:',msg);
 
+const pagesWorkflow=fs.readFileSync('.github/workflows/pages.yml','utf8');
+if(!pagesWorkflow.includes('deploy-info.json')||
+   !pagesWorkflow.includes('GITHUB_SHA')||
+   !pagesWorkflow.includes('GITHUB_REF')||
+   !pagesWorkflow.includes('GITHUB_REPOSITORY')){
+  fail('Pages deployment SHA proof missing');
+}else pass('Pages deployment SHA proof');
+
 if(!nativeWorkflow.includes('node scripts/ios-simulator-smoke.mjs')||
    !nativeWorkflow.includes('timeout-minutes: 8')||
    !nativeWorkflow.includes('color-lab-native-launch.png')||
