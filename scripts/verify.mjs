@@ -70,13 +70,16 @@ if(!nativeWorkflow.includes('node scripts/ios-simulator-smoke.mjs')||
    !nativeWorkflow.includes('timeout-minutes: 10')||
    !nativeWorkflow.includes('color-lab-native-launch.png')||
    !nativeSimulatorSmoke.includes("['install',udid,APP_PATH],120000")||
-   !nativeSimulatorSmoke.includes("['launch',udid,BUNDLE_ID],180000")||
+   !nativeSimulatorSmoke.includes("spawn('xcrun',['simctl','launch',udid,BUNDLE_ID]")||
+   !nativeSimulatorSmoke.includes("['spawn',udid,'launchctl','list']")||
+   !nativeSimulatorSmoke.includes("'UIKitApplication:'+BUNDLE_ID")||
+   !nativeSimulatorSmoke.includes('waitForUIKitProcess(udid,8)')||
+   !nativeSimulatorSmoke.includes('captureScreenshotWithRetry(udid,3)')||
    !nativeSimulatorSmoke.includes("['io',udid,'screenshot',SCREENSHOT]")||
    !nativeSimulatorSmoke.includes('await sleep(45000)')||
-   !nativeSimulatorSmoke.includes("BUNDLE_ID+': <pid>'")||
    !nativeSimulatorSmoke.includes("spawnSync('xcrun'")){
-  fail('App Store iOS Simulator single-flight install/launch smoke gate missing or unbounded');
-}else pass('App Store iOS Simulator single-flight install/launch smoke gate');
+  fail('App Store iOS Simulator UIKit-process launch smoke gate missing or unbounded');
+}else pass('App Store iOS Simulator UIKit-process launch smoke gate');
 
 if(nativeConfig.appId!=='com.sy1124.colorlab'||nativeConfig.appName!=='Color Lab'||nativeConfig.webDir!=='dist'||nativeConfig.server?.url){
   fail('App Store native config must use local bundled assets and stable bundle id');
