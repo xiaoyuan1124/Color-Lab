@@ -6,7 +6,6 @@ const failures=[];
 const blockers=[];
 
 const chars=value=>[...String(value??'')].length;
-const bytes=value=>Buffer.byteLength(String(value??''),'utf8');
 const fail=message=>failures.push(message);
 const pass=message=>console.log('PASS:',message);
 
@@ -55,9 +54,9 @@ requireText('subtitle',packet.subtitle,{min:1,max:30});
 requireText('promotionalText',packet.promotionalText,{min:1,max:170});
 requireText('description',packet.description,{min:1,max:4000});
 
-const keywordBytes=bytes(packet.keywords);
-if(keywordBytes<1||keywordBytes>100)fail(`keywords size ${keywordBytes} bytes exceeds Apple 100-byte limit`);
-else pass(`keywords size ${keywordBytes}/100 bytes`);
+const keywordChars=chars(packet.keywords);
+if(keywordChars<1||keywordChars>100)fail(`keywords length ${keywordChars} characters exceeds Apple 100-character limit`);
+else pass(`keywords length ${keywordChars}/100 characters`);
 const keywords=String(packet.keywords||'').split(',').map(x=>x.trim()).filter(Boolean);
 if(new Set(keywords).size!==keywords.length)fail('keywords must not contain duplicates');
 if(keywords.some(keyword=>keyword.toLowerCase()==='color lab'))fail('keywords should not duplicate the app name');
