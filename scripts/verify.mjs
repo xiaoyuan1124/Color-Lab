@@ -62,7 +62,8 @@ if(!nativeWorkflow.includes('xcrun simctl install')||
    !nativeWorkflow.includes('xcrun simctl io')||
    !nativeWorkflow.includes('color-lab-native-launch.png')||
    !nativeWorkflow.includes('Simulator failed to reach Booted state within 120 seconds')||
-   !nativeWorkflow.includes('for attempt in $(seq 1 60)')){
+   !nativeWorkflow.includes('for attempt in $(seq 1 60)')||
+   !nativeWorkflow.includes('timeout-minutes: 4')){
   fail('App Store iOS Simulator install/launch smoke gate missing or unbounded');
 }else pass('App Store iOS Simulator bounded install/launch smoke gate');
 
