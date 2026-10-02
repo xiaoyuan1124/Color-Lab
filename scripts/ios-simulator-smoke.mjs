@@ -88,7 +88,7 @@ async function resetCoreSimulator(){
 }
 
 function startLaunchRequest(udid){
-  console.log('[native-smoke] START launch request (async; PID proven via launchctl)');
+  console.log('[native-smoke] START launch request (async; PID proven by simctl output or launchctl)');
   const child=spawn('xcrun',['simctl','launch',udid,BUNDLE_ID],{stdio:['ignore','pipe','pipe']});
   let stdout='';
   let stderr='';
@@ -98,8 +98,22 @@ function startLaunchRequest(udid){
   return{child,getOutput:()=>({stdout,stderr})};
 }
 
-async function waitForUIKitProcess(udid,attempts=8){
+function launchPidFromSimctlOutput(output){
+  const text=String(output?.stdout||'')+'\n'+String(output?.stderr||'');
+  const escaped=BUNDLE_ID.replaceAll('.','\\.');
+  const match=text.match(new RegExp(escaped+'\\s*:\\s*(\\d+)'));
+  const pid=match?Number.parseInt(match[1],10):NaN;
+  return Number.isInteger(pid)&&pid>0?pid:null;
+}
+
+async function waitForLaunchProof(udid,launchRequest,attempts=8){
   for(let attempt=1;attempt<=attempts;attempt++){
+    const directPid=launchPidFromSimctlOutput(launchRequest.getOutput());
+    if(directPid){
+      console.log(`[native-smoke] PASS simctl launch process ${BUNDLE_ID} pid=${directPid}`);
+      return{pid:directPid,line:`simctl launch: ${BUNDLE_ID}: ${directPid}`,source:'simctl-launch'};
+    }
+
     console.log(`[native-smoke] UIKit PID probe ${attempt}/${attempts}`);
     const result=simctl(
       'inspect UIKit launchd jobs',
@@ -107,19 +121,29 @@ async function waitForUIKitProcess(udid,attempts=8){
       15000,
       {allowFailure:true,allowTimeout:true}
     );
+
+    const postProbePid=launchPidFromSimctlOutput(launchRequest.getOutput());
+    if(postProbePid){
+      console.log(`[native-smoke] PASS simctl launch process ${BUNDLE_ID} pid=${postProbePid}`);
+      return{pid:postProbePid,line:`simctl launch: ${BUNDLE_ID}: ${postProbePid}`,source:'simctl-launch'};
+    }
+
     if(!result.timedOut&&result.status===0){
       const line=(result.stdout||'').split(/\r?\n/).find(row=>row.includes('UIKitApplication:'+BUNDLE_ID));
       if(line){
         const pid=Number.parseInt(line.trim().split(/\s+/)[0],10);
         if(Number.isInteger(pid)&&pid>0){
           console.log(`[native-smoke] PASS UIKit process ${BUNDLE_ID} pid=${pid}`);
-          return{pid,line};
+          return{pid,line,source:'launchctl'};
         }
       }
     }
     if(attempt<attempts)await sleep(10000);
   }
-  throw new Error(`No running UIKitApplication job found for ${BUNDLE_ID}`);
+
+  const launchOutput=launchRequest.getOutput();
+  fs.appendFileSync(LAUNCH_LOG,'launch proof failure output:\n'+launchOutput.stdout+launchOutput.stderr+'\n');
+  throw new Error(`No launch PID proof found for ${BUNDLE_ID}`);
 }
 
 async function captureScreenshotWithRetry(udid,attempts=3){
@@ -158,11 +182,11 @@ async function runFreshSession(profile,session){
     simctl('install Color Lab',['install',udid,APP_PATH],120000);
 
     launchRequest=startLaunchRequest(udid);
-    const running=await waitForUIKitProcess(udid,8);
+    const running=await waitForLaunchProof(udid,launchRequest,8);
     const launchOutput=launchRequest.getOutput();
     fs.appendFileSync(
       LAUNCH_LOG,
-      `SESSION ${session} UIKitApplication PID: ${running.pid}\n${running.line}\n${launchOutput.stdout}${launchOutput.stderr}\n`
+      `SESSION ${session} launch PID: ${running.pid} source=${running.source}\n${running.line}\n${launchOutput.stdout}${launchOutput.stderr}\n`
     );
 
     await sleep(3000);
