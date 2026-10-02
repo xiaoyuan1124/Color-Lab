@@ -28,8 +28,17 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Native web bundle preflight
         run: npm run test:native
+      - name: AppIcon generator self-test
+        run: npm run test:app-icon
       - name: Generate iOS project
         run: npm run ios:init
+      - name: Verify Color Lab AppIcon
+        run: |
+          ICON="ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png"
+          test -f "$ICON"
+          test "$(sips -g pixelWidth "$ICON" | awk '/pixelWidth/{print $2}')" = "1024"
+          test "$(sips -g pixelHeight "$ICON" | awk '/pixelHeight/{print $2}')" = "1024"
+          sips -g hasAlpha "$ICON" | grep -q 'hasAlpha: no'
       - name: Verify native permissions and version
         run: |
           grep -q NSCameraUsageDescription ios/App/App/Info.plist
