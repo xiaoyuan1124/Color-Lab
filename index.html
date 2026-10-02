@@ -2970,6 +2970,10 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
    User-mediated service worker activation prevents mixed-version sessions. */
 
 const COLORLAB_APP_VERSION='2.53.0';
+function isNativeAppShell(){
+  return globalThis.Capacitor?.isNativePlatform?.()===true||location.protocol==='capacitor:';
+}
+document.documentElement.classList.toggle('native-shell',isNativeAppShell());
 const PWA_UPDATE_CHECK_INTERVAL=20*60*1000;
 let pwaRegistration=null;
 let pwaUpdateReady=false;
@@ -3047,6 +3051,7 @@ async function pwaCheckForUpdate(force=false){
   try{await pwaRegistration.update();return true}catch(_){return false}
 }
 async function initPwaHealth(){
+  if(isNativeAppShell()){pwaHealthHide();return null}
   pwaHealthEnsureUi();
   if(pwaBound){pwaConnectivityState();return pwaRegistration}
   pwaBound=true;
@@ -5361,7 +5366,7 @@ document.addEventListener('click',e=>{
 
 
 function isStandalone(){
-  return window.matchMedia?.('(display-mode: standalone)').matches||window.navigator.standalone===true;
+  return isNativeAppShell()||window.matchMedia?.('(display-mode: standalone)').matches||window.navigator.standalone===true;
 }
 function isIOSDevice(){return /iphone|ipad|ipod/i.test(navigator.userAgent)}
 function updateInstallCard(){
