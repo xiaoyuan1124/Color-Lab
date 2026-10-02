@@ -24,6 +24,8 @@ jobs:
           node-version: '24'
       - name: Install quality tools
         run: npm install --no-audit --no-fund
+      - name: Test Lighthouse summary
+        run: npm run test:lighthouse-summary
       - name: Lighthouse CI
         run: npm run audit:lighthouse
       - name: Summarize Lighthouse

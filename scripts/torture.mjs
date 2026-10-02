@@ -745,7 +745,7 @@ check('V2.46 semantic search keeps exact legacy fields in the index',
   librarySearchCore.includes('(x?.name&&x.name.trim())')&&
   librarySearchCore.includes('x?.seed,x?.palette?.base,x?.palette?.structure,x?.palette?.accent')&&
   librarySearchCore.includes('...(x?.selectedColors||[]),...tags,x?.folder||\'\',projectName')&&
-  localProjects.includes('librarySearchDocument(x,localProjectSearchText(x))'),
+  localProjects.includes('librarySearchDocumentMatches(x,query,localProjectSearchText(x))'),
   'name, HEX, tags, folders, and project names remain searchable alongside semantic color terms');
 
 check('V2.46 use-case search terms are derived from measurable palette relationships',

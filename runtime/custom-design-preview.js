@@ -12,9 +12,6 @@ let customDesignState=null;
 let customDesignBound=false;
 let customDesignColorCanvas=null;
 
-function customDesignEscape(value){
-  return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-}
 function customDesignNormalizeColor(value){
   const raw=String(value||'').trim();
   if(!raw||/^(none|transparent|currentcolor|inherit)$/i.test(raw)||/url\s*\(/i.test(raw))return null;
@@ -108,12 +105,6 @@ function customDesignMappedMarkup(){
     });
   });
   return new XMLSerializer().serializeToString(root);
-}
-function customDesignMappedRoles(){
-  if(!customDesignState)return{};
-  const out={};
-  Object.entries(customDesignState.mapping).forEach(([source,role])=>{if(role)out[source]=palette?.[role]||null});
-  return out;
 }
 function renderCustomDesignPreview(){
   const status=document.getElementById('customDesignStatus');
