@@ -355,10 +355,12 @@ if(!pkg.scripts?.['test:lighthouse-summary']||
    !qualityWorkflow.includes('run: npm run test:lighthouse-summary')||
    !lighthouseSummary.includes('function median(')||
    !lighthouseSummary.includes('summarizeLighthouseReports')||
+   !lighthouseSummary.includes('function isLighthouseReport(')||
    !lighthouseSummary.includes('performanceRange')||
    !lighthouseSummary.includes('Lighthouse performance outliers')||
    !lighthouseSummary.includes('Lighthouse representative report')||
    !lighthouseSummaryTest.includes('assert.equal(median([79,93,93]),93)')||
+   !lighthouseSummaryTest.includes('isLighthouseReport({}),false')||
    !lighthouseSummaryTest.includes('summary.outliers.map')){
   fail('V2.53.0 median Lighthouse baseline reporting contract missing');
 }else pass('V2.53.0 Lighthouse median + outlier reporting');
