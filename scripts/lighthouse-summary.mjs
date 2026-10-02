@@ -11,6 +11,11 @@ export function median(values){
 function scorePercent(report,key){
   return Math.round((report?.categories?.[key]?.score||0)*100);
 }
+export function isLighthouseReport(report){
+  return Number.isFinite(report?.categories?.performance?.score)&&
+    Number.isFinite(report?.categories?.accessibility?.score)&&
+    Number.isFinite(report?.categories?.['best-practices']?.score);
+}
 export function summarizeLighthouseReports(reports,files=[]){
   const runs=reports.map((report,index)=>({
     index,
@@ -39,9 +44,10 @@ export function summarizeLighthouseReports(reports,files=[]){
 
 export function readLighthouseReports(dir='.lighthouseci-reports'){
   if(!fs.existsSync(dir))return{files:[],reports:[]};
-  const files=fs.readdirSync(dir).filter(x=>x.endsWith('.json')).sort();
-  const reports=files.map(file=>JSON.parse(fs.readFileSync(path.join(dir,file),'utf8')));
-  return{files,reports};
+  const candidates=fs.readdirSync(dir).filter(x=>x.endsWith('.json')).sort();
+  const loaded=candidates.map(file=>({file,report:JSON.parse(fs.readFileSync(path.join(dir,file),'utf8'))}))
+    .filter(item=>isLighthouseReport(item.report));
+  return{files:loaded.map(x=>x.file),reports:loaded.map(x=>x.report)};
 }
 
 export function printLighthouseSummary(dir='.lighthouseci-reports'){
