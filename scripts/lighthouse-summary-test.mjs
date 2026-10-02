@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {median,summarizeLighthouseReports} from './lighthouse-summary.mjs';
+import {median,isLighthouseReport,summarizeLighthouseReports} from './lighthouse-summary.mjs';
 
 const report=(performance,accessibility=100,bestPractices=93)=>({
   categories:{
@@ -12,6 +12,8 @@ const report=(performance,accessibility=100,bestPractices=93)=>({
 
 assert.equal(median([79,93,93]),93);
 assert.equal(median([80,90]),85);
+assert.equal(isLighthouseReport({}),false);
+assert.equal(isLighthouseReport({categories:{performance:{score:.93},accessibility:{score:1},'best-practices':{score:.93}}}),true);
 
 const summary=summarizeLighthouseReports(
   [report(79),report(93),report(93)],
