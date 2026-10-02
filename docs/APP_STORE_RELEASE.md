@@ -35,6 +35,7 @@ This is the core defense against App Review Guideline 4.2 Minimum Functionality.
 ## Apple 2026 submission baseline
 
 - Build with Xcode 26 or newer and iOS 26 SDK or newer.
+- Capacitor is on Apple's listed SDKs that require a privacy manifest; CI must verify the pinned SDK ships one and the built app contains at least one aggregated/bundled `PrivacyInfo.xcprivacy`.
 - App Store upload must target at least iOS 13; this project intentionally uses Capacitor 8's iOS 15+ baseline.
 - A Privacy Policy URL is required for iOS apps.
 - App Privacy answers must match actual app and third-party SDK behavior.
@@ -101,7 +102,7 @@ There is no login, subscription, ad SDK, analytics SDK, or hidden paid content i
 
 These are intentionally not faked in source control:
 
-1. Generate the native iOS project and pass unsigned Xcode 26 build CI.
+1. Generate the native iOS project and pass unsigned Xcode 26 build CI, including bundled Capacitor privacy-manifest verification.
 2. Produce final 1024×1024 App Store icon.
 3. Native iPhone smoke test: safe area, keyboard, camera, photo picker, local persistence, share sheet, SVG/JSON import/export.
 4. Create App Store Connect app record with the final Bundle ID.
