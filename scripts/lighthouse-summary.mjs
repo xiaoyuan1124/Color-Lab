@@ -16,29 +16,52 @@ export function isLighthouseReport(report){
     Number.isFinite(report?.categories?.accessibility?.score)&&
     Number.isFinite(report?.categories?.['best-practices']?.score);
 }
-export function summarizeLighthouseReports(reports,files=[]){
-  const runs=reports.map((report,index)=>({
-    index,
-    file:files[index]||'run-'+(index+1),
-    performance:scorePercent(report,'performance'),
-    accessibility:scorePercent(report,'accessibility'),
-    bestPractices:scorePercent(report,'best-practices')
-  }));
+export function lighthousePageKey(report){
+  const raw=report?.finalUrl||report?.requestedUrl||'';
+  if(!raw)return'unknown';
+  try{
+    const url=new URL(raw);
+    return url.pathname==='/'?'/index.html':url.pathname;
+  }catch(_){return raw}
+}
+function summarizeRuns(runs){
   const performance=median(runs.map(x=>x.performance));
   const accessibility=median(runs.map(x=>x.accessibility));
   const bestPractices=median(runs.map(x=>x.bestPractices));
   const sorted=[...runs].sort((a,b)=>Math.abs(a.performance-performance)-Math.abs(b.performance-performance)||a.index-b.index);
-  const representative=sorted[0]||{index:0,file:'',performance:0,accessibility:0,bestPractices:0};
+  const representative=sorted[0]||{index:0,file:'',page:'unknown',performance:0,accessibility:0,bestPractices:0};
   const perfValues=runs.map(x=>x.performance);
   const minPerformance=perfValues.length?Math.min(...perfValues):0;
   const maxPerformance=perfValues.length?Math.max(...perfValues):0;
-  const outliers=runs.filter(x=>Math.abs(x.performance-performance)>=10);
   return{
     runs,
     scores:{performance,accessibility,bestPractices},
     range:{performance:[minPerformance,maxPerformance]},
     representative,
-    outliers
+    outliers:runs.filter(x=>Math.abs(x.performance-performance)>=10)
+  };
+}
+export function summarizeLighthouseReports(reports,files=[]){
+  const allRuns=reports.map((report,index)=>({
+    index,
+    file:files[index]||'run-'+(index+1),
+    page:lighthousePageKey(report),
+    performance:scorePercent(report,'performance'),
+    accessibility:scorePercent(report,'accessibility'),
+    bestPractices:scorePercent(report,'best-practices')
+  }));
+  const grouped=new Map();
+  for(const run of allRuns){
+    if(!grouped.has(run.page))grouped.set(run.page,[]);
+    grouped.get(run.page).push(run);
+  }
+  const pages=[...grouped.entries()].map(([page,runs])=>({page,...summarizeRuns(runs)}));
+  const primary=pages.find(x=>x.page==='/index.html')||pages[0]||{page:'unknown',...summarizeRuns([])};
+  return{
+    ...primary,
+    primaryPage:primary.page,
+    allRuns,
+    pages
   };
 }
 
@@ -62,10 +85,23 @@ export function printLighthouseSummary(dir='.lighthouseci-reports'){
     accessibility:summary.scores.accessibility,
     bestPractices:summary.scores.bestPractices,
     runs:summary.runs.length,
+    primaryPage:summary.primaryPage,
+    pages:summary.pages.length,
     performanceRange:summary.range.performance.join('-')
   });
   console.log('Lighthouse run scores');
   for(const run of summary.runs)console.log(JSON.stringify(run));
+  if(summary.pages.length>1){
+    console.log('Lighthouse page summaries');
+    for(const page of summary.pages)console.log(JSON.stringify({
+      page:page.page,
+      runs:page.runs.length,
+      performance:page.scores.performance,
+      accessibility:page.scores.accessibility,
+      bestPractices:page.scores.bestPractices,
+      performanceRange:page.range.performance.join('-')
+    }));
+  }
   if(summary.outliers.length){
     console.log('Lighthouse performance outliers');
     for(const run of summary.outliers)console.log(JSON.stringify({
