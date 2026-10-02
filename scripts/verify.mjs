@@ -92,6 +92,8 @@ if(!nativeWorkflow.includes('node scripts/ios-simulator-smoke.mjs')||
    !nativeSimulatorSmoke.includes('for(let session=1;session<=2;session++)')||
    !nativeSimulatorSmoke.includes("['install',udid,APP_PATH],120000")||
    !nativeSimulatorSmoke.includes("spawn('xcrun',['simctl','launch',udid,BUNDLE_ID]")||
+   !nativeSimulatorSmoke.includes('function launchPidFromSimctlOutput(')||
+   !nativeSimulatorSmoke.includes('waitForLaunchProof(udid,launchRequest,8)')||
    !nativeSimulatorSmoke.includes("'UIKitApplication:'+BUNDLE_ID")||
    !nativeSimulatorSmoke.includes('captureScreenshotWithRetry(udid,3)')){
   fail('App Store iOS fresh-simulator install/launch gate missing or unbounded');
