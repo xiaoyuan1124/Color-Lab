@@ -277,8 +277,11 @@ test('V2.17 fixed-Hue Tone Explorer changes tone while preserving hue identity',
     await ensureToneFamilies();
     const colors=['#5E6648','#B95A37','#315EAA'];
     const candidate=toneExplorerToneCandidate(colors,'earth');
-    const hueDrift=toneExplorerHueDrift(colors,candidate);
-    const toneDelta=toneExplorerToneDelta(colors,candidate);
+    const hueDrift=colors.map((hex,i)=>hueDistance(toOKLCH(hex).h,toOKLCH(candidate[i]).h));
+    const toneDelta=colors.map((hex,i)=>{
+      const before=toOKLCH(hex),after=toOKLCH(candidate[i]);
+      return{light:Math.abs(before.l-after.l),chroma:Math.abs(before.c-after.c)};
+    });
     return {candidate,hueDrift,toneDelta};
   });
   expect(result.candidate).toHaveLength(3);
@@ -852,7 +855,9 @@ test('V2.24 maps local SVG flat colors to exact source roles without mutating Co
   await expect(page.locator('#customDesignCanvas svg')).toBeVisible();
 
   const mapped=await page.evaluate(() => ({
-    roles:customDesignMappedRoles(),
+    roles:Object.fromEntries(Object.entries(customDesignState.mapping)
+      .filter(([,role])=>role&&role!=='keep')
+      .map(([source,role])=>[source,palette[role]])),
     markup:customDesignMappedMarkup(),
     after:paletteArtifactBase()
   }));
