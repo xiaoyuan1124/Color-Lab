@@ -52,6 +52,8 @@ jobs:
           node-version: '24'
       - name: Install browser quality tools
         run: npm install --no-audit --no-fund
+      - name: Verify App Store submission metadata
+        run: npm run test:app-store-metadata
       - name: Verify size budget
         run: npm run test:budget
       - name: Verify Color Lab
