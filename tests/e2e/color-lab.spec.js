@@ -2514,3 +2514,41 @@ test('V2.52 exports all Context Preview layouts from the current DOM without mut
   expect(source).toContain('Color Lab');
   expect(source).toContain('75 / 18 / 7');
 });
+
+test('App Store native lifecycle persists exact source state before backgrounding', async ({ page }) => {
+  await page.addInitScript(() => {
+    const listeners={};
+    globalThis.__colorLabNativeListeners=listeners;
+    globalThis.Capacitor={
+      isNativePlatform:()=>true,
+      Plugins:{
+        App:{
+          addListener:async(name,callback)=>{
+            listeners[name]=callback;
+            return{remove:async()=>{delete listeners[name]}};
+          }
+        }
+      }
+    };
+  });
+  await page.reload();
+  await expect(page.locator('html')).toHaveClass(/native-shell/);
+  await expect(page.locator('script[src="./runtime/native-app-lifecycle.js"]')).toHaveCount(1);
+
+  await page.evaluate(() => {
+    selectedColors=['#112233','#445566','#AABBCC'];
+    lockedSlots=[false,false,false];
+    activeSlot=0;seed=selectedColors[0];generate(false);
+    localStorage.removeItem('colorlab.draft');
+  });
+
+  await page.evaluate(async()=>{
+    const callback=globalThis.__colorLabNativeListeners.appStateChange;
+    if(typeof callback!=='function')throw new Error('native appStateChange listener missing');
+    await callback({isActive:false});
+    await new Promise(resolve=>setTimeout(resolve,0));
+  });
+
+  const persisted=await page.evaluate(()=>JSON.parse(localStorage.getItem('colorlab.draft')||'null'));
+  expect(persisted?.selectedColors).toEqual(['#112233','#445566','#AABBCC']);
+});

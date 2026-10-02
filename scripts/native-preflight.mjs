@@ -17,6 +17,7 @@ if(config.server?.url)fail('server.url is forbidden for App Store build');else p
 for(const dep of ['@capacitor/core']){
   if(pkg.dependencies?.[dep]!=='8.5.2')fail(dep+' must be pinned to 8.5.2');else pass(dep+' 8.5.2');
 }
+if(pkg.dependencies?.['@capacitor/app']!=='8.1.1')fail('@capacitor/app must be pinned to 8.1.1');else pass('@capacitor/app 8.1.1');
 for(const dep of ['@capacitor/cli','@capacitor/ios']){
   if(pkg.devDependencies?.[dep]!=='8.5.2')fail(dep+' must be pinned to 8.5.2');else pass(dep+' 8.5.2');
 }
@@ -46,7 +47,8 @@ if(!capacitorPrivacyPaths.length){
 
 const required=[
   'dist/index.html','dist/manifest.json','dist/privacy.html','dist/native-build.json',
-  'dist/core/color-quality.js','dist/core/color-handoff.js','dist/runtime/palette-tools.js'
+  'dist/core/color-quality.js','dist/core/color-handoff.js','dist/runtime/palette-tools.js',
+  'dist/runtime/native-app-lifecycle.js'
 ];
 for(const file of required){
   if(!fs.existsSync(path.join(root,file)))fail('missing '+file);else pass(file);
@@ -65,6 +67,13 @@ if(!index.includes('if(isNativeAppShell()){pwaHealthHide();return null}')){
 if(!index.includes('return isNativeAppShell()||window.matchMedia')){
   fail('native install-card suppression missing');
 }else pass('native install-card suppression');
+if(!index.includes('<script src="./runtime/native-app-lifecycle.js"></script>')||!index.includes('initNativeAppLifecycle();')){
+  fail('native lifecycle bootstrap missing');
+}else pass('native lifecycle bootstrap');
+const nativeLifecycle=read('dist/runtime/native-app-lifecycle.js');
+if(!nativeLifecycle.includes('Plugins?.App')||!nativeLifecycle.includes("'appStateChange'")||!nativeLifecycle.includes('!state?.isActive')){
+  fail('Capacitor App lifecycle persistence bridge missing');
+}else pass('Capacitor App lifecycle persistence bridge');
 
 const remoteScripts=[...index.matchAll(/<script[^>]+src=["'](https?:\/\/[^"']+)/gi)].map(m=>m[1]);
 const remoteStyles=[...index.matchAll(/<link[^>]+href=["'](https?:\/\/[^"']+)/gi)].map(m=>m[1]);

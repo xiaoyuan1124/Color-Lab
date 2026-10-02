@@ -7,6 +7,7 @@ const qualityWorkflow=fs.readFileSync('.github/workflows/quality.yml','utf8');
 const lighthouseSummary=fs.readFileSync('scripts/lighthouse-summary.mjs','utf8');
 const lighthouseSummaryTest=fs.readFileSync('scripts/lighthouse-summary-test.mjs','utf8');
 const storageHardening=fs.readFileSync('runtime/storage-hardening.js','utf8');
+const nativeAppLifecycle=fs.readFileSync('runtime/native-app-lifecycle.js','utf8');
 const colorQuality=fs.readFileSync('core/color-quality.js','utf8');
 const colorHandoff=fs.readFileSync('core/color-handoff.js','utf8');
 const librarySearchCore=fs.readFileSync('core/library-search.js','utf8');
@@ -235,6 +236,16 @@ if(pkg.version!=='2.53.0') fail('package version must be 2.53.0');
 else pass('package version');
 if(!html.includes('Color Lab V2.53.0')||!html.includes('<div class="version">V2.53.0</div>')||!html.includes("appVersion:'2.53.0'")) fail('V2.53.0 UI or backup version metadata missing');
 else pass('V2.53.0 version metadata');
+
+if(!html.includes('<script src="./runtime/native-app-lifecycle.js"></script>')||
+   !html.includes('initPwaHealth();initNativeAppLifecycle();')||
+   !sw.includes('./runtime/native-app-lifecycle.js')||
+   !nativeAppLifecycle.includes('Plugins?.App')||
+   !nativeAppLifecycle.includes("'appStateChange'")||
+   !nativeAppLifecycle.includes('!state?.isActive')||
+   /selectedColors\s*=|palette\s*=/.test(nativeAppLifecycle)){
+  fail('App Store native lifecycle bridge contract missing or source-mutating');
+}else pass('App Store native lifecycle bridge preserves source state and offline Web cache');
 
 if(!html.includes('id="compareMore"')||
    !html.includes('<b>匯出</b>')||
