@@ -69,6 +69,9 @@ jobs:
             echo "Remote app-shell reference detected in native bundle"
             exit 1
           fi
+      - name: Install and launch on iOS Simulator
+        timeout-minutes: 8
+        run: node scripts/ios-simulator-smoke.mjs
       - name: Upload generated native project
         if: always()
         uses: actions/upload-artifact@v7
@@ -77,5 +80,7 @@ jobs:
           path: |
             ios
             dist/native-build.json
+            .native-derived/color-lab-native-launch.png
+            .native-launch.txt
           if-no-files-found: error
           retention-days: 7

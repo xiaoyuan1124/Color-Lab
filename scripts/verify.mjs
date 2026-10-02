@@ -52,10 +52,26 @@ const nativeBuild=fs.readFileSync('scripts/build-native.mjs','utf8');
 const nativePreflight=fs.readFileSync('scripts/native-preflight.mjs','utf8');
 const nativePatch=fs.readFileSync('scripts/patch-ios-project.mjs','utf8');
 const nativeWorkflow=fs.readFileSync('.github/workflows/native-ios.yml','utf8');
+const nativeSimulatorSmoke=fs.readFileSync('scripts/ios-simulator-smoke.mjs','utf8');
 const privacyPolicy=fs.readFileSync('privacy.html','utf8');
 
 const fail=(msg)=>{console.error('FAIL:',msg);process.exitCode=1};
 const pass=(msg)=>console.log('PASS:',msg);
+
+if(!nativeWorkflow.includes('node scripts/ios-simulator-smoke.mjs')||
+   !nativeWorkflow.includes('timeout-minutes: 8')||
+   !nativeWorkflow.includes('color-lab-native-launch.png')||
+   !nativeSimulatorSmoke.includes('async function installWithRetry(')||
+   !nativeSimulatorSmoke.includes('async function launchWithRetry(')||
+   !nativeSimulatorSmoke.includes("['install',udid,APP_PATH]")||
+   !nativeSimulatorSmoke.includes("['launch',udid,BUNDLE_ID]")||
+   !nativeSimulatorSmoke.includes("['io',udid,'screenshot',SCREENSHOT]")||
+   !nativeSimulatorSmoke.includes('installWithRetry(udid,8)')||
+   !nativeSimulatorSmoke.includes('launchWithRetry(udid,4)')||
+   !nativeSimulatorSmoke.includes('await sleep(10000)')||
+   !nativeSimulatorSmoke.includes("spawnSync('xcrun'")){
+  fail('App Store iOS Simulator staged install/launch smoke gate missing or unbounded');
+}else pass('App Store iOS Simulator staged install/launch smoke gate');
 
 if(nativeConfig.appId!=='com.sy1124.colorlab'||nativeConfig.appName!=='Color Lab'||nativeConfig.webDir!=='dist'||nativeConfig.server?.url){
   fail('App Store native config must use local bundled assets and stable bundle id');
