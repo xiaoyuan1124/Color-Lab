@@ -67,7 +67,7 @@ if(!pagesWorkflow.includes('deploy-info.json')||
 }else pass('Pages deployment SHA proof');
 
 if(!nativeWorkflow.includes('node scripts/ios-simulator-smoke.mjs')||
-   !nativeWorkflow.includes('timeout-minutes: 8')||
+   !nativeWorkflow.includes('timeout-minutes: 10')||
    !nativeWorkflow.includes('color-lab-native-launch.png')||
    !nativeSimulatorSmoke.includes('async function installWithRetry(')||
    !nativeSimulatorSmoke.includes('async function launchWithRetry(')||
@@ -75,8 +75,9 @@ if(!nativeWorkflow.includes('node scripts/ios-simulator-smoke.mjs')||
    !nativeSimulatorSmoke.includes("['launch',udid,BUNDLE_ID]")||
    !nativeSimulatorSmoke.includes("['io',udid,'screenshot',SCREENSHOT]")||
    !nativeSimulatorSmoke.includes('installWithRetry(udid,8)')||
-   !nativeSimulatorSmoke.includes('launchWithRetry(udid,4)')||
+   !nativeSimulatorSmoke.includes('launchWithRetry(udid,5)')||
    !nativeSimulatorSmoke.includes('await sleep(10000)')||
+   !nativeSimulatorSmoke.includes("['launch',udid,BUNDLE_ID],30000")||
    !nativeSimulatorSmoke.includes("spawnSync('xcrun'")){
   fail('App Store iOS Simulator staged install/launch smoke gate missing or unbounded');
 }else pass('App Store iOS Simulator staged install/launch smoke gate');
