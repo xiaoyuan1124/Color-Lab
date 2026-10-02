@@ -54,9 +54,24 @@ const nativePatch=fs.readFileSync('scripts/patch-ios-project.mjs','utf8');
 const nativeWorkflow=fs.readFileSync('.github/workflows/native-ios.yml','utf8');
 const nativeSimulatorSmoke=fs.readFileSync('scripts/ios-simulator-smoke.mjs','utf8');
 const privacyPolicy=fs.readFileSync('privacy.html','utf8');
+const appStorePacket=JSON.parse(fs.readFileSync('app-store/submission.v1.0.json','utf8'));
+const appStoreMetadataCheck=fs.readFileSync('scripts/app-store-metadata-check.mjs','utf8');
 
 const fail=(msg)=>{console.error('FAIL:',msg);process.exitCode=1};
 const pass=(msg)=>console.log('PASS:',msg);
+
+const appStoreKeywordBytes=Buffer.byteLength(appStorePacket.keywords||'','utf8');
+if(pkg.scripts?.['test:app-store-metadata']!=='node scripts/app-store-metadata-check.mjs'||
+   appStorePacket.version!=='1.0.0'||
+   appStorePacket.webEngine!=='2.53.0'||
+   appStorePacket.bundleId!=='com.sy1124.colorlab'||
+   appStorePacket.locale!=='zh-Hant'||
+   appStoreKeywordBytes>100||
+   !appStoreMetadataCheck.includes('External blockers remaining:')||
+   !qualityWorkflow.includes('npm run test:app-store-metadata')||
+   !fs.readFileSync('.github/workflows/pages.yml','utf8').includes('npm run test:app-store-metadata')){
+  fail('App Store submission packet/metadata gate missing or invalid');
+}else pass('App Store submission packet metadata gate');
 
 const pagesWorkflow=fs.readFileSync('.github/workflows/pages.yml','utf8');
 if(!pagesWorkflow.includes('deploy-info.json')||
