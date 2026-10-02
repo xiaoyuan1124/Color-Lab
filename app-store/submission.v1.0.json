@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "product": "Color Lab",
+  "version": "1.0.0",
+  "webEngine": "2.53.0",
+  "bundleId": "com.sy1124.colorlab",
+  "sku": "COLORLAB-IOS-001",
+  "locale": "zh-Hant",
+  "name": "Color Lab",
+  "subtitle": "理解、驗證並交付你的配色",
+  "promotionalText": "Color Lab 用三色 75 / 18 / 7 角色系統，幫你從取色、理解、比較、無障礙驗證一路做到情境預覽與專業色彩交付。",
+  "description": "Color Lab 不只是找顏色，而是理解顏色為什麼成立。\n\n從三色 75 / 18 / 7 角色系統開始：\nBase 75% 負責主要視覺基底，Structure 18% 建立層級與秩序，Accent 7% 負責焦點與辨識。\n\n你可以：\n\n• 建立自己的三色配色，保留你輸入的原始順序\n• 用相機或相簿在裝置上取色\n• 查看色彩關係、明暗層級、調性與候選色\n• 驗證 WCAG 對比與視覺辨識\n• 比較 Light / Dark 與不同使用情境\n• 將配色套入 App、品牌、簡報、室內、穿搭等預覽\n• 收藏、搜尋、分類並建立本機專案\n• 匯出 CSS、Design Tokens、SVG 與平台格式\n• 查看 LAB D50、CMYK 參考值與 Display-P3 handoff\n• 匯出 Context Preview SVG，交付實際設計工作\n\nColor Lab 採 Local-first 設計。\n不需要登入帳號，核心配色、收藏、專案與照片分析都在你的裝置上處理與保存。\n\n沒有廣告追蹤。\n沒有行為分析 SDK。\n沒有雲端 AI API。\n沒有 Color Lab 後端帳號系統。\n\n你的三個 source colors 只有在你明確套用修改時才會改變；Dark Mode、Accessibility、Vision、Tone、Role Scale、Gradient 等衍生結果不會偷偷覆寫原始配色。\n\nColor Lab 的目的不是產生更多顏色，而是讓你更快知道：\n這組顏色為什麼成立、是否真的能用、應該放在哪裡，以及如何交付。",
+  "keywords": "配色工具,色彩設計,調色盤,取色工具,對比檢查,品牌配色,簡報配色,室內配色",
+  "primaryCategory": "Graphics & Design",
+  "secondaryCategory": "Utilities",
+  "privacyPolicyUrl": "https://xiaoyuan1124.github.io/Color-Lab/privacy.html",
+  "supportUrl": null,
+  "marketingUrl": "https://xiaoyuan1124.github.io/Color-Lab/",
+  "signInRequired": false,
+  "appPrivacy": {
+    "collectsData": false,
+    "tracking": false,
+    "advertising": false,
+    "analyticsSdk": false,
+    "accountData": false,
+    "photosProcessedLocally": true,
+    "localPaletteProjectDataStaysOnDevice": true
+  },
+  "encryption": {
+    "usesNonExemptEncryption": false,
+    "infoPlistKey": "ITSAppUsesNonExemptEncryption"
+  },
+  "ageRatingDraft": {
+    "unrestrictedWebAccess": false,
+    "userGeneratedPublicContent": false,
+    "messagingOrChat": false,
+    "locationSharing": false,
+    "gamblingOrContests": false,
+    "lootBoxes": false,
+    "violence": "none",
+    "sexualContentOrNudity": "none",
+    "profanityOrCrudeHumor": "none",
+    "alcoholTobaccoOrDrugs": "none",
+    "horrorOrFearThemes": "none",
+    "medicalOrWellnessAdvice": "none",
+    "finalRating": "App Store Connect questionnaire decides final rating"
+  },
+  "reviewNotes": "Color Lab is a local-first color design utility. No account or network connection is required for the core workflow. Camera/photo access is requested only after explicit user action and image analysis is performed on device. The App Store build bundles its web assets locally and does not use GitHub Pages as the app shell. There is no login, subscription, ad SDK, analytics SDK, tracking SDK, or hidden paid content in v1.0.",
+  "reviewContact": {
+    "name": null,
+    "email": null,
+    "phone": null
+  },
+  "copyright": null,
+  "contentRightsAnswer": null,
+  "dsaTraderStatus": null,
+  "plannedPrice": "Free",
+  "releaseSetting": "TBD in App Store Connect",
+  "externalBlockers": [
+    {
+      "id": "support-contact",
+      "fields": [
+        "supportUrl"
+      ],
+      "reason": "Apple Support URL must lead to actual contact information; do not fabricate contact details."
+    },
+    {
+      "id": "app-review-contact",
+      "fields": [
+        "reviewContact.name",
+        "reviewContact.email",
+        "reviewContact.phone"
+      ],
+      "reason": "App Review contact must be supplied by the account holder."
+    },
+    {
+      "id": "copyright",
+      "fields": [
+        "copyright"
+      ],
+      "reason": "Copyright owner string must be confirmed by the account holder."
+    },
+    {
+      "id": "content-rights",
+      "fields": [
+        "contentRightsAnswer"
+      ],
+      "reason": "Confirm the App Store Connect content-rights answer against the final bundled assets and datasets."
+    },
+    {
+      "id": "dsa-status",
+      "fields": [
+        "dsaTraderStatus"
+      ],
+      "reason": "DSA status is account/legal information and must be selected in App Store Connect by the account holder."
+    }
+  ]
+}
