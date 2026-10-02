@@ -2950,7 +2950,7 @@ body{padding-bottom:calc(env(safe-area-inset-bottom) + var(--space-5))}
 <div id="pwaHealthMount"></div>
 <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true">已複製</div>
 
-<script src="./runtime/storage-hardening.js"></script>
+<script src="./runtime/storage-hardening.js"></script>\n<script src="./runtime/native-app-lifecycle.js"></script>
 <script src="./core/color-quality.js"></script>
 <script src="./core/color-handoff.js"></script>
 <script src="./core/library-search.js"></script>
@@ -5589,7 +5589,7 @@ $('#librarySort').addEventListener('change',e=>{librarySort=e.target.value;stora
 $('#libraryFolderFilter').addEventListener('change',e=>{libraryFolderFilter=e.target.value;renderSaved()});
 $('#comboName').addEventListener('input',e=>{currentComboName=e.target.value;persistDraft()});
 renderModes();palette=fastInitialPalette();renderComboSlots();render();updateLockToggle();
-historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();installShareSnapshotHashListener();initCustomDesignPreview();initLocalProjects();initReferenceBoardExport();initGradientStudio();initDeepDiveUx();initPwaHealth();
+historyStack=[snapshotState()];historyIndex=0;updateHistoryButtons();installShareSnapshotHashListener();initCustomDesignPreview();initLocalProjects();initReferenceBoardExport();initGradientStudio();initDeepDiveUx();initPwaHealth();initNativeAppLifecycle();
 setCornerNavOpen(false);
 switchTab(storageReadRaw('colorlab.tab','compose'),false);updatePhotoTarget();
 initFirstRunGuide();
