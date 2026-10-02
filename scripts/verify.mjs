@@ -57,6 +57,14 @@ const privacyPolicy=fs.readFileSync('privacy.html','utf8');
 const fail=(msg)=>{console.error('FAIL:',msg);process.exitCode=1};
 const pass=(msg)=>console.log('PASS:',msg);
 
+if(!nativeWorkflow.includes('xcrun simctl bootstatus')||
+   !nativeWorkflow.includes('xcrun simctl install')||
+   !nativeWorkflow.includes('xcrun simctl launch')||
+   !nativeWorkflow.includes('xcrun simctl io')||
+   !nativeWorkflow.includes('color-lab-native-launch.png')){
+  fail('App Store iOS Simulator install/launch smoke gate missing');
+}else pass('App Store iOS Simulator install/launch smoke gate');
+
 if(nativeConfig.appId!=='com.sy1124.colorlab'||nativeConfig.appName!=='Color Lab'||nativeConfig.webDir!=='dist'||nativeConfig.server?.url){
   fail('App Store native config must use local bundled assets and stable bundle id');
 }else pass('App Store local Capacitor config');
