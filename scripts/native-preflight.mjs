@@ -21,15 +21,27 @@ for(const dep of ['@capacitor/cli','@capacitor/ios']){
   if(pkg.devDependencies?.[dep]!=='8.5.2')fail(dep+' must be pinned to 8.5.2');else pass(dep+' 8.5.2');
 }
 
-const capacitorPrivacyPath=path.join(root,'node_modules','@capacitor','ios','Capacitor','PrivacyInfo.xcprivacy');
-if(!fs.existsSync(capacitorPrivacyPath)){
+function findFilesNamed(dir,name,out=[]){
+  if(!fs.existsSync(dir))return out;
+  for(const entry of fs.readdirSync(dir,{withFileTypes:true})){
+    const full=path.join(dir,entry.name);
+    if(entry.isDirectory())findFilesNamed(full,name,out);
+    else if(entry.isFile()&&entry.name===name)out.push(full);
+  }
+  return out;
+}
+const capacitorIosRoot=path.join(root,'node_modules','@capacitor','ios');
+const capacitorPrivacyPaths=findFilesNamed(capacitorIosRoot,'PrivacyInfo.xcprivacy');
+if(!capacitorPrivacyPaths.length){
   fail('Capacitor PrivacyInfo.xcprivacy missing');
 }else{
-  const manifest=fs.readFileSync(capacitorPrivacyPath,'utf8');
-  for(const key of ['NSPrivacyAccessedAPITypes','NSPrivacyCollectedDataTypes','NSPrivacyTrackingDomains','NSPrivacyTracking']){
-    if(!manifest.includes('<key>'+key+'</key>'))fail('Capacitor privacy manifest missing '+key);
-  }
-  if(!process.exitCode)pass('Capacitor privacy manifest present');
+  const valid=capacitorPrivacyPaths.some(file=>{
+    const manifest=fs.readFileSync(file,'utf8');
+    return ['NSPrivacyAccessedAPITypes','NSPrivacyCollectedDataTypes','NSPrivacyTrackingDomains','NSPrivacyTracking']
+      .every(key=>manifest.includes('<key>'+key+'</key>'));
+  });
+  if(!valid)fail('Capacitor privacy manifest keys incomplete');
+  else pass('Capacitor privacy manifest present ('+capacitorPrivacyPaths.length+')');
 }
 
 const required=[
