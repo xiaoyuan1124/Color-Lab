@@ -66,7 +66,6 @@ function localProjectSearchText(item){
   const id=sanitizeProjectId(item?.projectId);
   return id?localProjectName(id):'';
 }
-function librarySearchText(x){return librarySearchDocument(x,localProjectSearchText(x))}
 function librarySearchMatches(x,query){return librarySearchDocumentMatches(x,query,localProjectSearchText(x))}
 function createLocalProject(){
   const raw=prompt('新專案名稱');if(raw===null)return;
