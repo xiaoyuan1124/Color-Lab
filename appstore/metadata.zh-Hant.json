@@ -1,0 +1,14 @@
+{
+  "appName": "Color Lab",
+  "subtitle": "理解顏色為什麼成立",
+  "bundleId": "com.sy1124.colorlab",
+  "marketingVersion": "1.0.0",
+  "buildNumber": 1,
+  "primaryCategory": "Graphics & Design",
+  "secondaryCategory": "Utilities",
+  "promotionalText": "從三色 75 / 18 / 7 出發，理解配色、驗證可讀性、從照片取色，並交付給設計與開發工作。",
+  "keywords": "配色,色彩,色票,設計,調色,品牌,穿搭,室內,簡報,無障礙,P3",
+  "privacyPolicyUrl": "https://xiaoyuan1124.github.io/Color-Lab/privacy.html",
+  "supportUrl": "https://xiaoyuan1124.github.io/Color-Lab/support.html",
+  "description": "Color Lab 是一款以三色角色系統為核心的本機配色工作室。\\n\\nColor 1 = Base = 75%\\nColor 2 = Structure = 18%\\nColor 3 = Accent = 7%\\n\\n你可以從顏色或照片開始，理解一組配色為什麼成立，檢查對比與可讀性，在 App、品牌、室內、穿搭與簡報情境中預覽，再把結果輸出為 HEX、LAB D50、CMYK 參考值、Display-P3 CSS、Design Tokens、SVG 等格式。\\n\\nColor Lab 採 Local-first 設計：不需要登入，不使用雲端帳號，不使用廣告追蹤，也不需要把你的配色或照片上傳到伺服器。照片與配色分析在裝置上完成。\\n\\n主要功能：\\n• 三色 75 / 18 / 7 配色角色系統\\n• 精準選色、照片取色與相機取色\\n• OKLCH、對比、WCAG 與色覺模擬\\n• 情境預覽與 SVG Snapshot\\n• 收藏、專案與本機語意搜尋\\n• LAB D50、CMYK 參考值與 Display-P3 handoff\\n• CSS、JSON、Design Tokens、SwiftUI、Flutter 等匯出\\n\\nColor Lab 不只是找顏色，而是幫你理解顏色為什麼成立、是否真的能用，以及應該如何交付。"
+}
