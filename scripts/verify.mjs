@@ -4,6 +4,8 @@ const html=fs.readFileSync('index.html','utf8');
 const webkitConfig=fs.readFileSync('playwright.webkit.config.js','utf8');
 const webkitCore=fs.readFileSync('tests/e2e/webkit-core.spec.js','utf8');
 const qualityWorkflow=fs.readFileSync('.github/workflows/quality.yml','utf8');
+const lighthouseSummary=fs.readFileSync('scripts/lighthouse-summary.mjs','utf8');
+const lighthouseSummaryTest=fs.readFileSync('scripts/lighthouse-summary-test.mjs','utf8');
 const storageHardening=fs.readFileSync('runtime/storage-hardening.js','utf8');
 const colorQuality=fs.readFileSync('core/color-quality.js','utf8');
 const colorHandoff=fs.readFileSync('core/color-handoff.js','utf8');
@@ -168,13 +170,13 @@ if(!html.includes('function fastInitialPalette(')||
 if(/<script[^>]+src="https?:\/\//.test(html)) fail('external runtime script detected');
 else pass('runtime scripts are local');
 
-if(!sw.includes("color-lab-v2520")) fail('service worker cache version is not V2.52.0');
+if(!sw.includes("color-lab-v2530")) fail('service worker cache version is not V2.53.0');
 else pass('service worker cache version');
 
-if(pkg.version!=='2.52.0') fail('package version must be 2.52.0');
+if(pkg.version!=='2.53.0') fail('package version must be 2.53.0');
 else pass('package version');
-if(!html.includes('Color Lab V2.52.0')||!html.includes('<div class="version">V2.52.0</div>')||!html.includes("appVersion:'2.52.0'")) fail('V2.52.0 UI or backup version metadata missing');
-else pass('V2.52.0 version metadata');
+if(!html.includes('Color Lab V2.53.0')||!html.includes('<div class="version">V2.53.0</div>')||!html.includes("appVersion:'2.53.0'")) fail('V2.53.0 UI or backup version metadata missing');
+else pass('V2.53.0 version metadata');
 
 if(!html.includes('id="compareMore"')||
    !html.includes('<b>匯出</b>')||
@@ -347,6 +349,34 @@ if(!html.includes('id="exportContextPreview">輸出 SVG</button>')||
 if(html.includes('html2canvas')||html.includes('dom-to-image')||html.includes('html-to-image')){
   fail('V2.52.0 Context Preview export must remain dependency-free');
 }else pass('V2.52.0 Context Preview snapshot adds no capture dependency');
+
+if(!pkg.scripts?.['test:lighthouse-summary']||
+   !qualityWorkflow.includes('name: Test Lighthouse summary')||
+   !qualityWorkflow.includes('run: npm run test:lighthouse-summary')||
+   !lighthouseSummary.includes('function median(')||
+   !lighthouseSummary.includes('summarizeLighthouseReports')||
+   !lighthouseSummary.includes('performanceRange')||
+   !lighthouseSummary.includes('Lighthouse performance outliers')||
+   !lighthouseSummary.includes('Lighthouse representative report')||
+   !lighthouseSummaryTest.includes('assert.equal(median([79,93,93]),93)')||
+   !lighthouseSummaryTest.includes('summary.outliers.map')){
+  fail('V2.53.0 median Lighthouse baseline reporting contract missing');
+}else pass('V2.53.0 Lighthouse median + outlier reporting');
+
+if(customDesignPreview.includes('function customDesignEscape(')||
+   customDesignPreview.includes('function customDesignMappedRoles(')||
+   localProjects.includes('function librarySearchText(')||
+   toneExplorer.includes('function toneExplorerHueDrift(')||
+   toneExplorer.includes('function toneExplorerToneDelta(')){
+  fail('V2.53.0 dead runtime helpers were not removed');
+}else pass('V2.53.0 dead runtime helper trim');
+
+if(!customDesignPreview.includes('function customDesignMappedMarkup(')||
+   !localProjects.includes('function librarySearchMatches(')||
+   !toneExplorer.includes('function toneExplorerToneCandidate(')||
+   !toneExplorer.includes('function toneExplorerHueCandidate(')){
+  fail('V2.53.0 runtime trim removed active behavior');
+}else pass('V2.53.0 active runtime behavior preserved');
 
 if(!html.includes('搜尋名稱、HEX、標籤、色系或調性')||
    !html.includes('可搜尋：藍、紅、柔和、鮮明、深色、淺色')||
@@ -1463,7 +1493,7 @@ if(!recommendationEngine.includes("added:inputs.length===1?[refined[1],refined[2
 }else pass('recommendation preview and applied colors aligned');
 
 
-for(const fn of ['getIGPatternRows','paletteSignature','librarySearchText','handleSlotKeyboard']){
+for(const fn of ['getIGPatternRows','paletteSignature','localProjectSearchText','handleSlotKeyboard']){
   if(!appSource.includes('function '+fn+'(')) fail('V1.6 hardening function missing: '+fn);
 }
 pass('V1.6 hardening functions present');
