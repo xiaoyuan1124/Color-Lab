@@ -32,14 +32,50 @@ function runCommand(label,command,args,timeoutMs,{allowFailure=false,allowTimeou
 }
 const simctl=(label,args,timeoutMs,options)=>runCommand(label,'xcrun',['simctl',...args],timeoutMs,options);
 
-function availableDevices(){
+function simulatorProfiles(){
   const list=simctl('list available devices',['list','devices','available','-j'],30000);
   const groups=JSON.parse(list.stdout||'{}').devices||{};
-  return Object.values(groups).flat().filter(device=>device&&device.isAvailable!==false&&String(device.name||'').startsWith('iPhone'));
+  const profiles=[];
+  for(const [runtimeIdentifier,devices] of Object.entries(groups)){
+    if(!runtimeIdentifier.includes('SimRuntime.iOS-'))continue;
+    for(const device of devices||[]){
+      if(!device||device.isAvailable===false||!String(device.name||'').startsWith('iPhone'))continue;
+      profiles.push({
+        runtimeIdentifier,
+        deviceTypeIdentifier:device.deviceTypeIdentifier,
+        name:device.name
+      });
+    }
+  }
+  const runtimeRank=id=>{
+    const match=id.match(/iOS-(\d+)-(\d+)/);
+    return match?Number(match[1])*100+Number(match[2]):99999;
+  };
+  profiles.sort((a,b)=>runtimeRank(a.runtimeIdentifier)-runtimeRank(b.runtimeIdentifier)||a.name.localeCompare(b.name));
+  const seen=new Set();
+  return profiles.filter(profile=>{
+    const key=profile.runtimeIdentifier+'|'+profile.deviceTypeIdentifier;
+    if(seen.has(key))return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function createFreshSimulator(profile,session){
+  const name=`Color Lab CI ${session}`;
+  const result=simctl(
+    'create fresh simulator',
+    ['create',name,profile.deviceTypeIdentifier,profile.runtimeIdentifier],
+    30000
+  );
+  const udid=(result.stdout||'').trim().split(/\s+/).pop();
+  if(!/^[0-9A-F-]{36}$/i.test(udid||''))throw new Error('Fresh simulator creation did not return a UDID');
+  console.log(`[native-smoke] created ${name} ${udid} runtime=${profile.runtimeIdentifier} type=${profile.deviceTypeIdentifier}`);
+  return udid;
 }
 
 async function resetCoreSimulator(){
-  console.log('[native-smoke] RECOVER CoreSimulator session');
+  console.log('[native-smoke] RECOVER CoreSimulator service');
   simctl('shutdown all simulators',['shutdown','all'],15000,{allowFailure:true,allowTimeout:true});
   runCommand(
     'restart CoreSimulatorService',
@@ -53,9 +89,7 @@ async function resetCoreSimulator(){
 
 function startLaunchRequest(udid){
   console.log('[native-smoke] START launch request (async; PID proven via launchctl)');
-  const child=spawn('xcrun',['simctl','launch',udid,BUNDLE_ID],{
-    stdio:['ignore','pipe','pipe']
-  });
+  const child=spawn('xcrun',['simctl','launch',udid,BUNDLE_ID],{stdio:['ignore','pipe','pipe']});
   let stdout='';
   let stderr='';
   child.stdout.on('data',chunk=>{stdout+=chunk.toString();});
@@ -64,7 +98,7 @@ function startLaunchRequest(udid){
   return{child,getOutput:()=>({stdout,stderr})};
 }
 
-async function waitForUIKitProcess(udid,attempts=6){
+async function waitForUIKitProcess(udid,attempts=8){
   for(let attempt=1;attempt<=attempts;attempt++){
     console.log(`[native-smoke] UIKit PID probe ${attempt}/${attempts}`);
     const result=simctl(
@@ -105,45 +139,46 @@ async function captureScreenshotWithRetry(udid,attempts=3){
   throw new Error('Simulator launch screenshot did not complete successfully');
 }
 
-async function runSessionAttempt(device,attemptNumber){
-  const udid=device.udid;
+async function runFreshSession(profile,session){
+  let udid=null;
   let launchRequest=null;
-  console.log(`[native-smoke] SESSION ${attemptNumber}/2 using ${device.name} ${udid} state=${device.state}`);
   try{
-    if(device.state!=='Booted'){
-      simctl('request simulator boot',['boot',udid],20000,{allowFailure:true,allowTimeout:true});
-      runCommand(
-        'open Simulator host',
-        'open',
-        ['-a','Simulator','--args','-CurrentDeviceUDID',udid],
-        15000,
-        {allowFailure:true,allowTimeout:true}
-      );
-      console.log('[native-smoke] warming cold simulator for 45s before install');
-      await sleep(45000);
-    }
+    udid=createFreshSimulator(profile,session);
+    simctl('boot fresh simulator',['boot',udid],30000);
+    runCommand(
+      'open Simulator host',
+      'open',
+      ['-a','Simulator','--args','-CurrentDeviceUDID',udid],
+      15000,
+      {allowFailure:true,allowTimeout:true}
+    );
+    console.log('[native-smoke] warming fresh simulator for 60s before install');
+    await sleep(60000);
 
     simctl('install Color Lab',['install',udid,APP_PATH],120000);
 
     launchRequest=startLaunchRequest(udid);
-    const running=await waitForUIKitProcess(udid,6);
+    const running=await waitForUIKitProcess(udid,8);
     const launchOutput=launchRequest.getOutput();
     fs.appendFileSync(
       LAUNCH_LOG,
-      `SESSION ${attemptNumber} UIKitApplication PID: ${running.pid}\n${running.line}\n${launchOutput.stdout}${launchOutput.stderr}\n`
+      `SESSION ${session} UIKitApplication PID: ${running.pid}\n${running.line}\n${launchOutput.stdout}${launchOutput.stderr}\n`
     );
 
     await sleep(3000);
     const size=await captureScreenshotWithRetry(udid,3);
     console.log(`[native-smoke] PASS screenshot ${SCREENSHOT} (${size} bytes)`);
-    console.log(`[native-smoke] PASS install + launch smoke on session ${attemptNumber}`);
+    console.log(`[native-smoke] PASS fresh simulator install + launch session ${session}`);
     return true;
   }finally{
     if(launchRequest?.child&&!launchRequest.child.killed){
       try{launchRequest.child.kill('SIGTERM')}catch(_){}
     }
-    try{simctl('terminate Color Lab',['terminate',udid,BUNDLE_ID],15000,{allowFailure:true,allowTimeout:true})}catch(_){}
-    try{simctl('shutdown simulator',['shutdown',udid],15000,{allowFailure:true,allowTimeout:true})}catch(_){}
+    if(udid){
+      try{simctl('terminate Color Lab',['terminate',udid,BUNDLE_ID],15000,{allowFailure:true,allowTimeout:true})}catch(_){}
+      try{simctl('shutdown fresh simulator',['shutdown',udid],15000,{allowFailure:true,allowTimeout:true})}catch(_){}
+      try{simctl('delete fresh simulator',['delete',udid],30000,{allowFailure:true,allowTimeout:true})}catch(_){}
+    }
   }
 }
 
@@ -151,16 +186,16 @@ if(!fs.existsSync(APP_PATH))throw new Error('Simulator app bundle missing: '+APP
 try{fs.rmSync(SCREENSHOT,{force:true})}catch(_){}
 try{fs.rmSync(LAUNCH_LOG,{force:true})}catch(_){}
 
-const attempted=new Set();
+const profiles=simulatorProfiles();
+if(!profiles.length)throw new Error('No compatible iPhone Simulator profile found');
+
 let finalError=null;
 for(let session=1;session<=2;session++){
   try{
     if(session>1)await resetCoreSimulator();
-    const devices=availableDevices().filter(device=>!attempted.has(device.udid));
-    if(!devices.length)throw new Error('No untried available iPhone Simulator found');
-    const device=devices.find(item=>item.state==='Booted')||devices.find(item=>item.state==='Shutdown')||devices[0];
-    attempted.add(device.udid);
-    await runSessionAttempt(device,session);
+    const profile=profiles[Math.min(session-1,profiles.length-1)];
+    console.log(`[native-smoke] SESSION ${session}/2 profile=${profile.name} runtime=${profile.runtimeIdentifier}`);
+    await runFreshSession(profile,session);
     finalError=null;
     break;
   }catch(error){
@@ -171,8 +206,8 @@ for(let session=1;session<=2;session++){
 }
 
 if(finalError){
-  console.error('[native-smoke] FAIL all simulator sessions',finalError);
+  console.error('[native-smoke] FAIL all fresh simulator sessions',finalError);
   process.exitCode=1;
 }else{
-  console.log('[native-smoke] PASS bounded simulator session recovery');
+  console.log('[native-smoke] PASS fresh simulator session gate');
 }
