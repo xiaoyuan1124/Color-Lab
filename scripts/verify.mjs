@@ -58,20 +58,29 @@ const privacyPolicy=fs.readFileSync('privacy.html','utf8');
 const fail=(msg)=>{console.error('FAIL:',msg);process.exitCode=1};
 const pass=(msg)=>console.log('PASS:',msg);
 
+const pagesWorkflow=fs.readFileSync('.github/workflows/pages.yml','utf8');
+if(!pagesWorkflow.includes('deploy-info.json')||
+   !pagesWorkflow.includes('GITHUB_SHA')||
+   !pagesWorkflow.includes('GITHUB_REF')||
+   !pagesWorkflow.includes('GITHUB_REPOSITORY')){
+  fail('Pages deployment SHA proof missing');
+}else pass('Pages deployment SHA proof');
+
 if(!nativeWorkflow.includes('node scripts/ios-simulator-smoke.mjs')||
-   !nativeWorkflow.includes('timeout-minutes: 8')||
+   !nativeWorkflow.includes('timeout-minutes: 18')||
    !nativeWorkflow.includes('color-lab-native-launch.png')||
-   !nativeSimulatorSmoke.includes('async function installWithRetry(')||
-   !nativeSimulatorSmoke.includes('async function launchWithRetry(')||
-   !nativeSimulatorSmoke.includes("['install',udid,APP_PATH]")||
-   !nativeSimulatorSmoke.includes("['launch',udid,BUNDLE_ID]")||
-   !nativeSimulatorSmoke.includes("['io',udid,'screenshot',SCREENSHOT]")||
-   !nativeSimulatorSmoke.includes('installWithRetry(udid,8)')||
-   !nativeSimulatorSmoke.includes('launchWithRetry(udid,4)')||
-   !nativeSimulatorSmoke.includes('await sleep(10000)')||
-   !nativeSimulatorSmoke.includes("spawnSync('xcrun'")){
-  fail('App Store iOS Simulator staged install/launch smoke gate missing or unbounded');
-}else pass('App Store iOS Simulator staged install/launch smoke gate');
+   !nativeSimulatorSmoke.includes('function simulatorProfiles(')||
+   !nativeSimulatorSmoke.includes('function createFreshSimulator(')||
+   !nativeSimulatorSmoke.includes('async function runFreshSession(')||
+   !nativeSimulatorSmoke.includes("['create',name,profile.deviceTypeIdentifier,profile.runtimeIdentifier]")||
+   !nativeSimulatorSmoke.includes("['delete',udid]")||
+   !nativeSimulatorSmoke.includes('for(let session=1;session<=2;session++)')||
+   !nativeSimulatorSmoke.includes("['install',udid,APP_PATH],120000")||
+   !nativeSimulatorSmoke.includes("spawn('xcrun',['simctl','launch',udid,BUNDLE_ID]")||
+   !nativeSimulatorSmoke.includes("'UIKitApplication:'+BUNDLE_ID")||
+   !nativeSimulatorSmoke.includes('captureScreenshotWithRetry(udid,3)')){
+  fail('App Store iOS fresh-simulator install/launch gate missing or unbounded');
+}else pass('App Store iOS fresh-simulator install/launch gate');
 
 if(nativeConfig.appId!=='com.sy1124.colorlab'||nativeConfig.appName!=='Color Lab'||nativeConfig.webDir!=='dist'||nativeConfig.server?.url){
   fail('App Store native config must use local bundled assets and stable bundle id');
@@ -108,7 +117,8 @@ if(!nativePatch.includes('NSCameraUsageDescription')||
   fail('iOS permissions/version/target patch contract missing');
 }else pass('iOS permissions + version + iPhone target patch');
 
-if(!nativeWorkflow.includes('runs-on: macos-26')||
+if(!nativeWorkflow.includes('runs-on: macos-15-intel')||
+   !nativeWorkflow.includes('sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer')||
    !nativeWorkflow.includes("grep -E '^Xcode 26")||
    !nativeWorkflow.includes('npm run test:native')||
    !nativeWorkflow.includes('npm run ios:init')||
