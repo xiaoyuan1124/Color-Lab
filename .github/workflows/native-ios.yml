@@ -48,6 +48,18 @@ jobs:
             -derivedDataPath .native-derived \
             CODE_SIGNING_ALLOWED=NO \
             build
+      - name: Verify built privacy manifest and local shell
+        run: |
+          APP_PATH=".native-derived/Build/Products/Debug-iphonesimulator/App.app"
+          test -d "$APP_PATH"
+          find "$APP_PATH" -name PrivacyInfo.xcprivacy -print | tee .native-privacy-manifests.txt
+          test -s .native-privacy-manifests.txt
+          test -f "$APP_PATH/public/native-build.json"
+          grep -q '"source": "bundled-local-assets"' "$APP_PATH/public/native-build.json"
+          if grep -R -E 'server\.url|https://xiaoyuan1124\.github\.io/Color-Lab' "$APP_PATH/public" --include='*.html' --include='*.js' --include='*.json'; then
+            echo "Remote app-shell reference detected in native bundle"
+            exit 1
+          fi
       - name: Upload generated native project
         if: always()
         uses: actions/upload-artifact@v7
