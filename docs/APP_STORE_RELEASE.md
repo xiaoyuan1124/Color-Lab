@@ -98,19 +98,32 @@ Recommended review path:
 
 There is no login, subscription, ad SDK, analytics SDK, or hidden paid content in v1.0.
 
+## Completed no-cost readiness
+
+- Capacitor 8.5.2 local native shell foundation.
+- Provisional Bundle ID: `com.sy1124.colorlab`.
+- Xcode 26 / iOS Simulator unsigned build CI.
+- Camera / Photo Library permission strings and non-exempt-encryption declaration.
+- Capacitor privacy-manifest verification in the built app.
+- Deterministic 1024×1024 no-alpha AppIcon generation.
+- Traditional Chinese App Store metadata draft and public privacy policy.
+- Deterministic 6.9-inch screenshot pack: six 1320×2868 no-alpha images.
+- Official `@capacitor/app` lifecycle bridge so backgrounding persists draft and resilience state.
+- PWA service worker remains disabled inside the native shell; GitHub Pages remains independent.
+
 ## Remaining release blockers
 
-These are intentionally not faked in source control:
+These require real device/account/release operations and are intentionally not faked in source control:
 
-1. Generate the native iOS project and pass unsigned Xcode 26 build CI, including bundled Capacitor privacy-manifest verification.
-2. Produce final 1024×1024 App Store icon.
-3. Native iPhone smoke test: safe area, keyboard, camera, photo picker, local persistence, share sheet, SVG/JSON import/export.
-4. Create App Store Connect app record with the final Bundle ID.
-5. Confirm Apple Developer signing/team configuration.
-6. Produce 6.9-inch App Store screenshots.
-7. Fill age rating, content rights, App Privacy, pricing/availability and review notes.
-8. Archive/sign/upload a TestFlight build.
-9. Native TestFlight acceptance gate before App Review submission.
+1. Native iPhone smoke test: safe area, keyboard, camera, photo picker, local persistence, Web Share / file export, SVG/JSON import/export.
+2. Confirm final support contact/Support URL.
+3. Create the App Store Connect app record with the final Bundle ID.
+4. Confirm Apple Developer signing/team configuration.
+5. Fill current App Privacy, age rating, content rights, pricing/availability and review notes in App Store Connect.
+6. Archive/sign/upload a TestFlight build.
+7. Native TestFlight acceptance gate before App Review submission.
+
+See `docs/APP_STORE_READINESS_AUDIT.md` for the Web API → WKWebView audit and native validation matrix.
 
 ## Paid feature policy for v1.0
 
