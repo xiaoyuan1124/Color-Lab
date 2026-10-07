@@ -22,7 +22,8 @@
     "test:app-icon": "node scripts/prepare-ios-assets.mjs --self-test",
     "ios:init": "npm run build:native && npx cap add ios && node scripts/patch-ios-project.mjs && node scripts/prepare-ios-assets.mjs",
     "ios:sync": "npm run build:native && npx cap sync ios && node scripts/patch-ios-project.mjs && node scripts/prepare-ios-assets.mjs",
-    "ios:open": "npx cap open ios"
+    "ios:open": "npx cap open ios",
+    "test:app-store-metadata": "node scripts/app-store-metadata-check.mjs"
   },
   "devDependencies": {
     "@lhci/cli": "0.15.1",

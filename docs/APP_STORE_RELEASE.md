@@ -109,6 +109,9 @@ There is no login, subscription, ad SDK, analytics SDK, or hidden paid content i
 - Traditional Chinese App Store metadata draft and public privacy policy.
 - Deterministic 6.9-inch screenshot pack: six 1320×2868 no-alpha images.
 - Official `@capacitor/app` lifecycle bridge so backgrounding persists draft and resilience state.
+- Fresh iOS Simulator install → UIKit process → screenshot smoke gate passed before merge.
+- Pages deployment identity proof: main `899ec2e4d4d49e46c3ae1f185fd43cc02c75f10e` deployed with matching `pages_build_version`.
+- Canonical App Store submission packet + metadata validator with external blockers kept explicit.
 - PWA service worker remains disabled inside the native shell; GitHub Pages remains independent.
 
 ## Remaining release blockers
@@ -117,11 +120,13 @@ These require real device/account/release operations and are intentionally not f
 
 1. Native iPhone smoke test: safe area, keyboard, camera, photo picker, local persistence, Web Share / file export, SVG/JSON import/export.
 2. Confirm final support contact/Support URL.
-3. Create the App Store Connect app record with the final Bundle ID.
-4. Confirm Apple Developer signing/team configuration.
-5. Fill current App Privacy, age rating, content rights, pricing/availability and review notes in App Store Connect.
-6. Archive/sign/upload a TestFlight build.
-7. Native TestFlight acceptance gate before App Review submission.
+3. Supply App Review contact (name / email / phone) and copyright owner string.
+4. Confirm Content Rights and DSA trader/non-trader account status where applicable.
+5. Create the App Store Connect app record with the final Bundle ID.
+6. Confirm Apple Developer signing/team configuration.
+7. Enter and publish current App Privacy / age-rating answers and configure pricing/availability/review notes in App Store Connect.
+8. Archive/sign/upload a TestFlight build.
+9. Native TestFlight acceptance gate before App Review submission.
 
 See `docs/APP_STORE_READINESS_AUDIT.md` for the Web API → WKWebView audit and native validation matrix.
 
