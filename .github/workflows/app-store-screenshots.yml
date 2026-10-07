@@ -1,6 +1,8 @@
 name: Color Lab App Store Screenshots
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
