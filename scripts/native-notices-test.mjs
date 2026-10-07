@@ -11,7 +11,13 @@ const required=[
   'vendor/Sortable.LICENSE.txt',
   'vendor/qrcode.LICENSE.txt',
   'vendor/capacitor.LICENSE.txt',
-  'vendor/capacitor-app.LICENSE.txt'
+  'vendor/capacitor-app.LICENSE.txt',
+  'vendor/preact.LICENSE.txt',
+  'vendor/TinyColor.LICENSE.txt',
+  'vendor/color-temperature.LICENSE.txt',
+  'vendor/iro-core.LICENSE.txt',
+  'vendor/cordova.LICENSE.txt',
+  'vendor/cordova.NOTICE.txt'
 ];
 for(const file of required){
   assert.ok(fs.existsSync('dist/'+file),'Native bundle missing notice: '+file);

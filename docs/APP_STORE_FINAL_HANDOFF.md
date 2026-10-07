@@ -17,7 +17,7 @@
 | 真正部署的 commit | 正式站 `deploy-info.json` 中的 `sha` 必須等於欲驗收的 main SHA |
 
 Native 與截圖 workflow 現在也在 main push 執行；合併後必須確認新的 main 結果，不能用 PR 結果代替。
-Artifact 有保存期限，過期時重新執行對應 workflow。Simulator 截圖只證明 smoke 啟動；商店截圖目前是 WebKit/真機前的瀏覽器生成草稿，正式提交前仍需以 signed native build 核對外觀與功能。
+Artifact 有保存期限，過期時重新執行對應 workflow。Simulator 截圖只證明 smoke 啟動；商店截圖目前是 Chromium 生成草稿，正式提交前仍需以 signed native build 核對外觀與功能。
 
 ## 帳號持有人一次提供／確認
 
