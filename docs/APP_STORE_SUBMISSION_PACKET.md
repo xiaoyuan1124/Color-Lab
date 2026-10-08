@@ -19,7 +19,7 @@ This file is the human checklist for `app-store/submission.v1.0.json`. The JSON 
 - No account, analytics, tracking, ads, paid API, backend or cloud AI.
 - Six 1320×2868 App Store screenshot artifacts.
 - Fresh iOS Simulator install/launch/screenshot gate.
-- GitHub Pages deployment proof for main SHA `899ec2e4d4d49e46c3ae1f185fd43cc02c75f10e`.
+- GitHub Pages deployment proof: the deployed artifact must contain `deploy-info.json` whose `sha` matches the current main commit.
 
 ## Apple metadata limits enforced in CI
 
