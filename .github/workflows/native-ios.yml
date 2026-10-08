@@ -73,6 +73,8 @@ jobs:
             echo "Remote app-shell reference detected in native bundle"
             exit 1
           fi
+      - name: Verify Simulator boot readiness regression
+        run: node scripts/ios-simulator-smoke-gate.test.mjs
       - name: Install and launch on iOS Simulator
         timeout-minutes: 18
         run: node scripts/ios-simulator-smoke.mjs
