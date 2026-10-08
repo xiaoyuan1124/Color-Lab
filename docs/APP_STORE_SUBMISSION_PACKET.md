@@ -27,14 +27,14 @@ This file is the human checklist for `app-store/submission.v1.0.json`. The JSON 
 - Subtitle: at most 30 characters.
 - Promotional Text: at most 170 characters.
 - Description: at most 4,000 characters.
-- Keywords: at most 100 characters.
+- Keywords: at most 100 UTF-8 bytes (Apple's official limit, not 100 characters).
 - Privacy Policy URL: HTTPS and present.
 - Sign-in requirement: NONE for v1.0.
 - App Privacy draft: no developer data collection.
 - Non-exempt encryption: false.
 - Age-rating behavior answers must match current v1.0 behavior.
 
-Current zh-Hant keywords intentionally use 3+ character phrases and currently use 38 of Apple's 100-character limit:
+Current zh-Hant keywords intentionally use 3+ character phrases and use exactly 100 UTF-8 bytes (38 characters):
 
 `配色工具,色彩設計,調色盤,取色工具,對比檢查,品牌配色,簡報配色,室內配色`
 
