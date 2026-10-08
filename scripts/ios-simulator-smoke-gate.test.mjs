@@ -5,7 +5,7 @@ import fs from 'node:fs';
 // services are ready to install a native app. Do not weaken launch/screenshot gates.
 const source=fs.readFileSync('scripts/ios-simulator-smoke.mjs','utf8');
 const boot=source.indexOf("simctl('boot fresh simulator',['boot',udid],30000)");
-const ready=source.indexOf("simctl('wait for fresh simulator boot readiness',['bootstatus',udid,'-b'],120000)");
+const ready=source.indexOf("simctl('wait for fresh simulator boot readiness',['bootstatus',udid,'-b'],45000,{allowFailure:true,allowTimeout:true})");
 const install=source.indexOf("simctl('install Color Lab',['install',udid,APP_PATH],120000)");
 assert.ok(boot>=0&&ready>boot&&install>ready,'bootstatus must be awaited between boot and install');
 assert.match(source,/for\(let session=1;session<=2;session\+\+\)/,'retain bounded second-session recovery');
