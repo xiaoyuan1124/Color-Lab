@@ -3,7 +3,7 @@ import path from 'node:path';
 
 const root=process.cwd();
 const dist=path.join(root,'dist');
-const rootFiles=['index.html','manifest.json','apple-touch-icon.png','icon-192.png','icon-512.png','privacy.html'];
+const rootFiles=['index.html','manifest.json','apple-touch-icon.png','icon-192.png','icon-512.png','privacy.html','THIRD_PARTY_NOTICES.md'];
 const dirs=['core','data','runtime','vendor'];
 
 fs.rmSync(dist,{recursive:true,force:true});

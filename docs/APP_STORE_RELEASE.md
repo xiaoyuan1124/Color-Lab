@@ -116,6 +116,8 @@ There is no login, subscription, ad SDK, analytics SDK, or hidden paid content i
 
 ## Remaining release blockers
 
+See `docs/APP_STORE_FINAL_HANDOFF.md` for the final asset map, account-holder input list, signed-device acceptance table and signing/upload sequence. Runtime third-party notices are distributed through `THIRD_PARTY_NOTICES.md` and tested by `npm run test:native`.
+
 These require real device/account/release operations and are intentionally not faked in source control:
 
 1. Native iPhone smoke test: safe area, keyboard, camera, photo picker, local persistence, Web Share / file export, SVG/JSON import/export.
