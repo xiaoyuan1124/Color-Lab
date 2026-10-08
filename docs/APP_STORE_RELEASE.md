@@ -110,7 +110,7 @@ There is no login, subscription, ad SDK, analytics SDK, or hidden paid content i
 - Deterministic 6.9-inch screenshot pack: six 1320×2868 no-alpha images.
 - Official `@capacitor/app` lifecycle bridge so backgrounding persists draft and resilience state.
 - Fresh iOS Simulator install → UIKit process → screenshot smoke gate passed before merge.
-- Pages deployment identity proof: main `899ec2e4d4d49e46c3ae1f185fd43cc02c75f10e` deployed with matching `pages_build_version`.
+- Pages deployment identity proof: the Pages artifact must include `deploy-info.json` whose `sha` matches the current main commit; release acceptance checks this on every main deployment.
 - Canonical App Store submission packet + metadata validator with external blockers kept explicit.
 - PWA service worker remains disabled inside the native shell; GitHub Pages remains independent.
 
