@@ -61,7 +61,9 @@ const fail=(msg)=>{console.error('FAIL:',msg);process.exitCode=1};
 const pass=(msg)=>console.log('PASS:',msg);
 
 const appStoreKeywordBytes=Buffer.byteLength(appStorePacket.keywords||'','utf8');
-if(pkg.scripts?.['test:app-store-metadata']!=='node scripts/app-store-metadata-check.mjs'||
+if(pkg.scripts?.['test:app-store-metadata']!=='node scripts/app-store-metadata-check.mjs --self-test && node scripts/app-store-metadata-check.mjs'||
+   !appStoreMetadataCheck.includes('Buffer.byteLength')||
+   !appStoreMetadataCheck.includes('keywordsFit')||
    appStorePacket.version!=='1.0.0'||
    appStorePacket.webEngine!=='2.53.0'||
    appStorePacket.bundleId!=='com.sy1124.colorlab'||
