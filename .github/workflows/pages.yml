@@ -53,6 +53,8 @@ jobs:
             test-results
           if-no-files-found: ignore
           retention-days: 7
+      - name: Test live Pages SHA verifier
+        run: node scripts/pages-live-proof.mjs --self-test
       - name: Write Pages deployment identity
         run: |
           cat > deploy-info.json <<EOF
@@ -69,3 +71,7 @@ jobs:
           path: .
       - id: deployment
         uses: actions/deploy-pages@v5
+      - name: Verify deployed public Pages SHA
+        env:
+          PAGES_DEPLOY_URL: ${{ steps.deployment.outputs.page_url }}
+        run: node scripts/pages-live-proof.mjs --verify-live
