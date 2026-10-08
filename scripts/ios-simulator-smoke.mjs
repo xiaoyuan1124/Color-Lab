@@ -172,7 +172,10 @@ async function runFreshSession(profile,session){
     // A successful `simctl boot` only requests boot. Block until SpringBoard and
     // simulator services report readiness before attempting to install the app.
     // Timeout remains bounded; a failure is recovered by the existing second session.
-    simctl('wait for fresh simulator boot readiness',['bootstatus',udid,'-b'],120000);
+    // CoreSimulator bootstatus can itself hang on hosted CI. Treat its timeout
+    // as a bounded readiness probe, never as proof of a successful install.
+    // The real install, launch PID, and screenshot gates below remain mandatory.
+    simctl('wait for fresh simulator boot readiness',['bootstatus',udid,'-b'],45000,{allowFailure:true,allowTimeout:true});
     runCommand(
       'open Simulator host',
       'open',
