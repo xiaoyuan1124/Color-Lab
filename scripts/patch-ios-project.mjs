@@ -10,16 +10,20 @@ if(!fs.existsSync(projectPath))throw new Error('Xcode project not found; run npx
 
 let plist=fs.readFileSync(plistPath,'utf8');
 const plistEntries=[
-  ['NSCameraUsageDescription','拍攝照片以在此裝置上取色與分析配色。'],
-  ['NSPhotoLibraryUsageDescription','選擇照片以在此裝置上取色與分析配色。']
+  ['NSCameraUsageDescription','<string>拍攝照片以在此裝置上取色與分析配色。</string>'],
+  ['NSPhotoLibraryUsageDescription','<string>選擇照片以在此裝置上取色與分析配色。</string>'],
+  ['ITSAppUsesNonExemptEncryption','<false/>']
 ];
-for(const [key,value] of plistEntries){
-  if(plist.includes('<key>'+key+'</key>'))continue;
-  plist=plist.replace('</dict>','\t<key>'+key+'</key>\n\t<string>'+value+'</string>\n</dict>');
+// Older generated projects placed these app keys inside a scene dictionary.
+// Remove those copies before inserting exactly once at the root closing tag.
+for(const [key] of plistEntries){
+  const entry=new RegExp('\\s*<key>'+key+'</key>\\s*(?:<string>[\\s\\S]*?</string>|<(?:true|false)\\s*/>)','g');
+  plist=plist.replace(entry,'');
 }
-if(!plist.includes('<key>ITSAppUsesNonExemptEncryption</key>')){
-  plist=plist.replace('</dict>','\t<key>ITSAppUsesNonExemptEncryption</key>\n\t<false/>\n</dict>');
-}
+const rootClosing=/\s*<\/dict>\s*<\/plist>\s*$/;
+if(!rootClosing.test(plist))throw new Error('Info.plist root dictionary closing tag not found');
+const appEntries=plistEntries.map(([key,value])=>'\t<key>'+key+'</key>\n\t'+value).join('\n');
+plist=plist.replace(rootClosing,'\n'+appEntries+'\n</dict>\n</plist>\n');
 fs.writeFileSync(plistPath,plist);
 
 let project=fs.readFileSync(projectPath,'utf8');
