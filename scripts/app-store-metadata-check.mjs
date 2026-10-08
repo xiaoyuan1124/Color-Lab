@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import assert from 'node:assert/strict';
 
 const path='app-store/submission.v1.0.json';
 const packet=JSON.parse(fs.readFileSync(path,'utf8'));
@@ -6,6 +7,18 @@ const failures=[];
 const blockers=[];
 
 const chars=value=>[...String(value??'')].length;
+const keywordBytes=value=>Buffer.byteLength(String(value??''),'utf8');
+const keywordsFit=value=>keywordBytes(value)>=1&&keywordBytes(value)<=100;
+
+if(process.argv.includes('--self-test')){
+  assert.equal(keywordsFit('a'.repeat(100)),true,'100 ASCII bytes are valid');
+  assert.equal(keywordsFit('a'.repeat(101)),false,'101 ASCII bytes must fail');
+  assert.equal(keywordsFit('色'.repeat(33)),true,'99 UTF-8 bytes are valid');
+  assert.equal(keywordsFit('色'.repeat(34)),false,'102 UTF-8 bytes must fail even with only 34 characters');
+  assert.equal(keywordsFit(''),false,'empty keywords must fail');
+  console.log('PASS: Apple keyword 100 UTF-8 byte limit regression tests');
+  process.exit(0);
+}
 const fail=message=>failures.push(message);
 const pass=message=>console.log('PASS:',message);
 
@@ -54,9 +67,9 @@ requireText('subtitle',packet.subtitle,{min:1,max:30});
 requireText('promotionalText',packet.promotionalText,{min:1,max:170});
 requireText('description',packet.description,{min:1,max:4000});
 
-const keywordChars=chars(packet.keywords);
-if(keywordChars<1||keywordChars>100)fail(`keywords length ${keywordChars} characters exceeds Apple 100-character limit`);
-else pass(`keywords length ${keywordChars}/100 characters`);
+const sizeBytes=keywordBytes(packet.keywords);
+if(!keywordsFit(packet.keywords))fail(`keywords size ${sizeBytes} UTF-8 bytes exceeds Apple's 100-byte limit`);
+else pass(`keywords size ${sizeBytes}/100 UTF-8 bytes`);
 const keywords=String(packet.keywords||'').split(',').map(x=>x.trim()).filter(Boolean);
 if(new Set(keywords).size!==keywords.length)fail('keywords must not contain duplicates');
 if(keywords.some(keyword=>keyword.toLowerCase()==='color lab'))fail('keywords should not duplicate the app name');
