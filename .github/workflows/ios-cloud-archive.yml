@@ -35,8 +35,8 @@ jobs:
         run: |
           sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
           xcodebuild -version
-          xcodebuild -version | grep -E '^Xcode 26\\.'
-          xcrun --sdk iphoneos --show-sdk-version | grep -E '^26\\.'
+          xcodebuild -version | grep -E '^Xcode 26\.'
+          xcrun --sdk iphoneos --show-sdk-version | grep -E '^26\.'
       - name: Install pinned npm dependencies
         run: npm install --no-audit --no-fund
       - name: Validate metadata, native bundle and AppIcon
