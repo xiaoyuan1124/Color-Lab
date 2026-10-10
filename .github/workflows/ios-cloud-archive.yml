@@ -1,0 +1,80 @@
+name: Color Lab iOS Cloud Archive Preflight
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/ios-cloud-archive.yml'
+      - 'scripts/ios-cloud-archive-check.py'
+      - 'docs/IOS_CLOUD_ARCHIVE.md'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/ios-cloud-archive.yml'
+      - 'scripts/ios-cloud-archive-check.py'
+      - 'docs/IOS_CLOUD_ARCHIVE.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: color-lab-ios-cloud-archive-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unsigned-device-release-archive:
+    runs-on: macos-15-intel
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Select verified Xcode 26.3
+        run: |
+          sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+          xcodebuild -version
+          xcodebuild -version | grep -E '^Xcode 26\\.'
+          xcrun --sdk iphoneos --show-sdk-version | grep -E '^26\\.'
+      - name: Install pinned npm dependencies
+        run: npm install --no-audit --no-fund
+      - name: Validate metadata, native bundle and AppIcon
+        run: |
+          npm run test:app-store-metadata
+          npm run test:native
+          npm run test:app-icon
+          python3 scripts/ios-project-test.py
+      - name: Generate local-asset Capacitor iOS project
+        run: npm run ios:init
+      - name: Compile iPhoneOS Release archive WITHOUT signing
+        timeout-minutes: 23
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .cloud-archive
+          if ! xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -configuration Release \
+            -archivePath "$PWD/.cloud-archive/ColorLab.xcarchive" \
+            -derivedDataPath "$PWD/.cloud-archive/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            archive > .cloud-archive/archive-build.log 2>&1; then
+            echo 'Unsigned iPhoneOS Release archive failed; recent xcodebuild messages:'
+            tail -n 120 .cloud-archive/archive-build.log
+            exit 1
+          fi
+          echo 'PASS: unsigned iPhoneOS Release archive compiled'
+      - name: Inspect archive and emit NON-RELEASE provenance
+        run: python3 scripts/ios-cloud-archive-check.py .cloud-archive/ColorLab.xcarchive .cloud-archive/unsigned-proof.json
+      - name: Upload proof only (no IPA, signing certificates or provisioning profiles)
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: color-lab-unsigned-device-archive-proof
+          path: .cloud-archive/unsigned-proof.json
+          if-no-files-found: ignore
+          retention-days: 7
